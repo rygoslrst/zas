@@ -91,24 +91,29 @@ def bajar(codigo):
     return ruta
 
 
-def sticker(ruta):
-    """El emoji a 128 px con borde blanco y sombra, en una celda de CELDA x CELDA."""
-    im = Image.open(ruta).convert('RGBA').resize((TAM, TAM), Image.LANCZOS)
-    alfa = Image.new('L', (CELDA, CELDA), 0)
-    alfa.paste(im.getchannel('A'), (MARGEN, MARGEN))
-    # Borde: el contorno del emoji "engordado" BORDE píxeles
-    gordo = alfa.point(lambda a: 255 if a > 40 else 0).filter(ImageFilter.MaxFilter(2 * BORDE + 1))
-    gordo = gordo.filter(ImageFilter.GaussianBlur(0.8))
+def sticker(ruta, k=1):
+    """El emoji con borde blanco y sombra. k = 1: dibujo de 128 en una celda de
+    152 (el juego). k = 3: lo mismo, tres veces más grande (el cartel impreso)."""
+    tam, borde, margen = TAM * k, BORDE * k, MARGEN * k
+    celda_lado = tam + 2 * margen
+    im = Image.open(ruta).convert('RGBA').resize((tam, tam), Image.LANCZOS)
+    alfa = Image.new('L', (celda_lado, celda_lado), 0)
+    alfa.paste(im.getchannel('A'), (margen, margen))
+    # Borde: el contorno del emoji "engordado" (se engorda de a poco: rinde más)
+    gordo = alfa.point(lambda a: 255 if a > 40 else 0)
+    for _ in range(k):
+        gordo = gordo.filter(ImageFilter.MaxFilter(2 * BORDE + 1))
+    gordo = gordo.filter(ImageFilter.GaussianBlur(0.8 * k))
     # Sombra: la misma silueta, corrida y difuminada
-    sombra = Image.new('L', (CELDA, CELDA), 0)
-    sombra.paste(gordo, SOMBRA)
-    sombra = sombra.filter(ImageFilter.GaussianBlur(3)).point(lambda a: int(a * 0.32))
-    celda = Image.new('RGBA', (CELDA, CELDA), (0, 0, 0, 0))
+    sombra = Image.new('L', (celda_lado, celda_lado), 0)
+    sombra.paste(gordo, (SOMBRA[0] * k, SOMBRA[1] * k))
+    sombra = sombra.filter(ImageFilter.GaussianBlur(3 * k)).point(lambda a: int(a * 0.32))
+    celda = Image.new('RGBA', (celda_lado, celda_lado), (0, 0, 0, 0))
     celda.paste((27, 16, 48, 255), (0, 0), sombra)
-    blanco = Image.new('RGBA', (CELDA, CELDA), (255, 255, 255, 255))
+    blanco = Image.new('RGBA', (celda_lado, celda_lado), (255, 255, 255, 255))
     blanco.putalpha(gordo)
     celda.alpha_composite(blanco)
-    celda.alpha_composite(im, (MARGEN, MARGEN))
+    celda.alpha_composite(im, (margen, margen))
     return celda
 
 

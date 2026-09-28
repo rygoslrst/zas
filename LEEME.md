@@ -94,5 +94,18 @@ El juego está publicado con GitHub Pages: cada `git push` a `main` lo
 actualiza en uno o dos minutos. Los teléfonos pueden tardar hasta 10 minutos
 en ver la versión nueva: **no publiques nada durante el torneo**.
 
-El cartel para el stand, con el QR, está en `stand/cartel.html` (abrilo y
-tocá "Imprimir"). Se genera con `python herramientas/armar_cartel.py`.
+## Para el stand
+
+En `stand/` hay todo listo para imprimir en A4 (los PDF se imprimen tal cual):
+
+| Archivo | Qué es |
+|---|---|
+| `cartel.pdf` | el cartel a color: logo, QR, cómo se juega, medallas y un cuadro para anotar el récord del día |
+| `cartel-ahorra-tinta.pdf` | el mismo cartel con fondo blanco, para impresoras en blanco y negro o con poca tinta |
+| `tarjetas.pdf` | 8 tarjetitas con el QR por hoja, para recortar y repartir |
+
+Los HTML (`cartel.html`, `cartel.html#ahorro`, `tarjetas.html`) son las mismas
+hojas para abrir en el navegador. Todo se genera con
+`python herramientas/armar_cartel.py` a partir de `herramientas/plantilla_*.html`
+(para cambiar un texto del cartel, se cambia la plantilla y se vuelve a
+generar). Los PDF se hacen con Edge: ver el comentario en `armar_cartel.py`.

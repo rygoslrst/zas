@@ -1,22 +1,44 @@
 #!/usr/bin/env python3
 # =============================================================================
-#  armar_cartel.py — el cartel A4 del stand, con el QR que abre el juego
+#  armar_cartel.py — el cartel del stand y las tarjetitas, con el QR del juego
 # -----------------------------------------------------------------------------
-#  Genera stand/cartel.html (y stand/qr.svg). Si cambia la dirección del juego,
-#  cambiá URL y volvé a correrlo:
+#  Genera, en stand/:
+#      cartel.html     cartel A4 para pegar en el stand (a color o "ahorra tinta")
+#      tarjetas.html   8 tarjetitas por hoja A4 para recortar y repartir
+#      pegatinas.webp  los emoji del cartel, en alta resolución (para imprimir)
+#      qr.svg          el código QR solo
+#
+#  Si cambia la dirección del juego, cambiá URL y volvé a correrlo:
 #      python herramientas/armar_cartel.py
-#  Necesita: pip install qrcode
+#  Necesita: pip install qrcode pillow
+#
+#  Para rehacer los PDF (con el servidor de desarrollo andando), con Edge:
+#      msedge --headless=new --no-pdf-header-footer --virtual-time-budget=6000
+#             --print-to-pdf=stand/cartel.pdf http://localhost:8124/stand/cartel.html
+#  (y lo mismo con cartel.html#ahorro → cartel-ahorra-tinta.pdf y tarjetas.html)
 # =============================================================================
 
 import os
+import sys
 import qrcode
 import qrcode.constants
+from PIL import Image
+
+AQUI = os.path.dirname(os.path.abspath(__file__))
+RAIZ = os.path.dirname(AQUI)
+sys.path.insert(0, AQUI)
+from armar_emoji import EMOJI, bajar, sticker   # noqa: E402
 
 URL = 'https://rygoslrst.github.io/zas/'
 URL_VISIBLE = 'rygoslrst.github.io/zas'
 
-AQUI = os.path.dirname(os.path.abspath(__file__))
-RAIZ = os.path.dirname(AQUI)
+# Emoji que usa el cartel (los del juego y alguno más)
+PEGATINAS = ['bomba', 'globo', 'pizza', 'gato', 'sandia', 'pelota', 'cohete', 'sapo', 'diamante',
+             'trofeo', 'medalla_bronce', 'medalla_plata', 'medalla_oro', 'dedo', 'estrella',
+             'marciano', 'corona', 'rayo', 'telefono', 'explosion']
+EXTRA = {'telefono': '1f4f1'}
+K = 3                                   # tres veces el tamaño del juego: nítido impreso
+COLUMNAS = 5
 
 
 def svg_qr(url, tinta='#1b1030'):
@@ -44,87 +66,70 @@ def svg_qr(url, tinta='#1b1030'):
             f'<path fill="{tinta}" d="{"".join(partes)}"/></svg>')
 
 
-PLANTILLA = '''<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ZAS — cartel del stand</title>
-<!-- Generado por herramientas/armar_cartel.py -->
-<style>
-  /* Cartel para imprimir en A4. Fondo blanco a propósito: gasta poca tinta en
-     la impresora del colegio y el QR se lee mejor con máximo contraste. */
-  @font-face { font-family: 'Anton'; src: url('../fuentes/anton-latin.woff2') format('woff2'); }
-  @page { size: A4 portrait; margin: 0; }
-  :root { --tinta: #1b1030; --oro: #f2b705; --coral: #e5484d; --gris: #5b5570; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #e9e6ef; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: var(--tinta); }
-  .hoja {
-    width: 210mm; height: 297mm; margin: 12mm auto; background: #fff;
-    padding: 16mm 18mm 14mm; display: flex; flex-direction: column; align-items: center;
-    box-shadow: 0 6px 30px rgba(27, 16, 48, 0.18);
-  }
-  h1 {
-    font-family: 'Anton', Impact, sans-serif; font-weight: 400; font-size: 70mm; line-height: 0.85;
-    color: var(--oro); transform: rotate(-6deg);
-    text-shadow: 0 1.6mm 0 #b88a04, 0 3.2mm 0 var(--tinta);
-  }
-  .bajada { font-size: 7mm; font-weight: 600; margin-top: 9mm; text-align: center; line-height: 1.3; }
-  .qr { width: 100mm; height: 100mm; margin-top: 9mm; }
-  .qr svg { width: 100%; height: 100%; display: block; }
-  .escanea { font-family: 'Anton', Impact, sans-serif; font-size: 9.4mm; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 6mm; text-align: center; }
-  .url { font-size: 5.4mm; color: var(--gris); margin-top: 2mm; letter-spacing: 0.02em; }
-  .ordenes { display: flex; flex-wrap: wrap; justify-content: center; gap: 3mm; margin-top: 9mm; max-width: 160mm; }
-  .ordenes span {
-    font-family: 'Anton', Impact, sans-serif; font-size: 6.4mm; letter-spacing: 0.03em;
-    border: 0.6mm solid var(--tinta); border-radius: 99mm; padding: 1mm 4.5mm 1.4mm;
-  }
-  .nota { font-size: 4.6mm; color: var(--gris); margin-top: 6mm; text-align: center; }
-  .voto { margin-top: auto; font-family: 'Anton', Impact, sans-serif; font-size: 8.6mm; letter-spacing: 0.05em; text-transform: uppercase; color: var(--coral); }
-  .imprimir { position: fixed; top: 16px; right: 16px; font: 600 15px system-ui, sans-serif; padding: 12px 20px; border-radius: 999px; border: 0; background: var(--tinta); color: #fff; cursor: pointer; }
-  .imprimir:focus-visible { outline: 3px solid var(--oro); outline-offset: 2px; }
-  /* Sólo en pantalla: la vista previa se achica para entrar entera. */
-  @media screen and (max-width: 880px) { .hoja { zoom: 0.72; } }
-  @media screen and (max-height: 1180px) and (min-width: 881px) { .hoja { zoom: 0.8; } }
-  @media print {
-    body { background: #fff; }
-    .hoja { margin: 0; box-shadow: none; }
-    .imprimir { display: none; }
-  }
-</style>
-</head>
-<body>
-<button class="imprimir" type="button" onclick="print()">Imprimir</button>
-<main class="hoja">
-  <h1>ZAS</h1>
-  <p class="bajada">Microjuegos de 4 segundos.<br>¿Cuántos aguantás?</p>
+def estallido(n=13, ancho=200, alto=110):
+    """Puntos de un estallido de historieta (para el SVG detrás del logo)."""
+    import math
+    pts = []
+    for k in range(n * 2):
+        a = k / (n * 2) * math.tau - math.pi / 2
+        r = (0.62 + 0.06 * ((k * 7) % 3)) if k % 2 else (1.0 - 0.05 * ((k * 5) % 3))
+        pts.append(f'{ancho / 2 + math.cos(a) * r * (ancho / 2 - 3):.1f},{alto / 2 + math.sin(a) * r * (alto / 2 - 3):.1f}')
+    return ' '.join(pts)
 
-  <div class="qr" role="img" aria-label="Código QR para abrir el juego">__QR__</div>
-  <p class="escanea">Escaneá y jugá en tu celular</p>
-  <p class="url">__URL__</p>
 
-  <div class="ordenes" aria-label="Algunas de las órdenes del juego">
-    <span>¡ATRAPÁ!</span><span>¡CORTÁ EL ROJO!</span><span>¡PEGALE!</span><span>¡VOLÁ!</span>
-    <span>¡QUE NO TE VEA!</span><span>¡NO TOQUES NADA!</span><span>¿CUÁNTO ES?</span>
-  </div>
-  <p class="nota">Con el teléfono derecho. No hace falta instalar nada.</p>
+def rayos(n=18, r=150):
+    """Rayos de sol como dibujo vectorial (un gradiente cónico de CSS se imprime
+    como imagen en pedazos y se ve la unión)."""
+    import math
+    d = []
+    for k in range(n):
+        a0 = k / n * math.tau
+        a1 = a0 + math.pi / n
+        d.append(f'M0 0L{math.cos(a0) * r:.1f} {math.sin(a0) * r:.1f}L{math.cos(a1) * r:.1f} {math.sin(a1) * r:.1f}Z')
+    return (f'<svg class="rayos" viewBox="-{r} -{r} {2 * r} {2 * r}" aria-hidden="true">'
+            f'<path d="{"".join(d)}"/></svg>')
 
-  <p class="voto">Si te gustó, votá por ZAS</p>
-</main>
-</body>
-</html>
-'''
+
+def armar_pegatinas():
+    """Una sola imagen con los stickers del cartel y el CSS para usarlos."""
+    celdas = []
+    for nombre in PEGATINAS:
+        codigo = EXTRA.get(nombre) or EMOJI[nombre]
+        celdas.append(sticker(bajar(codigo), K))
+    lado = celdas[0].size[0]
+    filas = (len(celdas) + COLUMNAS - 1) // COLUMNAS
+    hoja = Image.new('RGBA', (COLUMNAS * lado, filas * lado), (0, 0, 0, 0))
+    for i, c in enumerate(celdas):
+        hoja.alpha_composite(c, ((i % COLUMNAS) * lado, (i // COLUMNAS) * lado))
+    hoja.save(os.path.join(RAIZ, 'stand', 'pegatinas.webp'), 'WEBP', quality=92, method=6)
+    # CSS: cada .e-nombre muestra su celda, a cualquier tamaño (en %)
+    css = [f'.e {{ background: url(pegatinas.webp) no-repeat; background-size: {COLUMNAS * 100}% {filas * 100}%; }}']
+    for i, nombre in enumerate(PEGATINAS):
+        col, fila = i % COLUMNAS, i // COLUMNAS
+        px = col / (COLUMNAS - 1) * 100
+        py = fila / (filas - 1) * 100 if filas > 1 else 0
+        css.append(f'.e-{nombre} {{ background-position: {px:.3f}% {py:.3f}%; }}')
+    return '\n  '.join(css)
 
 
 def main():
-    svg = svg_qr(URL)
     os.makedirs(os.path.join(RAIZ, 'stand'), exist_ok=True)
+    qr = svg_qr(URL)
     with open(os.path.join(RAIZ, 'stand', 'qr.svg'), 'w', encoding='utf-8', newline='\n') as f:
-        f.write(svg)
-    html = PLANTILLA.replace('__QR__', svg).replace('__URL__', URL_VISIBLE)
-    with open(os.path.join(RAIZ, 'stand', 'cartel.html'), 'w', encoding='utf-8', newline='\n') as f:
-        f.write(html)
-    print(f'stand/cartel.html y stand/qr.svg para {URL}')
+        f.write(qr)
+    css_pegatinas = armar_pegatinas()
+    for plantilla, salida in (('plantilla_cartel.html', 'cartel.html'), ('plantilla_tarjetas.html', 'tarjetas.html')):
+        with open(os.path.join(AQUI, plantilla), encoding='utf-8') as f:
+            html = f.read()
+        html = (html.replace('/*__PEGATINAS__*/', css_pegatinas)
+                    .replace('<!--__QR__-->', qr)
+                    .replace('__URL__', URL_VISIBLE)
+                    .replace('__ESTALLIDO__', estallido())
+                    .replace('<!--__RAYOS__-->', rayos()))
+        with open(os.path.join(RAIZ, 'stand', salida), 'w', encoding='utf-8', newline='\n') as f:
+            f.write(html)
+    kb = os.path.getsize(os.path.join(RAIZ, 'stand', 'pegatinas.webp')) // 1024
+    print(f'stand/cartel.html, stand/tarjetas.html y stand/pegatinas.webp ({kb} KB) para {URL}')
 
 
 if __name__ == '__main__':
