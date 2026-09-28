@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1b1030">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Microjuegos de 4 segundos. ¿Cuántos aguantás?">
+<meta property="og:title" content="ZAS">
+<meta property="og:description" content="Microjuegos de 4 segundos. ¿Cuántos aguantás?">
+<title>ZAS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231b1030'/%3E%3Cpath d='M36 6 L14 36 H30 L26 58 L50 26 H33 Z' fill='%23ffd23f' stroke='%23c9971a' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preload" href="fuentes/anton-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<div id="juego"></div>
+
+<div id="cargando" class="capa">Cargando</div>
+
+<section id="titulo" class="capa" hidden>
+  <h1>ZAS</h1>
+  <p class="bajada">Microjuegos de 4 segundos.<br>¿Cuántos aguantás?</p>
+  <p class="cta"><span class="solo-tactil">Tocá para jugar</span><span class="solo-mouse">Clic para jugar</span></p>
+  <p id="titulo-record" class="record"></p>
+  <div class="esquina">
+    <button class="boton icono" data-accion="sonido" type="button"></button>
+    <button class="boton texto" data-accion="creditos" type="button">Créditos</button>
+  </div>
+</section>
+
+<section id="fin" class="capa" hidden>
+  <p class="causa">¡Se acabó!</p>
+  <p id="fin-puntos" class="puntos"></p>
+  <p id="fin-detalle" class="detalle"></p>
+  <p id="fin-veredicto" class="bajada"></p>
+  <p id="fin-record" class="record"></p>
+  <p class="cta"><span class="solo-tactil">Tocá para jugar otra vez</span><span class="solo-mouse">Clic para jugar otra vez</span></p>
+  <div class="esquina">
+    <button class="boton icono" data-accion="sonido" type="button"></button>
+  </div>
+</section>
+
+<section id="pausa" class="capa" hidden>
+  <p class="grande">Pausa</p>
+  <p class="cta"><span class="solo-tactil">Tocá para seguir</span><span class="solo-mouse">Clic para seguir</span></p>
+</section>
+
+<section id="creditos" class="panel" hidden role="dialog" aria-modal="true" aria-labelledby="creditos-titulo">
+  <div class="panel-cuerpo desplazable">
+    <h2 id="creditos-titulo">ZAS</h2>
+    <p>Hecho para el torneo del colegio.</p>
+
+    <h3>Cómo se juega</h3>
+    <ul>
+      <li>Aparece una orden: <b>¡ATRAPÁ!</b>, <b>¡CORTÁ!</b>, <b>¡ESQUIVÁ!</b>… Tenés unos segundos para cumplirla.</li>
+      <li>Se juega sólo con el dedo (o el mouse): tocar, arrastrar, deslizar o mantener apretado.</li>
+      <li>Tenés 4 vidas. Cada tanto todo va <b>más rápido</b>.</li>
+      <li>Abajo se quema la mecha: cuando llega a la bomba, se acabó el tiempo.</li>
+    </ul>
+
+    <h3>Créditos</h3>
+    <dl>
+      <dt>Dibujos</dt>
+      <dd>Noto Emoji, de Google — licencia Apache 2.0</dd>
+      <dt>Música y sonidos</dt>
+      <dd>Generados con código mientras jugás.</dd>
+      <dt>Motor</dt>
+      <dd>Phaser 3.90 — licencia MIT — phaser.io</dd>
+      <dt>Tipografía</dt>
+      <dd>Anton, de The Anton Project Authors — SIL Open Font License 1.1</dd>
+      <dt>Inspiración</dt>
+      <dd>WarioWare, de Nintendo</dd>
+    </dl>
+
+    <button id="cerrar-creditos" class="boton texto" type="button">Cerrar</button>
+  </div>
+</section>
+
+<div id="gira" class="capa" hidden>
+  <div class="telefono" aria-hidden="true"></div>
+  <p class="grande">Poné el teléfono derecho</p>
+  <p class="bajada">ZAS se juega en vertical.</p>
+</div>
+
+<div id="error" class="capa" hidden>
+  <p class="grande">No se puede jugar acá</p>
+  <p class="bajada">Este navegador no tiene WebGL activado. Probá con Chrome, Firefox o Safari actualizados.</p>
+</div>
+
+<!-- Phaser va dentro del repo: el día del torneo no dependemos de ningún CDN. -->
+<script src="vendor/phaser.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
