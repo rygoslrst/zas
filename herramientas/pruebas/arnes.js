@@ -42,7 +42,8 @@ window.__foto = async (nombre, escala = 0.5) => {
   return nombre;
 };
 // Toques simulados en coordenadas del juego
-const aPantalla = (x, y) => { const r = J.canvas.getBoundingClientRect(); return [r.left + x * r.width / J.scale.width, r.top + y * r.height / J.scale.height]; };
+// Coordenadas del juego (540 de ancho) → pantalla. El canvas puede dibujarse más grande (zoom k).
+const aPantalla = (x, y) => { const r = J.canvas.getBoundingClientRect(), s = r.width / 540; return [r.left + x * s, r.top + y * s]; };
 window.__ev = (tipo, x, y) => {
   // Phaser escucha eventos de mouse (y de touch), no "pointer": se simula el mouse.
   const [cx, cy] = aPantalla(x, y);

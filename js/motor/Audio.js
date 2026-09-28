@@ -291,6 +291,12 @@ export class Audio {
     if (!this._ok) return;
     this._arpegio([72, 76, 79, 84, 79, 84, 88], 0.09, 0.2, 'square', 0.1);
   }
+  // Anuncio de jefe: redoble grave y un acorde amenazante
+  jefe() {
+    if (!this._ok) return;
+    for (let i = 0; i < 8; i++) this._osc('sine', 90, this._t + i * 0.06, 0.08, 0.4, this.sfx, 60);
+    this._arpegio([48, 51, 54, 57], 0.03, 0.8, 'sawtooth', 0.07, this._t + 0.5);
+  }
   empieza() {
     if (!this._ok) return;
     this._ruido(this._t, 0.35, 0.18, this.sfx, 'bandpass', 400, 3000, 1);

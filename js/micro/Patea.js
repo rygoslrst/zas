@@ -7,7 +7,7 @@ export class Patea extends Micro {
   static CONTROL = 'deslizar';
 
   armar() {
-    this.fondo(0x3fa34d, 'rayas');
+    this.tema('pasto');
     // El arco
     this.palo0 = 105; this.palo1 = 435;
     this.yLinea = this.arriba + 250;

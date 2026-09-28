@@ -10,7 +10,7 @@ export class Corta extends Micro {
   static CONTROL = 'deslizar';
 
   armar() {
-    this.fondo(0x8b5a2b, 'rayas');
+    this.tema('madera');
     this.g = 950 * this.vel * this.vel;
     const cosas = [[1], [1, 1], [1, 0, 1, 1]][this.nivel - 1];
     this.frutas = cosas.map((esFruta, i) => {
@@ -57,7 +57,7 @@ export class Corta extends Micro {
     // Dos mitades que se separan
     f.img.destroy();
     for (const lado of [-1, 1]) {
-      const m = this.emoji(f.nombre, f.x, f.y, 100).setCrop(lado < 0 ? 0 : 64, 0, 64, 128).setAngle(angulo * 57.3 + 90);
+      const m = this.emojiEntero(f.nombre, f.x, f.y, 100).setCrop(lado < 0 ? 0 : 76, 0, 76, 152).setAngle(angulo * 57.3 + 90);
       this.tweens.add({
         targets: m, x: f.x + lado * 90, y: f.y + 160, angle: m.angle + lado * 120, alpha: 0,
         duration: 600, ease: 'Quad.easeIn', onComplete: () => m.destroy(),

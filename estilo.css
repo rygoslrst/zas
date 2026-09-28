@@ -213,6 +213,13 @@ body.tactil .solo-mouse { display: none; }
   color: var(--crema);
 }
 #fin .bajada { margin-top: 6px; }
+.medalla {
+  width: clamp(90px, 26vw, 140px);
+  height: auto;
+  animation: medalla 0.6s cubic-bezier(.2, 1.6, .5, 1) both, flotar 2.4s ease-in-out 0.6s infinite;
+}
+@keyframes medalla { from { transform: scale(0) rotate(-40deg); } to { transform: scale(1) rotate(0); } }
+@keyframes flotar { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
 #fin .record.nuevo {
   font-family: var(--display);
   font-size: clamp(24px, 7vw, 32px);
@@ -302,5 +309,5 @@ body.tactil .solo-mouse { display: none; }
 #error { z-index: 50; background: var(--noche); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cta, #fin .record.nuevo, .telefono, #titulo h1, #cargando { animation: none; }
+  .cta, #fin .record.nuevo, .telefono, #titulo h1, #cargando, .medalla { animation: none; }
 }

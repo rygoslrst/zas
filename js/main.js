@@ -2,11 +2,11 @@
 //  main.js — arranque
 // ============================================================================
 
-import { ANCHO, VISTA, DEBUG, CLAVE_SONIDO, altoParaPantalla } from './config.js';
+import { ANCHO, VISTA, ESCALA, DEBUG, CLAVE_SONIDO, altoParaPantalla, escalaParaPantalla } from './config.js';
 import { Audio } from './motor/Audio.js';
 import { UI } from './ui.js';
 import { Director } from './escenas/Director.js';
-import { MICROS } from './micro/indice.js';
+import { MICROS, JEFES } from './micro/indice.js';
 
 // ----------------------------------------------------------------------------
 //  Que el navegador no se coma los toques: sin esto, arrastrar el dedo hace
@@ -64,13 +64,16 @@ function vigilarOrientacion(director) {
   revisar();
 }
 
-// El alto del mundo se adapta a la pantalla (celulares más o menos alargados).
+// El alto del mundo se adapta a la pantalla (celulares más o menos alargados),
+// y la resolución a la que se dibuja, a la densidad de la pantalla.
 function vigilarAlto(juego, director) {
   let pendiente = 0;
   const revisar = () => {
     const h = altoParaPantalla(window.innerWidth, window.innerHeight);
-    if (h === VISTA.alto) return;
-    juego.scale.setGameSize(ANCHO, h);
+    const k = escalaParaPantalla(window.innerWidth, window.innerHeight, h);
+    if (h === VISTA.alto && k === ESCALA.k) return;
+    ESCALA.k = k;
+    juego.scale.setGameSize(Math.round(ANCHO * k), Math.round(h * k));
     juego.scale.refresh();
     const d = director();
     if (d && d.fondoCapa) d.redimensionar(h);
@@ -100,21 +103,22 @@ async function arrancar() {
   }
 
   // La tipografía y los emoji tienen que estar antes de armar las texturas.
-  const fuente = Promise.race([document.fonts.load('96px Anton'), new Promise(r => setTimeout(r, 3000))])
+  const fuente = Promise.race([document.fonts.load('128px Anton'), new Promise(r => setTimeout(r, 3000))])
     .catch(() => { /* seguimos con la de respaldo */ });
   const imagenEmoji = new Image();
   imagenEmoji.src = (await soportaWebp()) ? 'assets/emoji.webp' : 'assets/emoji.png';
   await Promise.all([fuente, imagenEmoji.decode()]);
 
   const audio = new Audio(CLAVE_SONIDO);
-  const ui = new UI(audio);
+  const ui = new UI(audio, imagenEmoji);
 
   VISTA.alto = altoParaPantalla(window.innerWidth, window.innerHeight);
+  ESCALA.k = escalaParaPantalla(window.innerWidth, window.innerHeight, VISTA.alto);
   const juego = new Phaser.Game({
     type: Phaser.WEBGL,
     parent: 'juego',
-    width: ANCHO,
-    height: VISTA.alto,
+    width: Math.round(ANCHO * ESCALA.k),
+    height: Math.round(VISTA.alto * ESCALA.k),
     backgroundColor: '#1b1030',
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     render: { antialias: true, pixelArt: false, roundPixels: false, powerPreference: 'high-performance' },
@@ -124,7 +128,7 @@ async function arrancar() {
     banner: false,
   });
   // Los microjuegos primero y el Director al final: así queda dibujado encima.
-  for (const M of MICROS) juego.scene.add(M.name, M, false);
+  for (const M of [...MICROS, ...JEFES]) juego.scene.add(M.name, M, false);
   juego.scene.add('Director', Director, true, { audio, ui, imagenEmoji });
 
   const director = () => juego.scene.getScene('Director');

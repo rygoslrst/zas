@@ -9,18 +9,18 @@ export class Frena extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    this.fondo(0x8fd3ff, 'lunares');
+    this.tema('cielo');
     this.suelo = this.cy + 140;
     this.borde = 462;
     const zona = [130, 96, 70][this.nivel - 1];
     this.zona0 = this.borde - zona;
     // Precipicio: el camino termina en el borde
     this.rect(this.borde / 2, this.suelo + (this.H - this.suelo) / 2, this.borde, this.H - this.suelo, 0x6b4f3a).setOrigin(0.5);
+    this.add.image(0, this.suelo + 20, 'atlas', 'degradeV').setOrigin(0).setDisplaySize(this.borde, 80).setTint(0x8a6a50);
     this.rect(this.borde / 2, this.suelo + 10, this.borde, 20, 0x3d3d4a);
     for (let x = 20; x < this.borde; x += 60) this.rect(x + 15, this.suelo + 10, 28, 4, 0xfff1a8);
     this.rect((this.zona0 + this.borde) / 2, this.suelo + 10, zona, 20, COLOR.BIEN, 0.8);
     this.emoji('bandera', this.zona0 + 18, this.suelo - 44, 80);
-    this.emoji('nube', 120, this.arriba + 120, 140).setAlpha(0.8);
     // El auto
     this.x = -60;
     this.v = [240, 290, 330][this.nivel - 1] * this.vel;

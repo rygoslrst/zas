@@ -7,7 +7,7 @@ export class Topo extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    this.fondo(0x8ac926, 'lunares');
+    this.tema('pasto');
     this.necesarios = [3, 4, 5][this.nivel - 1];
     this.golpes = 0;
     this.ventana = [0.95, 0.75, 0.6][this.nivel - 1] / Math.sqrt(this.vel);

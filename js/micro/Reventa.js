@@ -6,8 +6,7 @@ export class Reventa extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    this.fondo(0x4d96ff, 'lunares');
-    for (let i = 0; i < 3; i++) this.emoji('nube', this.azar(60, 480), this.arriba + 60 + i * 150, this.azar(110, 170)).setAlpha(0.7);
+    this.tema('cielo');
     const n = [3, 4, 6][this.nivel - 1];
     const sube = [55, 65, 80][this.nivel - 1] * this.vel;
     this.globos = [];

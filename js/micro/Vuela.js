@@ -10,10 +10,9 @@ export class Vuela extends Micro {
   static GANA_AL_FINAL = true;
 
   armar() {
-    this.fondo(0x70d6ff, 'lunares');
-    this.emoji('nube', 380, this.arriba + 90, 150).setAlpha(0.8);
+    this.tema('cielo');
     this.suelo = this.bajo - 10;
-    this.rect(this.cx, this.suelo + (this.H - this.suelo) / 2, this.W, this.H - this.suelo, 0xded895);
+    this.piso(this.suelo, 0xded895);
     this.rect(this.cx, this.suelo + 4, this.W, 10, VERDE);
     this.x = 140;
     this.y = this.cy - 40;

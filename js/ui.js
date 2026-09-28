@@ -6,6 +6,8 @@
 //  tiene que ser lo más corto posible.
 // ============================================================================
 
+import { EMOJI, CELDA_EMOJI } from './datos/emoji.js';
+
 const $ = id => document.getElementById(id);
 
 const ICONO_SONIDO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -22,8 +24,9 @@ function veredicto(p) {
 }
 
 export class UI {
-  constructor(audio) {
+  constructor(audio, imagenEmoji) {
     this.audio = audio;
+    this.imagenEmoji = imagenEmoji;
     this.director = null;
     this.titulo = $('titulo');
     this.fin = $('fin');
@@ -112,12 +115,24 @@ export class UI {
     $('fin-puntos').textContent = d.puntos;
     $('fin-detalle').textContent = d.puntos === 1 ? 'microjuego superado' : 'microjuegos superados';
     $('fin-veredicto').textContent = veredicto(d.puntos);
+    this.dibujarMedalla(d.medalla);
     const rec = $('fin-record');
     rec.textContent = d.nuevo ? '¡Nuevo récord!' : `Tu récord: ${d.record}`;
     rec.classList.toggle('nuevo', d.nuevo);
     this.mostrarRecord(d.record);
     this.fin.hidden = false;
     this.finDesde = performance.now();
+  }
+
+  // La medalla (un emoji del atlas, dibujado en un canvas del HTML)
+  dibujarMedalla(nombre) {
+    const c = $('fin-medalla');
+    c.hidden = !nombre;
+    if (!nombre || !EMOJI[nombre]) return;
+    const g = c.getContext('2d');
+    const [x, y] = EMOJI[nombre];
+    g.clearRect(0, 0, c.width, c.height);
+    g.drawImage(this.imagenEmoji, x, y, CELDA_EMOJI, CELDA_EMOJI, 0, 0, c.width, c.height);
   }
 
   mostrarPausa(v) { this.pausa.hidden = !v; }

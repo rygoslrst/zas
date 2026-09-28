@@ -70,6 +70,53 @@ function piezas() {
         g.addColorStop(1, 'rgba(255,255,255,0)');
         c.fillStyle = g; c.fillRect(x, y, 16, 128);
       } },
+    // Degradé vertical: opaco arriba, transparente abajo (sobre un color liso = fondo en dos tonos)
+    { nombre: 'degradeV', w: 16, h: 256, interior: 2, dibujar: (c, x, y) => {
+        const g = c.createLinearGradient(0, y, 0, y + 256);
+        g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = g; c.fillRect(x, y, 16, 256);
+      } },
+    // Viñeta: bordes oscuros, centro limpio (se tiñe de oscuro)
+    { nombre: 'vineta', w: 256, h: 256, dibujar: (c, x, y) => {
+        const g = c.createRadialGradient(x + 128, y + 128, 60, x + 128, y + 128, 182);
+        g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.6, 'rgba(255,255,255,0.35)');
+        g.addColorStop(1, 'rgba(255,255,255,1)');
+        c.fillStyle = g; c.fillRect(x, y, 256, 256);
+      } },
+    // Estallido de historieta, detrás de cada consigna
+    { nombre: 'estallido', w: 512, h: 512, dibujar: (c, x, y) => {
+        c.fillStyle = '#fff'; c.beginPath();
+        const n = 14;
+        for (let k = 0; k < n * 2; k++) {
+          const a = (k / (n * 2)) * Math.PI * 2 - Math.PI / 2;
+          const r = k % 2 ? 150 + ((k * 37) % 5) * 6 : 250 - ((k * 53) % 4) * 12;
+          c.lineTo(x + 256 + Math.cos(a) * r, y + 256 + Math.sin(a) * r * 0.78);
+        }
+        c.closePath(); c.fill();
+      } },
+    // Borde en sierra del telón del intermedio
+    { nombre: 'dientes', w: 64, h: 32, dibujar: (c, x, y) => {
+        c.fillStyle = '#fff'; c.beginPath();
+        c.moveTo(x, y); c.lineTo(x + 64, y); c.lineTo(x + 48, y + 30); c.lineTo(x + 32, y); c.lineTo(x + 16, y + 30);
+        c.closePath(); c.fill();
+      } },
+    // Mantel a cuadros
+    { nombre: 'cuadros', w: 64, h: 64, dibujar: (c, x, y) => {
+        c.fillStyle = '#fff'; c.fillRect(x, y, 32, 32); c.fillRect(x + 32, y + 32, 32, 32);
+      } },
+    // Flecha gruesa (apunta a la derecha)
+    { nombre: 'flecha', w: 128, h: 128, dibujar: (c, x, y) => {
+        c.fillStyle = '#fff'; c.beginPath();
+        c.moveTo(x + 10, y + 44); c.lineTo(x + 66, y + 44); c.lineTo(x + 66, y + 12); c.lineTo(x + 120, y + 64);
+        c.lineTo(x + 66, y + 116); c.lineTo(x + 66, y + 84); c.lineTo(x + 10, y + 84); c.closePath(); c.fill();
+      } },
+    // Rayo de luz bajo el agua
+    { nombre: 'haz', w: 64, h: 256, dibujar: (c, x, y) => {
+        const g = c.createLinearGradient(0, y, 0, y + 256);
+        g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = g; c.beginPath();
+        c.moveTo(x + 24, y); c.lineTo(x + 40, y); c.lineTo(x + 64, y + 256); c.lineTo(x, y + 256); c.closePath(); c.fill();
+      } },
   ];
 }
 
@@ -81,7 +128,7 @@ function piezas() {
 //  texto no cuesta nada. El borde oscuro viene horneado: el tint colorea el
 //  relleno y el borde queda oscuro, así se lee sobre cualquier fondo.
 const FUENTE = {
-  TAM: 96, BORDE: 8,
+  TAM: 128, BORDE: 11,
   CARACTERES: ' ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÑÜ0123456789!¡?¿.,:;-+×%\'"/()#',
 };
 
@@ -148,9 +195,8 @@ export function crearAtlas() {
     x += p.w + MARGEN;
     altoFila = Math.max(altoFila, p.h + MARGEN);
   }
-  const usado = y + altoFila + MARGEN;
-  let alto = 256;
-  while (alto < usado) alto *= 2;
+  // Alto justo (no potencia de 2): WebGL lo acepta y ahorra memoria de video.
+  const alto = Math.ceil((y + altoFila + MARGEN) / 4) * 4;
 
   const canvas = document.createElement('canvas');
   canvas.width = ANCHO_ATLAS;

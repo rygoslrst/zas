@@ -17,6 +17,20 @@ export function altoParaPantalla(w, h) {
   return Math.max(ALTO_MIN, Math.min(ALTO_MAX, alto));
 }
 
+// NITIDEZ. Las coordenadas del juego son siempre de 540 de ancho, pero se
+// DIBUJA a la resolución real de la pantalla: en un celular con pantalla
+// densa, k = 2 (el doble de píxeles, todo nítido); en la computadora, k = 1.
+// Todas las escenas usan una cámara con zoom k: nada más se entera.
+export const ESCALA = { k: 1 };
+export function escalaParaPantalla(w, h, alto) {
+  const forzada = new URLSearchParams(location.search).get('k');     // para probar: ?k=2
+  if (forzada) return Math.max(1, Math.min(2, parseFloat(forzada) || 1));
+  const anchoCss = Math.min(w, (h * ANCHO) / alto);      // cuánto ocupa el juego en la pantalla
+  const fisico = anchoCss * (window.devicePixelRatio || 1);
+  const k = Math.round((fisico / ANCHO) * 4) / 4;        // en pasos de 0,25
+  return Math.max(1, Math.min(2, k));
+}
+
 // --- Ritmo --------------------------------------------------------------------
 // Cada microjuego dura una cantidad de PULSOS de la música (8 casi siempre).
 // Cuando el juego acelera, sube el pulso: todo dura menos y se mueve más rápido.
@@ -32,6 +46,7 @@ export const PARTIDA = {
   ACELERA: 0.12,            // cuánto más rápido cada vez (x1,12, x1,24...)
   VEL_MAX: 1.85,
   CADA_NIVEL: 12,           // cada 12 microjuegos, más difíciles (nivel 1 → 2 → 3)
+  CADA_JEFE: 12,            // y justo antes, un JEFE: más largo; si lo ganás, vida extra
   // Después de decidir (ganaste o perdiste) el microjuego sigue un ratito,
   // para que se vea qué pasó, y enseguida viene el siguiente.
   DESPUES_DE_DECIDIR_S: 0.55,

@@ -7,7 +7,7 @@ export class Pesca extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    this.fondo(0x1e6fa8, 'lunares');
+    this.tema('mar');
     this.yAgua = this.arriba + 60;
     this.rect(this.cx, this.yAgua / 2, this.W, this.yAgua, 0x8fd3ff).setOrigin(0.5);
     this.rect(this.cx, this.yAgua, this.W, 8, 0xc7f0ff);

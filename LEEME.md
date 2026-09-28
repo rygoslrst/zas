@@ -12,7 +12,10 @@ Aparece una orden de una o dos palabras (**¡ATRAPÁ!**, **¡CORTÁ!**,
 mecha: cuando llega a la bomba, se acabó el tiempo. Tenés 4 vidas.
 
 - Cada 5 microjuegos todo va **más rápido**.
-- Cada 12, los microjuegos se vuelven **más difíciles** (nivel 1, 2 y 3).
+- Cada 12 aparece un **JEFE** (un desafío más largo: si lo ganás, vida extra) y
+  después los microjuegos se vuelven **más difíciles** (nivel 1, 2 y 3).
+- Al final, según cuántos superaste, una medalla: bronce (5), plata (10), oro
+  (20), trofeo (30) y diamante (40).
 - Se juega con el dedo (o el mouse): tocar, arrastrar, deslizar, mantener
   apretado o tocar muchas veces seguidas. Debajo de la orden aparece cuál.
 
@@ -26,7 +29,8 @@ python servidor.py
 
 y abrí `http://localhost:8124`. Con `?debug` se ven los FPS; con
 `?debug&micro=Frena&nivel=3&vel=1.5` se repite siempre el mismo microjuego con
-esa dificultad (para probarlo).
+esa dificultad (para probarlo), y `&k=2` fuerza el dibujo a doble resolución
+(como en un celular con pantalla densa).
 
 ## Dónde se toca cada cosa
 
@@ -34,6 +38,8 @@ esa dificultad (para probarlo).
 |---|---|
 | que todo vaya más rápido o más lento, más o menos vidas | `js/config.js` → `RITMO`, `PARTIDA` |
 | cambiar o arreglar un microjuego | `js/micro/<Nombre>.js` (uno por archivo) |
+| cambiar los fondos temáticos (cielo, mar, noche…) | `js/escenas/Micro.js` → `TEMAS` |
+| sumar un jefe | un microjuego con `static JEFE = true`, en `JEFES` de `js/micro/indice.js` |
 | agregar un microjuego | ver abajo |
 | usar un emoji que no está | `herramientas/armar_emoji.py` (ver abajo) |
 | cambiar los carteles entre microjuegos | `js/escenas/Director.js` → `intermedio()` |
@@ -75,6 +81,12 @@ python herramientas/armar_emoji.py
   música se inventa al azar para cada uno (otra tonalidad, otra melodía).
 - **Dos texturas en total:** la de emoji y una generada al cargar con formas y
   la tipografía (fuente bitmap, para no re-subir texturas al cambiar textos).
+- **Estilo "sticker":** cada emoji lleva un borde blanco y una sombra, horneados
+  en la imagen. El marco de Phaser mide lo que mide el dibujo (el borde se
+  dibuja por fuera), así los tamaños del código son los del emoji.
+- **Nitidez:** el juego piensa siempre en 540 de ancho, pero dibuja a la
+  resolución real de la pantalla (hasta el doble) con una cámara con zoom. En
+  la computadora dibuja a 540, que es lo más liviano.
 
 ## Publicar
 

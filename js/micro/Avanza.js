@@ -8,7 +8,7 @@ export class Avanza extends Micro {
   static CONTROL = 'mantener';
 
   armar() {
-    this.fondo(0xffe0a3, 'rayas');
+    this.tema('atardecer');
     this.yPista = this.cy + 170;
     this.x0 = 70;
     this.meta = 400;

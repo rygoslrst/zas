@@ -22,7 +22,7 @@ export class Cable extends Micro {
   ];
 
   armar() {
-    this.fondo(0x2b2d42, 'rayas');
+    this.tema('oscuro');
     const objetivo = this.variante ? this.variante.color : 'rojo';
     this.objetivo = objetivo;
     this.bomba = this.emoji('bomba', this.cx, this.arriba + 120, 170);

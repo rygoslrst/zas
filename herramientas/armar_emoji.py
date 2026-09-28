@@ -3,8 +3,10 @@
 #  armar_emoji.py — junta los emoji que usa el juego en UNA sola imagen
 # -----------------------------------------------------------------------------
 #  Los dibujos de ZAS son emoji de Google (Noto Emoji, estilo "2D", licencia
-#  Apache 2.0). Bajar 80 imágenes sueltas en cada celular sería lento: este
-#  script las baja una vez, las pega en una grilla y genera
+#  Apache 2.0). Bajar 150 imágenes sueltas en cada celular sería lento: este
+#  script las baja una vez (en alta resolución), a cada una le pone un borde
+#  blanco y una sombra suave —el estilo "sticker" del juego: se lee sobre
+#  cualquier fondo— y las pega en una grilla. Genera
 #      assets/emoji.webp   (y assets/emoji.png, para navegadores viejos)
 #      js/datos/emoji.js   (dónde quedó cada una)
 #
@@ -17,15 +19,19 @@
 import os
 import sys
 import urllib.request
-from PIL import Image
+from PIL import Image, ImageFilter
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)
-CACHE = os.path.join(AQUI, 'cache_emoji')
-URL = 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/2D/png/128/emoji_u{}.png'
+CACHE = os.path.join(AQUI, 'cache_emoji_512')
+URL = 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/2D/png/512/emoji_u{}.png'
 
-TAM = 128          # cada emoji mide 128x128
-SEP = 2            # píxeles vacíos entre uno y otro: evita que se "filtre" el vecino
+TAM = 128          # el emoji en sí mide 128x128...
+BORDE = 6          # ...con un borde blanco de 6 px...
+MARGEN = 12        # ...centrado en una celda de 152 (sobra lugar para la sombra)
+CELDA = TAM + 2 * MARGEN
+SOMBRA = (3, 6)    # la sombra cae abajo a la derecha
+SEP = 2            # píxeles vacíos entre celdas: evita que se "filtre" el vecino
 ANCHO = 2048
 
 # nombre → código Unicode (en minúsculas, como lo nombra Noto)
@@ -67,6 +73,10 @@ EMOJI = {
     'dinosaurio': '1f996', 'fantasma': '1f47b', 'alien': '1f47d', 'robot': '1f916', 'pato': '1f986',
     'cangrejo': '1f980', 'panda': '1f43c', 'zorro': '1f98a', 'leon': '1f981', 'vaca': '1f42e',
     'ballena': '1f433',
+    # --- para la segunda tanda y los jefes ---
+    'vaquero': '1f920', 'pistola': '1f52b', 'hormiga': '1f41c', 'trebol': '1f340', 'corona': '1f451',
+    'ogro': '1f479', 'marciano': '1f47e', 'humo': '1f4a8', 'estrellitas': '1f4ab', 'confeti': '1f38a',
+    'medalla_oro': '1f947', 'medalla_plata': '1f948', 'medalla_bronce': '1f949', 'caja': '1f4e6',
 }
 
 
@@ -81,39 +91,59 @@ def bajar(codigo):
     return ruta
 
 
+def sticker(ruta):
+    """El emoji a 128 px con borde blanco y sombra, en una celda de CELDA x CELDA."""
+    im = Image.open(ruta).convert('RGBA').resize((TAM, TAM), Image.LANCZOS)
+    alfa = Image.new('L', (CELDA, CELDA), 0)
+    alfa.paste(im.getchannel('A'), (MARGEN, MARGEN))
+    # Borde: el contorno del emoji "engordado" BORDE píxeles
+    gordo = alfa.point(lambda a: 255 if a > 40 else 0).filter(ImageFilter.MaxFilter(2 * BORDE + 1))
+    gordo = gordo.filter(ImageFilter.GaussianBlur(0.8))
+    # Sombra: la misma silueta, corrida y difuminada
+    sombra = Image.new('L', (CELDA, CELDA), 0)
+    sombra.paste(gordo, SOMBRA)
+    sombra = sombra.filter(ImageFilter.GaussianBlur(3)).point(lambda a: int(a * 0.32))
+    celda = Image.new('RGBA', (CELDA, CELDA), (0, 0, 0, 0))
+    celda.paste((27, 16, 48, 255), (0, 0), sombra)
+    blanco = Image.new('RGBA', (CELDA, CELDA), (255, 255, 255, 255))
+    blanco.putalpha(gordo)
+    celda.alpha_composite(blanco)
+    celda.alpha_composite(im, (MARGEN, MARGEN))
+    return celda
+
+
 def main():
     nombres = list(EMOJI)
-    por_fila = ANCHO // (TAM + SEP)
+    por_fila = ANCHO // (CELDA + SEP)
     filas = (len(nombres) + por_fila - 1) // por_fila
     alto = 1
-    while alto < filas * (TAM + SEP) + SEP:
+    while alto < filas * (CELDA + SEP) + SEP:
         alto *= 2
     hoja = Image.new('RGBA', (ANCHO, alto), (0, 0, 0, 0))
     pos = {}
     faltan = []
     for i, nombre in enumerate(nombres):
         try:
-            im = Image.open(bajar(EMOJI[nombre])).convert('RGBA')
+            im = sticker(bajar(EMOJI[nombre]))
         except Exception as e:                       # noqa: BLE001 — se informa y se sigue
             faltan.append(f'{nombre} ({EMOJI[nombre]}): {e}')
             continue
-        if im.size != (TAM, TAM):
-            im = im.resize((TAM, TAM), Image.LANCZOS)
-        x = SEP + (i % por_fila) * (TAM + SEP)
-        y = SEP + (i // por_fila) * (TAM + SEP)
+        x = SEP + (i % por_fila) * (CELDA + SEP)
+        y = SEP + (i // por_fila) * (CELDA + SEP)
         hoja.alpha_composite(im, (x, y))
         pos[nombre] = (x, y)
     if faltan:
         print('NO SE PUDIERON BAJAR:\n  ' + '\n  '.join(faltan))
         sys.exit(1)
 
-    hoja.save(os.path.join(RAIZ, 'assets', 'emoji.webp'), 'WEBP', quality=90, method=6)
+    hoja.save(os.path.join(RAIZ, 'assets', 'emoji.webp'), 'WEBP', quality=82, alpha_quality=75, method=6)
     hoja.save(os.path.join(RAIZ, 'assets', 'emoji.png'), 'PNG', optimize=True)
 
     lineas = [
         '// Generado por herramientas/armar_emoji.py — no editar a mano.',
         '// Emoji Noto (Google), estilo 2D, licencia Apache 2.0.',
-        f'export const TAM_EMOJI = {TAM};',
+        f'export const TAM_EMOJI = {TAM};      // el dibujo',
+        f'export const CELDA_EMOJI = {CELDA};  // la celda: dibujo + borde + sombra',
         'export const EMOJI = {',
     ]
     for nombre in nombres:

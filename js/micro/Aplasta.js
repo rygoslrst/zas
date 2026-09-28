@@ -6,7 +6,7 @@ export class Aplasta extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    this.fondo(this.elegir([0xffe0a3, 0xc8f0d0, 0xffd6e0]), 'rayas');
+    this.tema('cocina');
     const bicho = this.elegir(['mosquito', 'cucaracha', 'mariquita', 'mosca']);
     const n = this.nivel >= 3 ? 2 : 1;
     const rapidez = [210, 270, 290][this.nivel - 1] * this.vel;

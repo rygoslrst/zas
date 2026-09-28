@@ -7,11 +7,10 @@ export class Salta extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    this.fondo(0xffcf6e, 'rayas');
+    this.tema('atardecer');
     this.emoji('sol', 440, this.arriba + 110, 130);
     this.suelo = this.cy + 150;
-    this.rect(this.cx, this.suelo + (this.H - this.suelo) / 2, this.W, this.H - this.suelo, 0xe0a458);
-    this.rect(this.cx, this.suelo + 3, this.W, 6, 0x9c6b30);
+    this.piso(this.suelo, 0xe0a458);
     this.rapidez = 340 * this.vel;
     this.duracionSalto = 0.62 / this.vel;
     // El corredor mira a la izquierda: se lo da vuelta

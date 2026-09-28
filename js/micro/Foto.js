@@ -7,9 +7,7 @@ export class Foto extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    this.fondo(0x8fd3ff, 'lunares');
-    this.emoji('nube', 110, this.arriba + 110, 150).setAlpha(0.8);
-    this.emoji('nube', 430, this.bajo - 120, 130).setAlpha(0.8);
+    this.tema('cielo');
     this.emoji('camara', this.W - 60, this.bajo - 20, 80).setAngle(-12);
     // El visor: cuatro esquinas
     this.lado = [230, 180, 140][this.nivel - 1];

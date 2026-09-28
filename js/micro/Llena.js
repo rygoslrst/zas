@@ -7,7 +7,7 @@ export class Llena extends Micro {
   static CONTROL = 'mantener';
 
   armar() {
-    this.fondo(0xffe8c2, 'lunares');
+    this.tema('cocina');
     const ancho = 190, alto = 300;
     this.x0 = this.cx - ancho / 2;
     this.yFondo = this.bajo - 40;
@@ -40,7 +40,7 @@ export class Llena extends Micro {
     const yCanilla = this.yBorde - 130;
     this.yCanilla = yCanilla + 14 * k;
     this.chorro = this.rect(this.cx, this.yCanilla, 20, 1, 0x4d96ff, 0.9).setOrigin(0.5, 0).setVisible(false);
-    this.emoji('canilla', this.cx + 38 * k, yCanilla, 160).setCrop(0, 0, 128, 82);   // encima del chorro
+    this.emojiEntero('canilla', this.cx + 38 * k, yCanilla, 160).setCrop(0, 0, 152, 94);   // encima del chorro
 
     this.alTocar(() => { this.sirviendo = true; this.audio.chorro(true); });
     this.input.on('pointerup', () => this.cortar());

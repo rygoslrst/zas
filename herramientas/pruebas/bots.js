@@ -151,3 +151,43 @@ B.Avanza = m => {
   if (m.estadoG === 'duerme' && !m.apretado) ev('pointerdown', 270, 500);
   if (m.estadoG !== 'duerme' && m.apretado) ev('pointerup', 270, 500);
 };
+
+// --- tercera tanda y jefes ---
+B.Apila = m => {
+  const c = m.colgada, tope = m.pila[m.pila.length - 1];
+  if (c && !m.cayendo && m.vale() && Math.abs(c.x - tope.x) < 16) { ev('pointerdown', 270, 500); ev('pointerup', 270, 500); }
+};
+B.Memoria = m => {
+  if (!m.vueltas) return;
+  const c = m.cartas.find(o => o.nombre === m.buscada);
+  ev('pointerdown', c.x, c.y); ev('pointerup', c.x, c.y);
+};
+B.Despega = m => { if (++cuadro % 9 === 0) { ev('pointerdown', 270, 400); ev('pointerup', 270, 400); } };
+// Duelo: reacciona como una persona, 0,2 s después de la señal
+B.Duelo = m => { if (m.salio && m.t - m.tSenal >= 0.2) { ev('pointerdown', 270, 400); ev('pointerup', 270, 400); } };
+B.Flechas = m => {
+  const f = m.flechas[m.actual];
+  if (!f || m.t < 0.3 || ++cuadro % 6) return;
+  ev('pointerdown', 270, 500); window.__paso(1);
+  ev('pointermove', 270 + f.d[0] * 30, 500 + f.d[1] * 30); window.__paso(1);
+  ev('pointerup', 270 + f.d[0] * 80, 500 + f.d[1] * 80);
+};
+let agarrado = false;
+B.Sigue = m => {
+  if (m.t < 0.3) { agarrado = false; return; }
+  if (!agarrado) { ev('pointerdown', m.bicho.x, m.bicho.y); agarrado = true; }
+  ev('pointermove', m.bicho.x, m.bicho.y);
+};
+B.Simon = m => {
+  if (m.fase !== 'turno' || ++cuadro % 8) return;
+  const b = m.botones[m.secuencia[m.puesto]];
+  ev('pointerdown', b.x, b.y); ev('pointerup', b.x, b.y);
+};
+// Torta: aplasta la hormiga más cercana a la torta, 10 veces por segundo como mucho
+B.Torta = m => {
+  if (++cuadro % 6) return;
+  const vivas = m.hormigas.filter(h => h.img && h.viva && h.x > 0 && h.x < m.W && h.y > 0 && h.y < m.H);
+  if (!vivas.length) return;
+  const h = vivas.sort((a, b) => Math.hypot(a.x - m.tx, a.y - m.ty) - Math.hypot(b.x - m.tx, b.y - m.ty))[0];
+  ev('pointerdown', h.x, h.y); ev('pointerup', h.x, h.y);
+};

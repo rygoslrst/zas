@@ -8,19 +8,21 @@ export class Esquiva extends Micro {
   static GANA_AL_FINAL = true;
 
   armar() {
-    this.fondo(0x3a2a6b, 'lunares');
+    this.tema('noche');
     this.yJugador = this.bajo - 60;
     this.jugador = this.emoji('facha', this.cx, this.yJugador, 96);
     this.objetivoX = this.cx;
-    const n = [5, 7, 8][this.nivel - 1];
+    const n = [5, 6, 7][this.nivel - 1];
     // Las piedras salen repartidas; una de cada tres apunta adonde estás
     // (la última llega abajo un poco antes de que se acabe el tiempo)
-    const desde = 0.35 / this.vel, hasta = this.dur - 1.8 / this.vel;
+    // Caen más rápido con la velocidad, pero no tanto: tiene que dar para reaccionar
+    this.cae = 560 * Math.pow(this.vel, 0.7);
+    const caida = (this.yJugador + 70) / this.cae;
+    const desde = 0.35 / this.vel, hasta = this.dur - caida - 0.1;
     this.piedras = [];
     for (let i = 0; i < n; i++) {
       this.piedras.push({ tSale: desde + (i / Math.max(1, n - 1)) * (hasta - desde), apunta: i % 3 === 0, img: null, x: 0, y: -70 });
     }
-    this.cae = 560 * this.vel;
     const mover = x => { this.objetivoX = Math.max(50, Math.min(this.W - 50, x)); };
     this.alMover(mover);
     this.alTocar(mover);
@@ -59,7 +61,7 @@ export class Esquiva extends Micro {
       p.y += this.cae * dt;
       p.img.setPosition(p.x, p.y);
       p.img.angle += p.giro * dt;
-      if (!this.decidido && Math.hypot(p.x - this.jugador.x, p.y - this.yJugador) < 66) this.perder();
+      if (!this.decidido && Math.hypot(p.x - this.jugador.x, p.y - this.yJugador) < 60) this.perder();
     }
   }
 }
