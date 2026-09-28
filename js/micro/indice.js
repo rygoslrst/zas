@@ -37,13 +37,18 @@ import { Flechas } from './Flechas.js';
 import { Sigue } from './Sigue.js';
 import { Simon } from './Simon.js';
 import { Torta } from './Torta.js';
+import { Colores } from './Colores.js';
+import { SinChocar } from './SinChocar.js';
+import { Ataja } from './Ataja.js';
+import { Ruleta } from './Ruleta.js';
+import { Carrera } from './Carrera.js';
 
 export const MICROS = [
   // tocar
   Reventa, Aplasta, Distinto, NoToques, Cuantos, Frena, Salta, Pesca, Foto, Topo, Vuela, Suma, Grande, Orden,
-  Apila, Memoria, Duelo,
+  Apila, Memoria, Duelo, Colores, Ataja, Ruleta,
   // arrastrar
-  Atrapa, Esquiva, Comer, Limpia, Sigue,
+  Atrapa, Esquiva, Comer, Limpia, Sigue, SinChocar,
   // deslizar
   Corta, Patea, Cable, Flechas,
   // machacar y mantener
@@ -51,4 +56,4 @@ export const MICROS = [
 ];
 
 // Jefes: cada 12 microjuegos, uno de estos (más largo; si lo ganás, vida extra)
-export const JEFES = [Simon, Torta];
+export const JEFES = [Simon, Torta, Carrera];

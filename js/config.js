@@ -21,14 +21,20 @@ export function altoParaPantalla(w, h) {
 // DIBUJA a la resolución real de la pantalla: en un celular con pantalla
 // densa, k = 2 (el doble de píxeles, todo nítido); en la computadora, k = 1.
 // Todas las escenas usan una cámara con zoom k: nada más se entera.
-export const ESCALA = { k: 1 };
+// "max" es el techo: si un aparato no da abasto dibujando tanto, el Director
+// lo baja solo (y se recuerda en este aparato para la próxima vez).
+export const CLAVE_ESCALA = 'zas_escala_max_v1';
+function techoGuardado() {
+  try { return parseFloat(localStorage.getItem(CLAVE_ESCALA)) || 2; } catch (e) { return 2; }
+}
+export const ESCALA = { k: 1, max: techoGuardado() };
 export function escalaParaPantalla(w, h, alto) {
   const forzada = new URLSearchParams(location.search).get('k');     // para probar: ?k=2
   if (forzada) return Math.max(1, Math.min(2, parseFloat(forzada) || 1));
   const anchoCss = Math.min(w, (h * ANCHO) / alto);      // cuánto ocupa el juego en la pantalla
   const fisico = anchoCss * (window.devicePixelRatio || 1);
   const k = Math.round((fisico / ANCHO) * 4) / 4;        // en pasos de 0,25
-  return Math.max(1, Math.min(2, k));
+  return Math.max(1, Math.min(ESCALA.max, 2, k));
 }
 
 // --- Ritmo --------------------------------------------------------------------

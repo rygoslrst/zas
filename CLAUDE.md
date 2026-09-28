@@ -51,6 +51,10 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    historieta, telón entre microjuegos, medallas, 30 microjuegos y 2 jefes.
    Reportó botones de números ilegibles y descuadrados → arreglado. Pidió un
    cartel mucho mejor → cartel a color, versión ahorra tinta y tarjetitas.
+5. 2026-09-28 (misma jornada, el usuario fuera de casa): resolución que baja
+   sola si la máquina no da, Topo/Infla/Llena rehechos a nivel visual, 4
+   microjuegos nuevos (Colores, SinChocar, Ataja, Ruleta) y un 3.er jefe
+   (Carrera). Regresión completa con bots: los 37 se ganan.
 
 ## Cómo es el juego hoy
 
@@ -61,21 +65,25 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 - Al final, **medalla**: bronce 5, plata 10, oro 20, trofeo 30, diamante 40.
 - Celular en **vertical**. Todo se juega con el dedo (o el mouse).
 
-**Microjuegos (30)**, por control:
+**Microjuegos (34)**, por control:
 - *tocar:* Reventa ¡REVENTÁ!, Aplasta ¡APLASTÁ!, Distinto ¡EL DISTINTO!,
   NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENÁ!, Salta
   ¡SALTÁ!, Pesca ¡PESCÁ!, Foto ¡SACÁ LA FOTO!, Topo ¡PEGALE!, Vuela ¡VOLÁ!,
   Suma ¿CUÁNTO ES?, Grande ¡EL MÁS GRANDE!/¡EL MÁS CHICO!, Orden ¡EN ORDEN!,
-  Apila ¡APILÁ!, Memoria ¿DÓNDE ESTABA?, Duelo ¡DISPARÁ!
+  Apila ¡APILÁ!, Memoria ¿DÓNDE ESTABA?, Duelo ¡DISPARÁ!, Colores ¡TOCÁ EL
+  AZUL! (y otros colores; desde el nivel 2 la palabra miente), Ataja ¡ATAJÁ!
+  (sos el arquero), Ruleta ¡PARÁ EN LA ESTRELLA!
 - *arrastrar:* Atrapa ¡ATRAPÁ!, Esquiva ¡ESQUIVÁ!, Comer ¡DALE DE COMER!,
-  Limpia ¡LIMPIÁ!, Sigue ¡NO LO SUELTES!
+  Limpia ¡LIMPIÁ!, Sigue ¡NO LO SUELTES!, SinChocar ¡SIN CHOCAR! (llevar la
+  abeja por un pasillo en zigzag)
 - *deslizar:* Corta ¡CORTÁ!, Patea ¡PATEÁ!, Cable ¡CORTÁ EL ROJO! (y otros
   colores), Flechas ¡SEGUÍ LAS FLECHAS!
 - *tocar rápido / mantener:* Infla ¡INFLÁ!, Despega ¡DESPEGÁ!, Llena ¡LLENÁ EL
   VASO!, Avanza ¡QUE NO TE VEA!
 
-**Jefes (2):** Simon ¡REPETÍ! (secuencia de colores) y Torta ¡DEFENDÉ LA TORTA!
-(hormigas).
+**Jefes (3):** Simon ¡REPETÍ! (secuencia de colores), Torta ¡DEFENDÉ LA TORTA!
+(hormigas) y Carrera ¡ESCAPÁ! (tocar para saltar obstáculos; un ogro te
+persigue, 3 choques y perdés). Un jefe dura `PULSOS × pulso × √vel`.
 
 ## Cómo está hecho (lo esencial)
 
@@ -93,6 +101,16 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 - `js/motor/Atlas.js`: formas y tipografía (Anton) generadas al cargar.
 - **Coordenadas siempre de 540 de ancho** (alto 760–1170 según la pantalla).
   Se dibuja a la resolución real con una cámara con zoom `ESCALA.k` (hasta 2).
+- **Resolución que se adapta:** `Director.medirRendimiento()` junta 150
+  cuadros durante los microjuegos; si la mediana pasa de 20 ms (menos de 50
+  FPS), baja el techo `ESCALA.max` un 0,25 y lo guarda en `localStorage`
+  (`zas_escala_max_v1`). Se aplica en el siguiente intermedio
+  (`aplicarResolucion()`), nunca a mitad de un microjuego. Así la Celeron o un
+  celular flojo terminan en la resolución que aguantan, y la próxima vez ya
+  arrancan ahí. Para volver a probar desde cero: borrar esa clave.
+- **Las escenas se reutilizan:** Phaser relanza la misma instancia de cada
+  microjuego. Todo el estado se inicializa en `armar()` (nada en el
+  constructor ni en campos de clase que "sobrevivan").
 - **Emoji = Noto "2D"** (Apache 2.0) con borde blanco y sombra, en
   `assets/emoji.webp`, armados por `herramientas/armar_emoji.py`. El marco
   `nombre` mide lo que el dibujo (borde por fuera, con `setTrim`); `nombre#` es
@@ -109,10 +127,28 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 - **Jugadores automáticos:** `herramientas/pruebas/` (ver su LEEME). Cada
   microjuego tiene un bot; si el bot pierde, casi seguro hay un caso
   imposible. Hoy todos se ganan en nivel 1 y en nivel 3 a velocidad 1,85.
+- **Regresión completa** (en la consola, con el arnés cargado): para cada
+  nombre de `window.director.scene.manager.scenes` (menos `Director`),
+  `__probar(nombre, 1, 1, 3)` y `__probar(nombre, 3, 1.85, 4)`. Conviene de a
+  6–8 microjuegos por llamada (el panel corta los scripts a los 45 s).
+- `__foto()` manda capturas a `capturas/` (tarda; puede parecer colgado si el
+  panel está oculto, pero termina). `hoja.py` arma hojas de contacto: ojo, las
+  capturas miden 270×(alto/2), no 270×480.
 - Trampas del panel del navegador: si está oculto, la página se queda en
   "Cargando" (una captura lo destraba); las capturas pueden salir viejas (usar
   las del arnés); Phaser escucha mouse/touch, no PointerEvent; los tweens usan
-  `Date.now()`.
+  `Date.now()`; tras `location.reload()` hay que volver a importar el arnés y
+  los bots (conviene `import('/capturas/arnes.js?' + Date.now())` para no
+  tomar una versión vieja: la página importa las copias de `capturas/`, así
+  que después de editar `herramientas/pruebas/*.js` hay que copiarlas ahí).
+- Si el chat se abrió desde otra carpeta (p. ej. la de FUGA),
+  `preview_start` con nombre levanta el servidor de ESA carpeta. Solución:
+  arrancar `python servidor.py 8124` desde `zas` en segundo plano y abrir el
+  panel con `preview_start` pasando la URL `http://localhost:8124/?debug`.
+- Qué mirar al hacer un bot: que no "haga trampa" con información que el
+  jugador no ve, y que no dependa de reflejos imposibles. Si falla, primero
+  mirar si es el bot (pasó con Esquiva: el bot viejo se trababa solo; hoy
+  simula el movimiento) antes de tocar el juego.
 
 ## Stand
 
@@ -127,6 +163,12 @@ archivo). Los QR se verificaron leyendo los PDF.
 - El usuario todavía no lo probó en su **teléfono real** ni midió en la
   **Celeron**: pedirle eso y ajustar según lo que diga (legibilidad, dificultad,
   microjuegos confusos, tirones).
-- Ideas para seguir: más microjuegos y jefes; pulir visualmente los más
-  simples (Infla, Topo, Llena); lo que el usuario pida después de probarlo.
+- Ideas para seguir: más microjuegos y jefes (lo que el usuario pida después
+  de probarlo). Candidatos a pulir visualmente: los de fondo liso más
+  antiguos (Reventa, NoToques, Grande). En Ruleta, la porción de la estrella
+  podría destacarse más si el usuario la encuentra difícil de ver.
+- Dificultad de Carrera: los pares de piedras (desde nivel 2) dejan una
+  ventana de ~130 ms a velocidad 1,85; la pista nunca es más larga de lo que
+  se corre en el 85 % del tiempo. Si en el teléfono resulta injusto, subir la
+  separación del par (hoy 72 px) o achicar la caja de choque (hoy ±32 px).
 - Antes del torneo: dejar todo publicado y verificado; durante, no publicar.

@@ -10,7 +10,7 @@
 //  microjuego en las transiciones y la consigna y la mecha van siempre encima.
 // ============================================================================
 
-import { ANCHO, VISTA, ESCALA, RITMO, PARTIDA, COLOR, DEBUG, CLAVE_RECORD } from '../config.js';
+import { ANCHO, VISTA, ESCALA, RITMO, PARTIDA, COLOR, DEBUG, CLAVE_RECORD, CLAVE_ESCALA } from '../config.js';
 import { crearAtlas } from '../motor/Atlas.js';
 import { EMOJI, TAM_EMOJI, CELDA_EMOJI } from '../datos/emoji.js';
 import { MICROS, JEFES } from '../micro/indice.js';
@@ -337,6 +337,7 @@ export class Director extends Phaser.Scene {
   // gano: null al empezar la partida, true / false después de cada microjuego
   intermedio(gano) {
     this.estado = 'intermedio';
+    this.aplicarResolucion();
     const a = this.audio.ahora();
     const velNueva = this.velocidadPara(this.rondas);
     const nivelNuevo = Math.min(3, 1 + Math.floor(this.rondas / PARTIDA.CADA_NIVEL));
@@ -553,6 +554,7 @@ export class Director extends Phaser.Scene {
     this.rayos.angle += dt * 14;
     this.dientes.tilePositionX += dt * 40;
     if (this.fps) this.fps.setText(`${Math.round(this.game.loop.actualFps)} FPS  x${ESCALA.k}`);
+    this.medirRendimiento(deltaMs);
     if (this.desfile[0].img.visible) this.animarDesfile(dt);
     this.animarMano(time);
     this.animarBrasas(dt);
@@ -603,6 +605,36 @@ export class Director extends Phaser.Scene {
         this.cameras.main.shake(220, 0.015);
       }
     }
+  }
+
+  // --------------------------------------------------------------------------
+  //  Red de seguridad del rendimiento: si este aparato no llega a ~50 cuadros
+  //  por segundo dibujando a resolución alta, se baja la resolución (en el
+  //  próximo intermedio, para no cortar un microjuego) y se recuerda en el
+  //  aparato para la próxima vez. En la computadora (k = 1) no hace nada.
+  // --------------------------------------------------------------------------
+  medirRendimiento(deltaMs) {
+    if (ESCALA.k <= 1 || this.estado !== 'micro') return;
+    this.muestras = this.muestras || [];
+    this.muestras.push(deltaMs);
+    if (this.muestras.length < 150) return;
+    const orden = this.muestras.sort((a, b) => a - b);
+    const mediana = orden[orden.length >> 1];
+    this.muestras = [];
+    if (mediana > 1000 / 50) {
+      ESCALA.max = Math.max(1, ESCALA.k - 0.25);
+      guardar(CLAVE_ESCALA, String(ESCALA.max));
+      this.bajarResolucion = true;
+    }
+  }
+
+  aplicarResolucion() {
+    if (!this.bajarResolucion) return;
+    this.bajarResolucion = false;
+    ESCALA.k = Math.min(ESCALA.k, ESCALA.max);
+    this.game.scale.setGameSize(Math.round(ANCHO * ESCALA.k), Math.round(VISTA.alto * ESCALA.k));
+    this.game.scale.refresh();
+    this.redimensionar(VISTA.alto);
   }
 
   soltarBrasa(x, y) {

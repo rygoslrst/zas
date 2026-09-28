@@ -28,18 +28,22 @@ B.Atrapa = m => {
   ev('pointermove', x, 500);
 };
 B.Esquiva = m => {
-  // Piedras que llegan a la altura del jugador en los próximos 0,8 s
-  const llegan = m.piedras.filter(p => p.img && p.y < m.yJugador + 40 && (m.yJugador - p.y) / m.cae < 0.8);
-  // Las que están por pegar (menos de 0,18 s): no se puede cruzar por debajo
-  const yaMismo = llegan.filter(p => (m.yJugador - 70 - p.y) / m.cae < 0.18);
-  const x0 = m.jugador.x;
-  let mejor = x0, dMejor = -1e9;
-  for (let x = 60; x <= 480; x += 20) {
-    // Bloquea sólo lo que queda en el camino (alejarse de una piedra siempre vale)
-    const bloquea = p => (x > x0 ? p.x > x0 - 10 && p.x < x + 70 : x < x0 ? p.x < x0 + 10 && p.x > x - 70 : false);
-    if (yaMismo.some(bloquea)) continue;
-    const d = llegan.length ? Math.min(...llegan.map(p => Math.abs(p.x - x))) : 999;
-    const valor = Math.min(d, 200) - Math.abs(x - x0) * 0.02;
+  // Simula los próximos 0,9 s yendo hacia cada destino posible (el jugador
+  // se mueve como en el juego: se acerca un 20·dt por cuadro) y elige el que
+  // pasa más lejos de todas las piedras
+  const piedras = m.piedras.filter(p => p.img && p.y < m.yJugador + 60);
+  const dt = 1 / 60;
+  let mejor = m.jugador.x, dMejor = -1e9;
+  for (let x = 50; x <= 490; x += 10) {
+    let jx = m.jugador.x, dMin = 1e9;
+    for (let k = 1; k <= 54; k++) {
+      jx += (x - jx) * Math.min(1, dt * 20);
+      for (const p of piedras) {
+        const y = p.y + m.cae * dt * k;
+        dMin = Math.min(dMin, Math.hypot(p.x - jx, y - m.yJugador));
+      }
+    }
+    const valor = Math.min(dMin, 150) - Math.abs(x - m.jugador.x) * 0.01;
     if (valor > dMejor) { dMejor = valor; mejor = x; }
   }
   ev('pointermove', mejor, 500);
@@ -190,4 +194,41 @@ B.Torta = m => {
   if (!vivas.length) return;
   const h = vivas.sort((a, b) => Math.hypot(a.x - m.tx, a.y - m.ty) - Math.hypot(b.x - m.tx, b.y - m.ty))[0];
   ev('pointerdown', h.x, h.y); ev('pointerup', h.x, h.y);
+};
+
+// --- cuarta tanda y jefe Carrera ---
+B.Colores = m => { if (m.t > 0.5) { const o = m.circulos.find(k => k.c === m.pedido); ev('pointerdown', o.base.x, o.base.y); ev('pointerup', o.base.x, o.base.y); } };
+B.SinChocar = m => {
+  if (m.t < 0.3) { m.__i = 1; return; }      // (la escena se reusa: se reinicia el tramo)
+  if (!m.agarrada) { ev('pointerdown', m.abeja.x, m.abeja.y); return; }
+  // Avanza por el camino: hacia el próximo vértice que todavía no pasó, de a 14 px
+  m.__i = m.__i || 1;
+  const p = m.camino[m.__i];
+  const dx = p.x - m.abeja.x, dy = p.y - m.abeja.y, d = Math.hypot(dx, dy);
+  if (d < 6 && m.__i < m.camino.length - 1) { m.__i++; return; }
+  const k = Math.min(1, 14 / Math.max(1, d));
+  ev('pointermove', m.abeja.x + dx * k, m.abeja.y + dy * k);
+};
+// Ataja: reacciona como una persona, 0,22 s después de la patada
+B.Ataja = m => {
+  if (m.salto || m.t < m.tPatada + 0.22) return;
+  const x = m.lado < 0 ? 100 : 440;
+  ev('pointerdown', x, 500); ev('pointerup', x, 500);
+};
+// Ruleta: toca cuando, contando lo que tarda en frenar, la estrella va a quedar arriba
+B.Ruleta = m => {
+  if (m.frenando >= 0 || m.t < 0.3) return;
+  const paso = Math.PI * 2 / m.n;
+  const giroFinal = m.giro + m.w * 0.42 / 2;
+  let a = (-giroFinal) % (Math.PI * 2); if (a < 0) a += Math.PI * 2;
+  if (Math.round(a / paso) % m.n === m.estrella && Math.abs(a / paso - Math.round(a / paso)) < 0.25) { ev('pointerdown', 270, 500); ev('pointerup', 270, 500); }
+};
+B.Carrera = m => {
+  if (m.enAire) return;
+  const o = m.obstaculos.find(k => !k.chocado && k.x > m.x - 20);
+  const mitad = m.rapidez * m.duracionSalto / 2;
+  // Si vienen dos pegados, apunta al medio del par (salta un poco después)
+  const otro = o && m.obstaculos.find(k => k !== o && k.x > o.x && k.x - o.x < 120);
+  const centro = otro ? (otro.x - o.x) / 2 : 0;
+  if (o && o.x + centro - m.x <= mitad) { ev('pointerdown', 270, 400); ev('pointerup', 270, 400); }
 };
