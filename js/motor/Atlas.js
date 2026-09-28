@@ -144,19 +144,28 @@ function bloqueFuente() {
   const glifos = [];
   let x = 0, y = 0;
   for (const ch of FUENTE.CARACTERES) {
-    const avance = Math.ceil(med.measureText(ch).width);
+    const mc = med.measureText(ch);
+    const avance = Math.ceil(mc.width);
     const w = avance + FUENTE.BORDE * 2;
+    // Cuánto sube y baja la tinta desde la línea de base (+1 por el suavizado)
+    const sube = Math.min(asc, Math.ceil((mc.actualBoundingBoxAscent ?? asc) + 1));
+    const baja = Math.min(desc, Math.max(0, Math.ceil((mc.actualBoundingBoxDescent ?? desc) + 1)));
     if (x + w > MAX_W) { x = 0; y += altoCelda; }
-    glifos.push({ ch, x, y, w, avance });
+    glifos.push({ ch, x, y, w, avance, sube: Math.max(0, sube), baja });
     x += w;
   }
   const W = MAX_W, H = y + altoCelda;
 
+  // Cada letra se declara con su caja JUSTA (lo que ocupa la tinta más el
+  // borde), no con la celda entera: así Phaser centra los textos por lo que
+  // se ve. Con la celda entera, un número quedaba corrido dentro de un botón.
   let xml = `<?xml version="1.0"?><font><info face="Anton" size="${FUENTE.TAM}"/>` +
             `<common lineHeight="${asc + desc + 2}" base="${asc}"/><chars count="${glifos.length}">`;
   for (const g of glifos) {
-    xml += `<char id="${g.ch.codePointAt(0)}" x="${g.x}" y="${g.y}" width="${g.w}" height="${altoCelda}" ` +
-           `xoffset="${-FUENTE.BORDE}" yoffset="0" xadvance="${g.avance + 3}"/>`;
+    const arriba = asc - g.sube;                      // desde el techo de la línea hasta la tinta
+    xml += `<char id="${g.ch.codePointAt(0)}" x="${g.x}" y="${g.y + arriba}" width="${g.w}" ` +
+           `height="${g.sube + g.baja + FUENTE.BORDE * 2}" xoffset="${-FUENTE.BORDE}" yoffset="${arriba}" ` +
+           `xadvance="${g.avance + 3}"/>`;
   }
   xml += '</chars></font>';
 

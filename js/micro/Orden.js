@@ -19,7 +19,7 @@ export class Orden extends Micro {
       const p = lugares[i];
       const fondoB = this.circulo(p.x, p.y, 56, colores[i % colores.length]);
       const anillo = this.add.image(p.x, p.y, 'atlas', 'anillo').setDisplaySize(118, 118).setTint(0xffffff);
-      const texto = this.texto(p.x, p.y + 4, String(num), 68);
+      const texto = this.texto(p.x, p.y, String(num), 68);
       return { ...p, num, partes: [fondoB, anillo, texto], vx: this.azar(-40, 40), vy: this.azar(-40, 40), viva: true };
     });
     this.orden = [...numeros].sort((a, b) => a - b);
@@ -51,7 +51,7 @@ export class Orden extends Micro {
       b.x += b.vx * this.vel * dt; b.y += b.vy * this.vel * dt;
       if (b.x < 70 || b.x > this.W - 70) b.vx *= -1;
       if (b.y < this.arriba + 80 || b.y > this.bajo - 50) b.vy *= -1;
-      for (const o of b.partes) o.setPosition(b.x, o === b.partes[2] ? b.y + 4 : b.y);
+      for (const o of b.partes) o.setPosition(b.x, b.y);
     }
   }
 }

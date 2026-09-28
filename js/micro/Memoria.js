@@ -18,7 +18,7 @@ export class Memoria extends Micro {
     this.cartas = cosas.map((nombre, i) => {
       const x = this.cx + (i - (n - 1) / 2) * paso;
       const dorso = this.rect(x, y, paso * 0.86, 150, 0x7b61ff).setVisible(false);
-      const signo = this.texto(x, y + 4, '?', 80).setVisible(false);
+      const signo = this.texto(x, y, '?', 80).setVisible(false);
       const marco = this.rect(x, y, paso * 0.86, 150, 0xffffff, 0.92);
       const img = this.emoji(nombre, x, y, Math.min(100, paso * 0.66));
       return { x, y, nombre, img, dorso, signo, marco, ancho: paso * 0.86 };

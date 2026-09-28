@@ -25,12 +25,7 @@ export class Cuantos extends Micro {
     const otros = this.mezclar([-2, -1, 1, 2].map(d => correcto + d).filter(v => v >= 1)).slice(0, 2);
     const opciones = this.mezclar([correcto, ...otros]);
     const by = this.bajo - 60;
-    this.botones = opciones.map((v, i) => {
-      const x = this.cx + (i - 1) * 160;
-      const fondo = this.circulo(x, by, 62, 0xffffff);
-      const num = this.texto(x, by + 4, String(v), 76, COLOR.OSCURO);
-      return { x, y: by, v, fondo, num };
-    });
+    this.botones = opciones.map((v, i) => ({ ...this.boton(this.cx + (i - 1) * 160, by, 64, v), v }));
     this.alTocar((x, y) => {
       const b = this.botones.find(o => Math.hypot(o.x - x, o.y - y) < 70);
       if (!b) return;

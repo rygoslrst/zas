@@ -241,6 +241,19 @@ export class Micro extends Phaser.Scene {
     return this.add.image(x, y, 'atlas', 'circulo').setDisplaySize(r * 2, r * 2).setTint(color).setAlpha(alfa);
   }
 
+  // Botón redondo con un número o una palabra: fondo oscuro, aro blanco y
+  // texto blanco (con su borde). Se lee sobre cualquier fondo. Para marcarlo
+  // bien o mal: b.fondo.setTint(COLOR.BIEN / COLOR.MAL).
+  boton(x, y, r, etiqueta, color = 0x3a2a6b) {
+    const sombra = this.circulo(x, y + 7, r, COLOR.OSCURO, 0.35);
+    const fondo = this.circulo(x, y, r, color);
+    const aro = this.add.image(x, y, 'atlas', 'anillo').setDisplaySize(r * 2.1, r * 2.1).setTint(0xffffff);
+    const num = this.texto(x, y, String(etiqueta), r * 1.1);
+    const k = Math.min(1, (r * 1.45) / Math.max(1, num.width));    // que entre en el círculo
+    num.setScale(k);
+    return { x, y, r, sombra, fondo, aro, num, partes: [fondo, aro, num] };
+  }
+
   // Sombra ovalada en el piso, debajo de algo
   sombra(x, y, ancho, alfa = 0.25) {
     return this.add.image(x, y, 'atlas', 'circulo').setDisplaySize(ancho, ancho * 0.28).setTint(COLOR.OSCURO).setAlpha(alfa);

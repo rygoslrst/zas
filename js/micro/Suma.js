@@ -22,10 +22,7 @@ export class Suma extends Micro {
     const cerca = [r - 1, r + 1, r - 2, r + 2, r + 10, r - 10].filter(v => v >= 0 && v !== r);
     const opciones = this.mezclar([r, ...this.mezclar(cerca.slice(0, 4)).slice(0, 2)]);
     const by = this.bajo - 70;
-    this.botones = opciones.map((v, i) => {
-      const x = this.cx + (i - 1) * 165;
-      return { x, y: by, v, fondo: this.circulo(x, by, 66, 0xffffff), num: this.texto(x, by + 4, String(v), 70, COLOR.OSCURO) };
-    });
+    this.botones = opciones.map((v, i) => ({ ...this.boton(this.cx + (i - 1) * 165, by, 66, v), v }));
     this.alTocar((x, y) => {
       const b = this.botones.find(o => Math.hypot(o.x - x, o.y - y) < 74);
       if (!b) return;
