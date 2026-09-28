@@ -5,7 +5,7 @@ import { COLOR } from '../config.js';
 const AGUA = 0x4d96ff, AGUA_CLARA = 0x9fd0ff, VIDRIO = 0xdff3ff;
 
 export class Llena extends Micro {
-  static ORDEN = '¡LLENÁ EL VASO!';
+  static ORDEN = '¡LLENA EL VASO!';
   static CONTROL = 'mantener';
 
   armar() {

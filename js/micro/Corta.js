@@ -6,7 +6,7 @@ const FRUTAS = [['sandia', 0xff4d6d], ['anana', 0xffd23f], ['coco', 0xf5f5f5], [
                 ['limon', 0xfff04d], ['manzana', 0xff4d5a], ['durazno', 0xffa07a]];
 
 export class Corta extends Micro {
-  static ORDEN = '¡CORTÁ!';
+  static ORDEN = '¡CORTA!';
   static CONTROL = 'deslizar';
 
   armar() {

@@ -3,7 +3,7 @@ import { Micro } from '../escenas/Micro.js';
 import { COLOR } from '../config.js';
 
 export class Foto extends Micro {
-  static ORDEN = '¡SACÁ LA FOTO!';
+  static ORDEN = '¡TOMA LA FOTO!';
   static CONTROL = 'tocar';
 
   armar() {

@@ -5,7 +5,7 @@ import { COLOR } from '../config.js';
 const TIERRA = 0x9a6532, TIERRA_CLARA = 0xb57b40, TIERRA_OSCURA = 0x6b4220, POZO = 0x2b1a0e;
 
 export class Topo extends Micro {
-  static ORDEN = '¡PEGALE!';
+  static ORDEN = '¡GOLPÉALO!';
   static CONTROL = 'tocar';
 
   armar() {

@@ -13,7 +13,7 @@ export class NoToques extends Micro {
     this.circulo(this.cx, by + 16, 128, 0x7a1020);                // sombra del botón
     this.boton = this.circulo(this.cx, by, 128, 0xe63946);
     this.brillo = this.circulo(this.cx - 40, by - 50, 34, 0xffffff, 0.35);
-    this.letrero = this.texto(this.cx, by, 'TOCAME', 58);
+    this.letrero = this.texto(this.cx, by, 'TÓCAME', 58);
     // Tentaciones, más cuanto más difícil
     this.cebos = [];
     const lugares = [[110, this.arriba + 170], [430, this.arriba + 170], [100, this.bajo - 40], [440, this.bajo - 40]];
@@ -22,7 +22,7 @@ export class NoToques extends Micro {
       const [x, y] = lugares[i];
       this.cebos.push({ img: this.emoji(n, x, y, 96), x, y, fase: i * 1.7 });
     });
-    this.globo = this.texto(110, this.arriba + 95, '¡TOCAME!', 30, COLOR.OSCURO).setTint(0xffffff);
+    this.globo = this.texto(110, this.arriba + 95, '¡TÓCAME!', 30, COLOR.OSCURO).setTint(0xffffff);
     this.alTocar(() => this.perder());
   }
 
@@ -34,7 +34,7 @@ export class NoToques extends Micro {
   }
 
   alGanar() {
-    this.cartel(this.cx, this.cy - 60, '¡BIEN AHÍ!', COLOR.ORO, 64);
+    this.cartel(this.cx, this.cy - 60, '¡BIEN HECHO!', COLOR.ORO, 64);
   }
 
   paso(dt, t) {

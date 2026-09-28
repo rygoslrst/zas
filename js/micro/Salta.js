@@ -3,7 +3,7 @@ import { Micro } from '../escenas/Micro.js';
 import { COLOR } from '../config.js';
 
 export class Salta extends Micro {
-  static ORDEN = '¡SALTÁ!';
+  static ORDEN = '¡SALTA!';
   static CONTROL = 'tocar';
 
   armar() {

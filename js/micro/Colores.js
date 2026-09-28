@@ -7,9 +7,9 @@ import { COLOR } from '../config.js';
 const COLORES = { ROJO: 0xff3b3b, AZUL: 0x2f6fff, AMARILLO: 0xffd23f, BLANCO: 0xf5f5f5 };
 
 export class Colores extends Micro {
-  static ORDEN = '¡TOCÁ EL AZUL!';
+  static ORDEN = '¡TOCA EL AZUL!';
   static CONTROL = 'tocar';
-  static VARIANTES = Object.keys(COLORES).map(c => ({ orden: `¡TOCÁ EL ${c}!`, color: c }));
+  static VARIANTES = Object.keys(COLORES).map(c => ({ orden: `¡TOCA EL ${c}!`, color: c }));
 
   armar() {
     this.fondo(0x2b2d42, 'lunares');

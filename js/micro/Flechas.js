@@ -5,7 +5,7 @@ import { COLOR } from '../config.js';
 const DIRS = [[1, 0, 0], [0, 1, 90], [-1, 0, 180], [0, -1, 270]];   // [dx, dy, ángulo]
 
 export class Flechas extends Micro {
-  static ORDEN = '¡SEGUÍ LAS FLECHAS!';
+  static ORDEN = '¡SIGUE LAS FLECHAS!';
   static CONTROL = 'deslizar';
 
   armar() {

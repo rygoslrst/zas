@@ -79,6 +79,7 @@ export class Micro extends Phaser.Scene {
   }
 
   update(time, deltaMs) {
+    if (this.director.congelado) return;       // lección de la práctica: todo quieto
     const dt = Math.min(0.05, deltaMs / 1000), t = this.t;
     if (this.deco.length) this.animarDeco(dt, t);
     this.paso(dt, t);

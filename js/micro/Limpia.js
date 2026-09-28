@@ -5,7 +5,7 @@ import { COLOR } from '../config.js';
 const FROTE = 130;           // px de frotar que hacen falta para sacar una mancha
 
 export class Limpia extends Micro {
-  static ORDEN = '¡LIMPIÁ!';
+  static ORDEN = '¡LIMPIA!';
   static CONTROL = 'arrastrar';
 
   armar() {

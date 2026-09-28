@@ -75,3 +75,4 @@ export const COLOR = {
 export const DEBUG = new URLSearchParams(location.search).has('debug');
 export const CLAVE_RECORD = 'zas_record_v1';
 export const CLAVE_SONIDO = 'zas_sonido_v1';
+export const CLAVE_PRACTICA = 'zas_practica_v1';      // '1' cuando ya se hizo la práctica

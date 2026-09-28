@@ -5,7 +5,7 @@ import { COLOR } from '../config.js';
 const LADO = 96;             // tamaño de cada caja
 
 export class Apila extends Micro {
-  static ORDEN = '¡APILÁ!';
+  static ORDEN = '¡APILA!';
   static CONTROL = 'tocar';
 
   armar() {

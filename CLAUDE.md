@@ -21,8 +21,13 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 
 ## Cómo trabajar con el usuario
 
-- Todo en **español rioplatense** (voseo): código, comentarios, interfaz y
-  respuestas.
+- **Todo lo que ve el jugador va en español NEUTRO, con "tú"** (¡TOCA!,
+  ¡CORTA!, "Tienes 4 vidas"), nunca voseo (¡TOCÁ!, "Tenés"): el torneo es en
+  Chile y el usuario pidió que las instrucciones se entiendan al instante.
+  Vale para el juego, el HTML, el cartel y las tarjetas. Ojo con palabras
+  regionales: "pastel" (no "torta"), "tomar la foto", "te salvaste".
+  Las respuestas al usuario, también en neutro. (Los comentarios del código
+  quedaron en rioplatense de antes; no hace falta cambiarlos.)
 - Prefiere que **decidas y ejecutes vos** ("te doy completa libertad
   creativa"). Construir, verificar y después explicar qué se decidió y por
   qué. Frenar sólo para lo que únicamente el usuario puede hacer (iniciar
@@ -55,41 +60,60 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    sola si la máquina no da, Topo/Infla/Llena rehechos a nivel visual, 4
    microjuegos nuevos (Colores, SinChocar, Ataja, Ruleta) y un 3.er jefe
    (Carrera). Regresión completa con bots: los 37 se ganan.
+6. 2026-09-28: pidió **español neutro** (el acento argentino confundía las
+   instrucciones; el torneo es en Chile) y un **tutorial como el de FUGA**,
+   donde el juego se detiene para enseñar → texto neutro en todo (juego,
+   HTML, cartel y tarjetas, PDF rehechos) y la **práctica guiada**.
 
 ## Cómo es el juego hoy
 
-- Una orden ("¡ATRAPÁ!") sobre un estallido, con una manito que muestra el
+- Una orden ("¡ATRAPA!") sobre un estallido, con una manito que muestra el
   gesto; ~4 s para cumplirla; abajo se quema una mecha. **4 vidas.**
 - Cada 5 microjuegos, **más rápido** (+12%, hasta ×1,85). Cada 12, un **JEFE**
   (si lo ganás, vida extra) y después **más difícil** (nivel 1 → 2 → 3).
+- **Práctica guiada** (`js/escenas/Practica.js`): la primera vez en cada
+  aparato, y siempre desde el botón "Cómo jugar" del título. Tres
+  microjuegos lentos (velocidad 0,85), uno por gesto: Reventa (tocar),
+  Atrapa (arrastrar) y Corta (deslizar). Pasada la consigna, el juego se
+  CONGELA con un cartel que explica y la mano haciendo el gesto sobre el
+  objeto; el primer toque lo descongela y cuenta como jugada. No se pierden
+  vidas (si sale mal, se repite una vez). Al final: "¡AHORA EN SERIO!",
+  "¡TIENES 4 VIDAS!" y arranca la partida. Botón "Saltar práctica" arriba a
+  la derecha. Se recuerda en `localStorage` (`zas_practica_v1`).
+  Cómo congela: `Director.congelado` frena `Micro.update`; al descongelar,
+  el tiempo congelado se le suma al `t0` del Director, del microjuego y de
+  la pista (`audio.correrPista`), así todo sigue donde quedó sin suspender
+  el audio. Para agregar una lección: una entrada en `LECCIONES` con
+  `listo(m)` (cuándo congelar) y `objetivo(m)` (dónde va la mano).
 - Al final, **medalla**: bronce 5, plata 10, oro 20, trofeo 30, diamante 40.
 - Celular en **vertical**. Todo se juega con el dedo (o el mouse).
 
 **Microjuegos (34)**, por control:
-- *tocar:* Reventa ¡REVENTÁ!, Aplasta ¡APLASTÁ!, Distinto ¡EL DISTINTO!,
-  NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENÁ!, Salta
-  ¡SALTÁ!, Pesca ¡PESCÁ!, Foto ¡SACÁ LA FOTO!, Topo ¡PEGALE!, Vuela ¡VOLÁ!,
+- *tocar:* Reventa ¡REVIENTA!, Aplasta ¡APLASTA!, Distinto ¡EL DISTINTO!,
+  NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENA!, Salta
+  ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Topo ¡GOLPÉALO!, Vuela ¡VUELA!,
   Suma ¿CUÁNTO ES?, Grande ¡EL MÁS GRANDE!/¡EL MÁS CHICO!, Orden ¡EN ORDEN!,
-  Apila ¡APILÁ!, Memoria ¿DÓNDE ESTABA?, Duelo ¡DISPARÁ!, Colores ¡TOCÁ EL
-  AZUL! (y otros colores; desde el nivel 2 la palabra miente), Ataja ¡ATAJÁ!
-  (sos el arquero), Ruleta ¡PARÁ EN LA ESTRELLA!
-- *arrastrar:* Atrapa ¡ATRAPÁ!, Esquiva ¡ESQUIVÁ!, Comer ¡DALE DE COMER!,
-  Limpia ¡LIMPIÁ!, Sigue ¡NO LO SUELTES!, SinChocar ¡SIN CHOCAR! (llevar la
+  Apila ¡APILA!, Memoria ¿DÓNDE ESTABA?, Duelo ¡DISPARA!, Colores ¡TOCA EL
+  AZUL! (y otros colores; desde el nivel 2 la palabra miente), Ataja ¡ATAJA
+  EL PENAL! (eres el arquero), Ruleta ¡FRENA EN LA ESTRELLA!
+- *arrastrar:* Atrapa ¡ATRAPA!, Esquiva ¡ESQUIVA!, Comer ¡DALE DE COMER!,
+  Limpia ¡LIMPIA!, Sigue ¡NO LO SUELTES!, SinChocar ¡SIN CHOCAR! (llevar la
   abeja por un pasillo en zigzag)
-- *deslizar:* Corta ¡CORTÁ!, Patea ¡PATEÁ!, Cable ¡CORTÁ EL ROJO! (y otros
-  colores), Flechas ¡SEGUÍ LAS FLECHAS!
-- *tocar rápido / mantener:* Infla ¡INFLÁ!, Despega ¡DESPEGÁ!, Llena ¡LLENÁ EL
+- *deslizar:* Corta ¡CORTA!, Patea ¡PATEA!, Cable ¡CORTA EL ROJO! (y otros
+  colores), Flechas ¡SIGUE LAS FLECHAS!
+- *tocar rápido / mantener:* Infla ¡INFLA!, Despega ¡DESPEGA!, Llena ¡LLENA EL
   VASO!, Avanza ¡QUE NO TE VEA!
 
-**Jefes (3):** Simon ¡REPETÍ! (secuencia de colores), Torta ¡DEFENDÉ LA TORTA!
-(hormigas) y Carrera ¡ESCAPÁ! (tocar para saltar obstáculos; un ogro te
-persigue, 3 choques y perdés). Un jefe dura `PULSOS × pulso × √vel`.
+**Jefes (3):** Simon ¡REPITE! (secuencia de colores), Torta ¡DEFIENDE EL
+PASTEL! (hormigas) y Carrera ¡ESCAPA! (tocar para saltar obstáculos; un ogro
+te persigue, 3 choques y pierdes). Un jefe dura `PULSOS × pulso × √vel`.
 
 ## Cómo está hecho (lo esencial)
 
 - **Phaser 3.90** en `vendor/`, sin build ni npm. Módulos ES nativos.
 - `js/escenas/Director.js`: maneja la partida (elige y lanza cada microjuego,
   consigna, mecha, telón del intermedio, jefes, medallas).
+- `js/escenas/Practica.js`: las lecciones de la práctica y su cartel.
 - `js/escenas/Micro.js`: base de todos los microjuegos (ayudas: `fondo()`,
   `tema()`, `emoji()`, `boton()`, `chispas()`, `confeti()`, `cartel()`,
   `alTocar/alMover/alSoltar`...). Leer su encabezado antes de hacer uno nuevo.

@@ -1,23 +1,26 @@
 # ZAS
 
-Microjuegos de 4 segundos. ¿Cuántos aguantás?
+Microjuegos de 4 segundos. ¿Cuántos aguantas?
 
 Un juego al estilo WarioWare para el navegador, en celular y computadora, sin
 instalar nada. Hecho para el torneo del colegio.
 
 ## Cómo se juega
 
-Aparece una orden de una o dos palabras (**¡ATRAPÁ!**, **¡CORTÁ!**,
-**¡QUE NO TE VEA!**) y tenés unos segundos para cumplirla. Abajo se quema la
-mecha: cuando llega a la bomba, se acabó el tiempo. Tenés 4 vidas.
+Aparece una orden de una o dos palabras (**¡ATRAPA!**, **¡CORTA!**,
+**¡QUE NO TE VEA!**) y tienes unos segundos para cumplirla. Abajo se quema la
+mecha: cuando llega a la bomba, se acabó el tiempo. Tienes 4 vidas.
+
+La primera vez hay una **práctica guiada** de tres microjuegos: el juego se
+detiene y muestra con una mano qué gesto hacer (también desde "Cómo jugar").
 
 - Cada 5 microjuegos todo va **más rápido**.
-- Cada 12 aparece un **JEFE** (un desafío más largo: si lo ganás, vida extra) y
+- Cada 12 aparece un **JEFE** (un desafío más largo: si lo ganas, vida extra) y
   después los microjuegos se vuelven **más difíciles** (nivel 1, 2 y 3).
 - Al final, según cuántos superaste, una medalla: bronce (5), plata (10), oro
   (20), trofeo (30) y diamante (40).
 - Se juega con el dedo (o el mouse): tocar, arrastrar, deslizar, mantener
-  apretado o tocar muchas veces seguidas. Debajo de la orden aparece cuál.
+  presionado o tocar muchas veces seguidas. Debajo de la orden aparece cuál.
 
 En el celular se juega **en vertical**.
 

@@ -5,7 +5,7 @@ import { COLOR } from '../config.js';
 const COMIDA = ['manzana', 'banana', 'uva', 'frutilla', 'sandia', 'cereza', 'durazno', 'anana', 'dona', 'pizza'];
 
 export class Atrapa extends Micro {
-  static ORDEN = '¡ATRAPÁ!';
+  static ORDEN = '¡ATRAPA!';
   static CONTROL = 'arrastrar';
 
   armar() {

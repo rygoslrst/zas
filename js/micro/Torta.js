@@ -4,7 +4,7 @@ import { Micro } from '../escenas/Micro.js';
 import { COLOR } from '../config.js';
 
 export class Torta extends Micro {
-  static ORDEN = '¡DEFENDÉ LA TORTA!';
+  static ORDEN = '¡DEFIENDE EL PASTEL!';
   static CONTROL = 'tocar';
   static PULSOS = 24;
   static GANA_AL_FINAL = true;
@@ -45,7 +45,7 @@ export class Torta extends Micro {
 
   alGanar() {
     this.confeti(this.tx, this.ty - 60);
-    this.cartel(this.cx, this.cy - 200, '¡TORTA A SALVO!', COLOR.ORO, 60);
+    this.cartel(this.cx, this.cy - 200, '¡PASTEL A SALVO!', COLOR.ORO, 60);
   }
 
   // Sale de un borde al azar (justo afuera de la pantalla), mirando a la torta

@@ -3,7 +3,7 @@ import { Micro } from '../escenas/Micro.js';
 import { COLOR } from '../config.js';
 
 export class Pesca extends Micro {
-  static ORDEN = '¡PESCÁ!';
+  static ORDEN = '¡PESCA!';
   static CONTROL = 'tocar';
 
   armar() {

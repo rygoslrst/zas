@@ -14,11 +14,11 @@ function cruzan(x1, y1, x2, y2, x3, y3, x4, y4) {
 }
 
 export class Cable extends Micro {
-  static ORDEN = '¡CORTÁ EL CABLE!';
+  static ORDEN = '¡CORTA EL CABLE!';
   static CONTROL = 'deslizar';
   static VARIANTES = [
-    { orden: '¡CORTÁ EL ROJO!', color: 'rojo' }, { orden: '¡CORTÁ EL AZUL!', color: 'azul' },
-    { orden: '¡CORTÁ EL AMARILLO!', color: 'amarillo' }, { orden: '¡CORTÁ EL BLANCO!', color: 'blanco' },
+    { orden: '¡CORTA EL ROJO!', color: 'rojo' }, { orden: '¡CORTA EL AZUL!', color: 'azul' },
+    { orden: '¡CORTA EL AMARILLO!', color: 'amarillo' }, { orden: '¡CORTA EL BLANCO!', color: 'blanco' },
   ];
 
   armar() {

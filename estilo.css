@@ -181,6 +181,15 @@ body.tactil .solo-mouse { display: none; }
   text-transform: uppercase;
 }
 .boton:hover { background: rgba(27, 16, 48, 0.85); }
+
+/* Saltar la práctica: arriba a la derecha, sobre el juego */
+.saltar {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  z-index: 20;
+}
+.saltar[hidden] { display: none; }
 .boton:focus-visible { outline: 3px solid var(--oro); outline-offset: 2px; }
 
 /* --- Fin de partida ------------------------------------------------------------ */

@@ -5,7 +5,7 @@ import { COLOR } from '../config.js';
 const VERDE = 0x3a9d23, VERDE_OSCURO = 0x1f6b12;
 
 export class Vuela extends Micro {
-  static ORDEN = '¡VOLÁ!';
+  static ORDEN = '¡VUELA!';
   static CONTROL = 'tocar';
   static GANA_AL_FINAL = true;
 

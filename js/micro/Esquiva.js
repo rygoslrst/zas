@@ -3,7 +3,7 @@ import { Micro } from '../escenas/Micro.js';
 import { COLOR } from '../config.js';
 
 export class Esquiva extends Micro {
-  static ORDEN = '¡ESQUIVÁ!';
+  static ORDEN = '¡ESQUIVA!';
   static CONTROL = 'arrastrar';
   static GANA_AL_FINAL = true;
 
@@ -35,7 +35,7 @@ export class Esquiva extends Micro {
   }
 
   alGanar() {
-    this.cartel(this.cx, this.cy - 80, '¡ZAFASTE!', COLOR.ORO, 64);
+    this.cartel(this.cx, this.cy - 80, '¡TE SALVASTE!', COLOR.ORO, 64);
   }
 
   // Una piedra "al azar" nunca cae pegada a otra que llega casi al mismo

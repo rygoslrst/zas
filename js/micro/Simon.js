@@ -11,7 +11,7 @@ const BOTONES = [
 ];
 
 export class Simon extends Micro {
-  static ORDEN = '¡REPETÍ!';
+  static ORDEN = '¡REPITE!';
   static CONTROL = 'tocar';
   static PULSOS = 30;
   static JEFE = true;
@@ -73,7 +73,7 @@ export class Simon extends Micro {
     this.fase = 'muestra';
     this.tMuestra = desde;
     this.mostrados = 0;
-    if (this.ronda === 0) this.dicho.setText('¡MIRÁ BIEN!');
+    if (this.ronda === 0) this.dicho.setText('¡MIRA BIEN!');
   }
 
   prender(i) {

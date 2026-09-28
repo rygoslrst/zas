@@ -15,12 +15,12 @@ const ICONO_MUDO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l
 
 // Qué decir según cuántos aguantaste
 function veredicto(p) {
-  if (p === 0) return '¡Uy! Otra vez, que ya le agarrás la mano.';
-  if (p < 5) return 'Buen arranque. ¿Llegás a 5?';
+  if (p === 0) return '¡Uy! Otra vez: ya le vas a tomar el ritmo.';
+  if (p < 5) return 'Buen comienzo. ¿Llegas a 5?';
   if (p < 10) return '¡Bien! Ya vas rápido.';
-  if (p < 20) return '¡Muy bien! Pocos llegan hasta acá.';
+  if (p < 20) return '¡Muy bien! Pocos llegan hasta aquí.';
   if (p < 30) return '¡Tremendo! Reflejos de acero.';
-  return '¡Leyenda! ¿Sos humano?';
+  return '¡Leyenda! ¿Eres humano?';
 }
 
 export class UI {
@@ -45,6 +45,11 @@ export class UI {
     for (const b of document.querySelectorAll('[data-accion="sonido"]')) {
       b.addEventListener('click', () => this.alternarSonido());
     }
+    for (const b of document.querySelectorAll('[data-accion="practica"]')) {
+      b.addEventListener('click', () => this.empezar(true));
+    }
+    this.saltar = $('saltar');
+    this.saltar.addEventListener('click', () => this.director && this.director.saltarPractica());
     for (const b of document.querySelectorAll('[data-accion="creditos"]')) {
       b.addEventListener('click', () => this.abrirCreditos(true));
     }
@@ -81,7 +86,8 @@ export class UI {
     $('titulo-record').textContent = record > 0 ? `Tu récord: ${record}` : '';
   }
 
-  async empezar() {
+  // practica: true = "Cómo jugar"; null = la decide el Director (sólo la primera vez)
+  async empezar(practica = null) {
     const d = this.director;
     if (this.arrancando || !d || (d.estado !== 'titulo' && d.estado !== 'fin')) return;
     // Medio segundo de guarda: el toque desesperado del final no reinicia solo.
@@ -91,7 +97,7 @@ export class UI {
     if (!this.audio.audioVivo) await this.audio.desbloquear();
     this.titulo.hidden = true;
     this.fin.hidden = true;
-    d.empezar();
+    d.empezar(practica);
     this.arrancando = false;
   }
 
@@ -135,7 +141,11 @@ export class UI {
     g.drawImage(this.imagenEmoji, x, y, CELDA_EMOJI, CELDA_EMOJI, 0, 0, c.width, c.height);
   }
 
-  mostrarPausa(v) { this.pausa.hidden = !v; }
+  mostrarPausa(v) {
+    this.pausa.hidden = !v;
+    if (this.director && this.director.practica) this.saltar.hidden = v;    // en pausa no se salta
+  }
+  mostrarSaltar(v) { this.saltar.hidden = !v; }
 
   alternarSonido() {
     this.audio.setSonido(!this.audio.sonido);

@@ -180,6 +180,9 @@ export class Audio {
 
   detenerPista() { this.pista = null; }
 
+  // La práctica congela el juego: la pista retoma donde quedó, corrida en el tiempo.
+  correrPista(seg) { if (this.pista) this.pista.t0 += seg; }
+
   // Se llama cada cuadro: agenda los pasos que caen en los próximos 150 ms.
   programar() {
     const p = this.pista;

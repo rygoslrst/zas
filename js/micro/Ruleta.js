@@ -9,7 +9,7 @@ const GAJOS = [0xff4d5a, 0xffd23f, 0x4d96ff, 0x2ec4b6, 0xff70a6, 0x7b61ff, 0xff9
 const FRENADA = 0.42;        // segundos que tarda en frenar
 
 export class Ruleta extends Micro {
-  static ORDEN = '¡PARÁ EN LA ESTRELLA!';
+  static ORDEN = '¡FRENA EN LA ESTRELLA!';
   static CONTROL = 'tocar';
 
   armar() {

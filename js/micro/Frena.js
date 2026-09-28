@@ -5,7 +5,7 @@ import { COLOR } from '../config.js';
 const FRENADA = 70;          // px que recorre el auto desde que frenás hasta parar
 
 export class Frena extends Micro {
-  static ORDEN = '¡FRENÁ!';
+  static ORDEN = '¡FRENA!';
   static CONTROL = 'tocar';
 
   armar() {

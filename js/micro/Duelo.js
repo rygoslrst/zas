@@ -4,7 +4,7 @@ import { Micro } from '../escenas/Micro.js';
 import { COLOR } from '../config.js';
 
 export class Duelo extends Micro {
-  static ORDEN = '¡DISPARÁ!';
+  static ORDEN = '¡DISPARA!';
   static CONTROL = 'tocar';
 
   armar() {
@@ -20,7 +20,7 @@ export class Duelo extends Micro {
     this.pistolaYo = this.emoji('pistola', 180, yPiso - 40, 60).setFlipX(true).setVisible(false);
     this.pistolaOtro = this.emoji('pistola', 360, yPiso - 40, 60).setVisible(false);
     this.senal = this.texto(this.cx, this.cy - 200, '', 110);
-    this.espera = this.texto(this.cx, this.cy - 200, 'ESPERÁ...', 60, 0xfff1d6);
+    this.espera = this.texto(this.cx, this.cy - 200, 'ESPERA...', 60, 0xfff1d6);
     // Cuándo sale la señal y cuánto hay para reaccionar
     this.tSenal = this.azar(1.1, 2.0) / this.vel + 0.2;
     this.ventana = [0.7, 0.58, 0.5][this.nivel - 1] / Math.sqrt(this.vel);   // hay que poder reaccionar (~0,3 s)

@@ -2,7 +2,7 @@
 import { Micro } from '../escenas/Micro.js';
 
 export class Aplasta extends Micro {
-  static ORDEN = '¡APLASTÁ!';
+  static ORDEN = '¡APLASTA!';
   static CONTROL = 'tocar';
 
   armar() {

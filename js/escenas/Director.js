@@ -5,20 +5,22 @@
 //  la consigna y la mecha, y entre uno y otro baja el TELÓN del intermedio:
 //  puntos, vidas y la carita de cómo te fue. Cada tanto, "¡MÁS RÁPIDO!", y
 //  cada 12 microjuegos, un JEFE (más largo; si lo ganás, vida extra).
+//  La primera vez, antes de la partida, corre la PRÁCTICA (ver Practica.js).
 //
 //  El Director es la escena de ARRIBA (se agrega última): el telón tapa al
 //  microjuego en las transiciones y la consigna y la mecha van siempre encima.
 // ============================================================================
 
-import { ANCHO, VISTA, ESCALA, RITMO, PARTIDA, COLOR, DEBUG, CLAVE_RECORD, CLAVE_ESCALA } from '../config.js';
+import { ANCHO, VISTA, ESCALA, RITMO, PARTIDA, COLOR, DEBUG, CLAVE_RECORD, CLAVE_ESCALA, CLAVE_PRACTICA } from '../config.js';
 import { crearAtlas } from '../motor/Atlas.js';
 import { EMOJI, TAM_EMOJI, CELDA_EMOJI } from '../datos/emoji.js';
 import { MICROS, JEFES } from '../micro/indice.js';
 import { mezcla } from './Micro.js';
+import { LECCIONES, VEL_PRACTICA, CartelLeccion } from './Practica.js';
 
 const AYUDA = {
-  tocar: 'TOCÁ', arrastrar: 'ARRASTRÁ', deslizar: 'DESLIZÁ EL DEDO', mantener: 'MANTENÉ APRETADO',
-  machacar: 'TOCÁ RÁPIDO', nada: 'NO TOQUES NADA',
+  tocar: 'TOCA', arrastrar: 'ARRASTRA', deslizar: 'DESLIZA EL DEDO', mantener: 'MANTÉN PRESIONADO',
+  machacar: 'TOCA RÁPIDO', nada: 'NO TOQUES NADA',
 };
 const CARAS_BIEN = ['contento', 'facha', 'guinio', 'lengua', 'rico'];
 const CARAS_MAL = ['mareado', 'asustado', 'enojado', 'calavera'];
@@ -53,8 +55,17 @@ export class Director extends Phaser.Scene {
     this.crearTelon();
     this.crearConsigna();
     this.crearMecha();
+    this.cartelLeccion = new CartelLeccion(this);
     this.estado = 'titulo';
     this.clave = null;
+    this.practica = null;
+    this.congelado = false;
+    // En una lección de la práctica, el primer toque descongela el juego. (El
+    // Director está arriba: recibe el toque antes que el microjuego, que
+    // después lo recibe también y lo cuenta como jugada.)
+    this.input.on('pointerdown', () => {
+      if (this.estado === 'leccion' && this.time.now >= this.leccionDesde) this.descongelar();
+    });
     // Para probar: ?micro=Nombre repite siempre el mismo microjuego (o jefe), y
     // ?nivel=3&vel=1.5 fuerzan la dificultad y la velocidad.
     const q = new URLSearchParams(location.search);
@@ -199,6 +210,7 @@ export class Director extends Phaser.Scene {
     this.tManoCero = this.time.now;
     // Salida: todo se agranda y se desvanece
     const quieta = Math.max(0.6, 0.95 / this.vel) * 1000;
+    this.tFinConsigna = (quieta + 200) / 1000;
     this.tweens.add({ targets: this.consignaGrupo, scale: 1.2, alpha: 0, delay: quieta, duration: 170, ease: 'Quad.easeIn' });
     this.tweens.add({ targets: [this.ayuda, this.mano, this.anilloMano], alpha: 0, delay: quieta, duration: 170 });
   }
@@ -212,12 +224,13 @@ export class Director extends Phaser.Scene {
   animarMano(ahora) {
     if (!this.mano.visible || this.mano.alpha <= 0) return;
     const t = (ahora - this.tManoCero) / 1000, b = this.manoBase;
+    const g = this.estado === 'leccion' ? 2.6 : 1;          // en la práctica, gestos amplios
     let x = b.x, y = b.y, anillo = -1;
     switch (this.control) {
       case 'tocar': { const f = (t * 1.6) % 1; y += f < 0.25 ? f * 40 : Math.max(0, 10 - (f - 0.25) * 40); if (f >= 0.25) anillo = (f - 0.25) / 0.75; break; }
       case 'machacar': { const f = (t * 5) % 1; y += f < 0.5 ? f * 20 : (1 - f) * 20; anillo = f; break; }
-      case 'arrastrar': x += Math.sin(t * 5) * 34; break;
-      case 'deslizar': { const f = (t * 1.4) % 1; x += -20 + f * 60; y += 24 - f * 60; this.mano.setAlpha(f < 0.8 ? 1 : (1 - f) * 5); break; }
+      case 'arrastrar': x += Math.sin(t * 5 / g) * 34 * g; break;
+      case 'deslizar': { const f = (t * 1.4) % 1; x += (-20 + f * 60) * g; y += (24 - f * 60) * g; this.mano.setAlpha(f < 0.8 ? 1 : (1 - f) * 5); break; }
       case 'mantener': y += 8; anillo = (t * 1.1) % 1; break;
       case 'nada': this.mano.setAngle(Math.sin(t * 8) * 12); break;
     }
@@ -293,10 +306,19 @@ export class Director extends Phaser.Scene {
   // --------------------------------------------------------------------------
   //  La partida
   // --------------------------------------------------------------------------
-  // Lo llama la interfaz, con el audio ya desbloqueado.
-  empezar() {
+  // Lo llama la interfaz, con el audio ya desbloqueado. practica: true la
+  // fuerza ("Cómo jugar"); si no se dice nada, corre sólo si nunca se hizo acá.
+  empezar(practica = null) {
     if (this.estado !== 'titulo' && this.estado !== 'fin') return;
     this.audio.iniciarPartida();
+    const hacer = practica === true || (practica === null && leer(CLAVE_PRACTICA, '') !== '1');
+    this.practica = hacer && !this.soloEste ? { paso: 0, intentos: 0 } : null;
+    this.ui.mostrarSaltar(!!this.practica);
+    this.reiniciarPartida();
+    this.intermedio(null);
+  }
+
+  reiniciarPartida() {
     this.vidas = PARTIDA.VIDAS;
     this.puntos = 0;
     this.rondas = 0;
@@ -307,7 +329,28 @@ export class Director extends Phaser.Scene {
     this.ultimo = null;
     this.Clase = null;
     this.mostrarDesfile(false);
+  }
+
+  // Terminó la práctica (o la saltearon): empieza la partida de verdad.
+  terminarPractica() {
+    guardar(CLAVE_PRACTICA, '1');
+    this.practica = null;
+    this.ui.mostrarSaltar(false);
+    this.reiniciarPartida();
+    this.trasPractica = true;
     this.intermedio(null);
+  }
+
+  saltarPractica() {
+    if (!this.practica || !['intermedio', 'micro', 'leccion', 'cerrando'].includes(this.estado)) return;
+    this.congelado = false;
+    this.cartelLeccion.ocultar();
+    if (this.clave) { this.scene.stop(this.clave); this.clave = null; }
+    this.audio.detenerPista();
+    this.audio.chorro(false);
+    this.mostrarMecha(false);
+    this.ocultarConsigna();
+    this.terminarPractica();
   }
 
   velocidadPara(rondas) {
@@ -316,10 +359,11 @@ export class Director extends Phaser.Scene {
 
   // ¿Le toca un jefe a la próxima ronda?
   tocaJefe() {
-    return JEFES.length > 0 && !this.soloEste && (this.rondas + 1) % PARTIDA.CADA_JEFE === 0;
+    return JEFES.length > 0 && !this.soloEste && !this.practica && (this.rondas + 1) % PARTIDA.CADA_JEFE === 0;
   }
 
   siguiente() {
+    if (this.practica) return MICROS.find(M => M.name === LECCIONES[this.practica.paso].micro);
     if (this.soloEste) return this.soloEste;
     if (this.tocaJefe()) {
       if (!this.bolsaJefes.length) this.bolsaJefes = Phaser.Utils.Array.Shuffle([...JEFES]);
@@ -339,25 +383,28 @@ export class Director extends Phaser.Scene {
     this.estado = 'intermedio';
     this.aplicarResolucion();
     const a = this.audio.ahora();
-    const velNueva = this.velocidadPara(this.rondas);
-    const nivelNuevo = Math.min(3, 1 + Math.floor(this.rondas / PARTIDA.CADA_NIVEL));
-    const acelera = velNueva > this.vel;
-    const sube = nivelNuevo > this.nivel;
+    const p = this.practica;
+    const velNueva = p ? VEL_PRACTICA : this.velocidadPara(this.rondas);
+    const nivelNuevo = p ? 1 : Math.min(3, 1 + Math.floor(this.rondas / PARTIDA.CADA_NIVEL));
+    const acelera = !p && velNueva > this.vel;
+    const sube = !p && nivelNuevo > this.nivel;
     const jefeGanado = gano === true && this.Clase && this.Clase.JEFE;
-    this.vel = this.velForzada || velNueva;
-    this.nivel = this.nivelForzado || nivelNuevo;
+    this.vel = p ? velNueva : this.velForzada || velNueva;
+    this.nivel = p ? nivelNuevo : this.nivelForzado || nivelNuevo;
 
     this.telonAbajo(false);
     this.mostrarDetalles(true);
     this.mostrarDesfile(false);
     this.ocultarConsigna();
     this.mostrarMecha(false);
-    this.velTxt.setText(this.vel > 1.001 ? `VELOCIDAD ×${this.vel.toFixed(2).replace('.', ',')}` : '');
+    this.velTxt.setText(p ? 'PRÁCTICA' : this.vel > 1.001 ? `VELOCIDAD ×${this.vel.toFixed(2).replace('.', ',')}` : '');
 
-    // Puntos y vidas
-    this.puntosTxt.setText(String(this.puntos)).setScale(1);
-    this.sombraPuntos.setText(String(this.puntos));
-    this.corazones.forEach((c, i) => c.setFrame(i < this.vidas ? 'corazon' : 'corazon_negro').setDisplaySize(82, 82).setAngle(0).setAlpha(1));
+    // Puntos y vidas (en la práctica: qué lección va, y sin corazones)
+    const arriba = p ? `${p.paso + 1}/${LECCIONES.length}` : String(this.puntos);
+    this.puntosTxt.setText(arriba).setScale(1);
+    this.sombraPuntos.setText(arriba);
+    this.corazones.forEach((c, i) => c.setFrame(i < this.vidas ? 'corazon' : 'corazon_negro').setDisplaySize(82, 82)
+      .setAngle(0).setAlpha(1).setVisible(!p));
     if (gano === true) {
       this.puntosTxt.setScale(1.5);
       this.tweens.add({ targets: this.puntosTxt, scale: 1, duration: 280, ease: 'Back.easeOut' });
@@ -369,7 +416,7 @@ export class Director extends Phaser.Scene {
         this.tweens.add({ targets: c, displayWidth: 82, displayHeight: 82, duration: 420, ease: 'Back.easeOut' });
       }
     } else if (gano === false) {
-      this.romperCorazon(this.corazones[this.vidas]);
+      if (!p) this.romperCorazon(this.corazones[this.vidas]);
       this.cameras.main.shake(160, 0.008);
       this.audio.perdio();
     } else {
@@ -383,7 +430,12 @@ export class Director extends Phaser.Scene {
 
     // Los carteles: se muestran uno después del otro
     const carteles = [];
-    if (gano === null) carteles.push(['¡PREPARATE!', null, 0x2f7dff]);
+    if (gano === null && p) carteles.push(['¡A PRACTICAR!', null, 0x2f7dff]);
+    else if (gano === null && this.trasPractica) {
+      carteles.push(['¡AHORA EN SERIO!', null, 0xe0339b], ['¡TIENES 4 VIDAS!', () => this.audio.record(), 0x16a37a]);
+    } else if (gano === null) carteles.push(['¡PREPÁRATE!', null, 0x2f7dff]);
+    if (p && gano === false && p.intentos > 0) carteles.push(['¡OTRA VEZ!', null, 0xff7a1a]);
+    this.trasPractica = false;
     if (jefeGanado) carteles.push(['¡VIDA EXTRA!', () => this.audio.record(), 0x16a37a]);
     if (gano === false && this.vidas === 1) carteles.push(['¡ÚLTIMA VIDA!', null, 0xff4d5a]);
     if (sube) carteles.push(['¡MÁS DIFÍCIL!', () => this.audio.acelera(), 0xe0339b]);
@@ -450,7 +502,8 @@ export class Director extends Phaser.Scene {
     this.decididoEn = null;
     this.gano = null;
     this.tics = 0;
-    // Algunos microjuegos traen variantes con su propia consigna ("¡CORTÁ EL ROJO!")
+    this.leccionMostrada = false;
+    // Algunos microjuegos traen variantes con su propia consigna ("¡CORTA EL ROJO!")
     const variante = Clase.VARIANTES ? Phaser.Utils.Array.GetRandom(Clase.VARIANTES) : null;
     this.orden = variante ? variante.orden : Clase.ORDEN;
     this.audio.empezarPista(bpm, this.t0, (Math.random() * 1e9) | 0);
@@ -496,6 +549,15 @@ export class Director extends Phaser.Scene {
   terminarMicro() {
     this.scene.stop(this.clave);
     this.clave = null;
+    const p = this.practica;
+    if (p) {
+      // En la práctica no se pierden vidas: si sale mal, se repite una vez
+      this.mostrarMecha(false);
+      if (this.gano || ++p.intentos >= 2) { p.paso++; p.intentos = 0; }
+      if (p.paso >= LECCIONES.length) this.terminarPractica();
+      else this.intermedio(this.gano);
+      return;
+    }
     this.rondas++;
     if (this.gano) {
       this.puntos++;
@@ -566,6 +628,7 @@ export class Director extends Phaser.Scene {
         this.reaccion.angle = Math.sin(time / 200) * 6;
         break;
       case 'micro': this.cuadroMicro(a); break;
+      case 'leccion': this.cartelLeccion.animar(time); break;
     }
     if (this.estado === 'intermedio' && a >= this.finIntermedio) this.empezarMicro();
   }
@@ -577,6 +640,7 @@ export class Director extends Phaser.Scene {
       if (a - this.decididoEn >= PARTIDA.DESPUES_DE_DECIDIR_S) this.cerrar();
       return;
     }
+    if (this.practica && !this.leccionMostrada && t >= this.tFinConsigna && this.revisarLeccion()) return;
     // La mecha se quema: la parte quemada tapa la cuerda desde la derecha
     const frac = limitar(1 - t / this.dur, 0, 1);
     const punta = this.mechaX0 + this.mechaLargo * frac;
@@ -605,6 +669,49 @@ export class Director extends Phaser.Scene {
         this.cameras.main.shake(220, 0.015);
       }
     }
+  }
+
+  // --------------------------------------------------------------------------
+  //  Lecciones de la práctica: congelar y descongelar
+  // --------------------------------------------------------------------------
+  // ¿Llegó el momento de la lección? Si llegó, congela todo y devuelve true.
+  revisarLeccion() {
+    const m = this.scene.get(this.clave), lec = LECCIONES[this.practica.paso];
+    if (!m || !m.sys.isActive() || m.decidido || !lec.listo(m)) return false;
+    this.leccionMostrada = true;
+    this.estado = 'leccion';
+    this.congelado = true;                    // Micro.update no avanza
+    this.congeladoEn = this.audio.ahora();
+    this.leccionDesde = this.time.now + 250;  // un dedo que ya estaba apoyado no cuenta
+    // Si el aparato se trabó, las animaciones pueden ir atrasadas respecto
+    // del reloj: el telón y la consigna se sacan igual, que no tapen nada.
+    this.tweens.killTweensOf([this.telon, this.rayos, ...this.hudConsigna]);
+    this.telon.setVisible(false).setY(-(VISTA.alto + 40));
+    this.tweens.add({ targets: this.consignaGrupo, alpha: 0, duration: 120 });
+    // La mano hace el gesto sobre el objeto (la punta del dedo, en el objeto)
+    const o = lec.objetivo(m) || { x: ANCHO / 2, y: VISTA.alto / 2 };
+    this.ayuda.setVisible(false);
+    this.control = lec.gesto;
+    this.manoBase = { x: o.x + 4, y: o.y + 30 };
+    this.mano.setVisible(true).setAlpha(1).setFrame('dedo').setDisplaySize(76, 76);
+    this.anilloMano.setVisible(lec.gesto === 'tocar').setAlpha(0);
+    this.tManoCero = this.time.now;
+    this.cartelLeccion.mostrar(lec, VISTA.alto, this.mechaY);
+    return true;
+  }
+
+  // El tiempo que estuvo congelado se le descuenta a todo lo que mide el
+  // reloj: la mecha, el microjuego y la música siguen justo donde quedaron.
+  descongelar() {
+    const pausa = this.audio.ahora() - this.congeladoEn;
+    this.t0 += pausa;
+    const m = this.scene.get(this.clave);
+    if (m) m.t0 += pausa;
+    this.audio.correrPista(pausa);
+    this.congelado = false;
+    this.estado = 'micro';
+    this.cartelLeccion.ocultar();
+    this.tweens.add({ targets: [this.mano, this.anilloMano], alpha: 0, duration: 140 });
   }
 
   // --------------------------------------------------------------------------
