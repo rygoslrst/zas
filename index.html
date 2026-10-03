@@ -24,7 +24,7 @@
 <section id="titulo" class="capa" hidden>
   <h1>ZAS</h1>
   <p class="bajada">Microjuegos de 4 segundos.<br>¿Cuántos aguantas?</p>
-  <p class="cta"><span class="solo-tactil">Toca para jugar</span><span class="solo-mouse">Haz clic para jugar</span></p>
+  <button id="btn-jugar" class="cta" type="button">Jugar</button>
   <p id="titulo-record" class="record"></p>
   <div class="fila-botones">
     <button class="boton texto ancho" data-accion="records" type="button">Récords</button>
@@ -52,9 +52,10 @@
       <input id="nombre" type="text" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="TU NOMBRE" aria-label="Tu nombre">
       <button class="boton texto primario" type="submit">Guardar</button>
     </form>
+    <p id="nombre-error" class="nombre-error" role="alert" hidden>Ese nombre no se puede usar. Prueba con otro.</p>
     <button id="no-guardar" class="boton texto chico" type="button">No, gracias</button>
   </div>
-  <p id="fin-cta" class="cta"><span class="solo-tactil">Toca para jugar otra vez</span><span class="solo-mouse">Haz clic para jugar otra vez</span></p>
+  <button id="fin-cta" class="cta" type="button">Jugar otra vez</button>
   <div class="fila-botones">
     <button class="boton texto ancho" data-accion="menu" type="button">Menú</button>
     <button class="boton texto ancho" data-accion="records" type="button">Récords</button>

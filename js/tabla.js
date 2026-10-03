@@ -12,6 +12,7 @@
 // ============================================================================
 
 import { CLAVE_TABLA, CLAVE_NOMBRE } from './config.js';
+import { nombreProhibido } from './filtroNombres.js';
 
 export const TAMANO_TABLA = 10;
 export const LARGO_NOMBRE = 10;
@@ -108,25 +109,24 @@ export function recordarNombre(nombre) {
 
 // --------------------------------------------------------------------------
 //  Nombres: en mayúsculas, sólo letras, números y espacios, hasta 10. La tabla
-//  se ve en el stand del colegio: si el nombre trae una grosería, va "JUGADOR".
+//  se ve en el stand del colegio: los nombres con groserías no se aceptan
+//  (ver filtroNombres.js; la última palabra la tiene la base de datos).
 // --------------------------------------------------------------------------
-// Dentro de cualquier palabra, y sólo como palabra entera (para no rechazar
-// nombres como PENÉLOPE o PICOLO)
-const EN_CUALQUIER_LADO = ['PUTA', 'PUTO', 'MIERDA', 'CULIA', 'CTM', 'CHUCHA', 'WEON', 'HUEON', 'HUEVON',
-  'AWEON', 'MARICON', 'MARACO', 'VERGA', 'PICHULA', 'ZORRA', 'NAZI', 'CABRON', 'PENDEJ', 'POLLA', 'QLO'];
-const PALABRA_ENTERA = ['CULO', 'CONCHA', 'PENE', 'PICO', 'PERRA', 'CACA', 'SEXO', 'CONO', 'JOTO',
-  'NALGA', 'TETA', 'TETAS', 'CHUPA', 'CHUPALA'];
-
-const sinTildes = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-const deNumeros = s => s.replace(/0/g, 'O').replace(/1/g, 'I').replace(/3/g, 'E').replace(/4/g, 'A')
-  .replace(/5/g, 'S').replace(/7/g, 'T').replace(/@/g, 'A');
-
 export function limpiarNombre(texto) {
-  const n = String(texto || '').toUpperCase().replace(/[^A-ZÁÉÍÓÚÑÜ0-9 ]/g, '').replace(/\s+/g, ' ')
+  return String(texto || '').toUpperCase().replace(/[^A-ZÁÉÍÓÚÑÜ0-9 ]/g, '').replace(/\s+/g, ' ')
     .trim().slice(0, LARGO_NOMBRE).trim();
-  if (!n) return '';
-  const palabras = deNumeros(sinTildes(n)).split(' ');
-  const junto = palabras.join('');
-  if (EN_CUALQUIER_LADO.some(g => junto.includes(g)) || palabras.some(w => PALABRA_ENTERA.includes(w))) return 'JUGADOR';
-  return n;
+}
+
+// ¿Se puede usar este nombre? Devuelve { ok, nombre } con el nombre como
+// quedaría guardado. Revisa acá y, si hay internet, en la base de datos (que
+// puede tener palabras nuevas agregadas desde el panel de Supabase).
+export async function revisarNombre(texto) {
+  const nombre = limpiarNombre(texto) || 'JUGADOR';
+  if (nombreProhibido(texto) || nombreProhibido(nombre)) return { ok: false, nombre };
+  try {
+    const r = await rpc('revisar_nombre', { p_nombre: nombre });
+    return r === null ? { ok: false, nombre } : { ok: true, nombre: r };
+  } catch (e) {
+    return { ok: true, nombre };                  // sin red: alcanza con la revisión de acá
+  }
 }

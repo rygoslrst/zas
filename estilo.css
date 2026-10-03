@@ -96,6 +96,10 @@ body.tactil .solo-mouse { display: none; }
 }
 
 .cta {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  touch-action: manipulation;
   font-family: var(--display);
   font-size: clamp(24px, 7.5vw, 36px);
   text-transform: uppercase;
@@ -125,7 +129,6 @@ body.tactil .solo-mouse { display: none; }
 /* --- Título ------------------------------------------------------------------ */
 #titulo {
   background: radial-gradient(ellipse 70% 55% at 50% 48%, rgba(27, 16, 48, 0.55) 0%, rgba(27, 16, 48, 0) 100%);
-  cursor: pointer;
   gap: clamp(10px, 2.4vh, 18px);
 }
 
@@ -209,7 +212,6 @@ body.tactil .solo-mouse { display: none; }
 #fin {
   background: radial-gradient(ellipse at center, rgba(27, 16, 48, 0.75) 0%, rgba(27, 16, 48, 0.45) 75%);
   gap: clamp(4px, 1.4vh, 10px);
-  cursor: pointer;
 }
 .causa {
   font-family: var(--display);
@@ -297,6 +299,9 @@ body.tactil .solo-mouse { display: none; }
 }
 #nombre:focus { outline: none; border-color: var(--oro); }
 #nombre::placeholder { color: rgba(255, 250, 240, 0.35); }
+.nombre-error { font-size: 14px; font-weight: 600; color: var(--coral); max-width: 30ch; }
+#nombre.temblar { border-color: var(--coral); animation: temblar 0.35s ease-in-out; }
+@keyframes temblar { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 
 /* --- Tabla de récords ------------------------------------------------------------ */
 .nota-tabla { color: #cfc3f5; margin-bottom: 10px; }

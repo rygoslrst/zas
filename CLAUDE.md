@@ -133,6 +133,20 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     según `Director.puntosPorMicro` — si cambia el puntaje, cambiar el tope —,
     múltiplos de 10, limpia el nombre, 20 anotaciones/minuto entre todos).
     La llave publishable en `js/tabla.js` es pública a propósito.
+  - **Filtro de nombres (v2, 2026-10-03, el usuario lo pidió "mucho"):**
+    forma canónica según cómo suena (tildes, leet, C/K/QU, V/B, Z/S, Y/I,
+    HUE/GUE/WE, H muda, letras repetidas salvo RR/LL, Ñ ≠ N), búsqueda en
+    todo el nombre junto, excepciones que perdonan sólo lo que cubren.
+    Listas en las tablas `palabras_prohibidas` (con `entera` para las cortas)
+    y `palabras_permitidas`, **ampliables desde el Table Editor** sin tocar el
+    juego. `js/filtroNombres.js` es una copia (procedimiento + foto de las
+    listas) para avisar al instante y sin red; si se cambia el procedimiento,
+    cambiarlo en los dos lados. Con un nombre prohibido, el juego avisa y pide
+    otro (`revisar_nombre`); igual, al guardar, la base lo cambia a JUGADOR.
+    Probado con 105 nombres que deben caer y 193 reales que deben pasar
+    (las listas de prueba están en el historial de esta sesión; rehacerlas
+    si se toca el filtro). Se pasaron por el filtro los puntajes ya
+    guardados (3 nombres quedaron como JUGADOR).
   - **Respaldo en el aparato** (localStorage `zas_tabla_v1`): se anota
     siempre ahí también; si no hay red (3,5 s sin respuesta), se muestra ésa
     ("de este aparato (sin conexión)").
@@ -142,7 +156,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     torneo, jugar/abrir Récords al menos una vez; si se pausó, se reactiva
     desde el panel de Supabase (el juego mientras usa la tabla local).
 - **Menú principal** = la pantalla de título (Jugar, Récords, Cómo jugar,
-  Créditos). Durante la partida hay un botón de pausa (arriba a la
+  Créditos). Se empieza **sólo con el botón Jugar** (antes, tocar cualquier
+  parte del fondo arrancaba; el usuario no lo quería). Igual al final:
+  "Jugar otra vez" es un botón. Durante la partida hay un botón de pausa (arriba a la
   izquierda; también Escape) con "Menú principal" (`Director.irAlMenu`, la
   partida se abandona). Al final: "Menú" y "Récords". Los botones sobre el
   juego se acomodan a la columna del juego (`--col-izq/--col-der`, ver

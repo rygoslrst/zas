@@ -2,12 +2,12 @@
 //  ui.js — menú principal, fin de partida, pausa, récords y créditos
 // ----------------------------------------------------------------------------
 //  Son HTML encima del canvas: texto nítido en cualquier pantalla y cero costo
-//  para el motor. Reintentar es tocar en cualquier lado: el ciclo "otra vez"
-//  tiene que ser lo más corto posible.
+//  para el motor. Se juega sólo con el botón "Jugar" (tocar el fondo no hace
+//  nada: así nadie empieza una partida sin querer).
 // ============================================================================
 
 import { EMOJI, CELDA_EMOJI } from './datos/emoji.js';
-import { leerTabla, entraEnTabla, anotar, limpiarNombre, ultimoNombre, recordarNombre, precargar, enLinea } from './tabla.js';
+import { leerTabla, entraEnTabla, anotar, revisarNombre, ultimoNombre, recordarNombre, precargar, enLinea } from './tabla.js';
 
 const $ = id => document.getElementById(id);
 const AVISO_PANTALLA_S = 3.8;      // lo que tarda en irse el aviso de pantalla completa (Chrome en Android)
@@ -82,9 +82,9 @@ export class UI {
     window.addEventListener('resize', () => requestAnimationFrame(() => this.ajustarColumna()));
     this.pintarSonido();
 
-    // pointerup y no pointerdown: en iOS el audio sólo se destraba al levantar el dedo.
-    this.titulo.addEventListener('pointerup', () => this.empezar());
-    this.fin.addEventListener('pointerup', () => this.empezar());
+    // "click" llega al levantar el dedo: en iOS el audio sólo se destraba ahí.
+    $('btn-jugar').addEventListener('click', () => this.empezar());
+    $('fin-cta').addEventListener('click', () => this.empezar());
     this.pausa.addEventListener('pointerup', () => this.director && this.director.seguir());
 
     window.addEventListener('keydown', e => {
@@ -200,6 +200,7 @@ export class UI {
     this.cajaNombre.hidden = false;
     $('fin-cta').hidden = true;
     this.inputNombre.value = ultimoNombre();
+    $('nombre-error').hidden = true;
     // En la computadora se escribe directo; en el celular, al tocar la caja
     // (si no, el teclado tapa el puntaje apenas termina la partida)
     if (!this.tactil) { this.inputNombre.focus(); this.inputNombre.select(); }
@@ -218,10 +219,23 @@ export class UI {
     if (!p || this.guardando) return;
     this.guardando = true;
     const boton = $('form-nombre').querySelector('button');
+    boton.textContent = 'Revisando…';
+    $('nombre-error').hidden = true;
+    // Un nombre con groserías no se guarda: se pide otro
+    const revisado = await revisarNombre(this.inputNombre.value);
+    if (!revisado.ok) {
+      this.guardando = false;
+      boton.textContent = 'Guardar';
+      $('nombre-error').hidden = false;
+      this.inputNombre.classList.remove('temblar');
+      void this.inputNombre.offsetWidth;            // para que la animación vuelva a arrancar
+      this.inputNombre.classList.add('temblar');
+      this.inputNombre.select();
+      return;
+    }
     boton.textContent = 'Guardando…';
-    const nombre = limpiarNombre(this.inputNombre.value) || 'JUGADOR';
-    recordarNombre(nombre);
-    const r = await anotar(nombre, p.puntaje, p.rondas);
+    recordarNombre(revisado.nombre);
+    const r = await anotar(revisado.nombre, p.puntaje, p.rondas);
     this.guardando = false;
     boton.textContent = 'Guardar';
     this.ultimaPartida = null;
