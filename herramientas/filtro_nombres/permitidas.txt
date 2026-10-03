@@ -1,0 +1,53 @@
+# Excepciones: nombres y palabras de verdad que contienen o se parecen a una
+# prohibida. Una por línea, escrita normal.
+#
+# Las de 5 letras o más perdonan la parte que cubren aunque estén pegadas a
+# otras (PENÉLOPE sí; PENELOPENE no, porque el segundo PENE queda afuera). Las
+# más cortas sólo valen como palabra suelta (ANA, PERA).
+#
+# Después de cambiar algo: python herramientas/filtro_nombres/armar.py
+
+## nombres
+ANA
+KAKASHI
+MARICARMEN
+PENÉLOPE
+SORA
+SORAYA
+VERGARA
+
+## lugares
+CONCHALÍ
+POTOSÍ
+PUTAENDO
+
+## palabras
+ALACRÁN
+CACAO
+CACATÚA
+CÁLCULO
+CHINGANA
+CÍRCULO
+COMPUTADOR
+COMPUTADORA
+DISPUTA
+ÉPICO
+ESCULAPIO
+ESPECTÁCULO
+ESPERANZA
+KUNTUR
+MÚSCULO
+OBSTÁCULO
+ORÁCULO
+PAJARITO
+PÁJARO
+PERA
+PICCOLO
+PICOLO
+POLA
+REPUTACIÓN
+TÓPICO
+TORPEDO
+TRÓPICO
+TUBÉRCULO
+VEHÍCULO

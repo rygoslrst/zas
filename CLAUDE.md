@@ -147,30 +147,44 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     según `Director.puntosPorMicro` — si cambia el puntaje, cambiar el tope —,
     múltiplos de 10, limpia el nombre, 20 anotaciones/minuto entre todos).
     La llave publishable en `js/tabla.js` es pública a propósito.
-  - **Filtro de nombres (v4, 2026-10-03; el usuario lo pidió "mucho" y
-    después "más filtros y entradas"):** nada que parezca teléfono (7+
-    cifras), números/siglas con mala fama (69, 420, 1488, KKK); forma
-    canónica según cómo suena (tildes, leet, C/K/QU, V/B, Z/S, Y/I, X=CH como
-    en XUXA, HUE/GUE/WE, H muda, letras repetidas salvo RR/LL, Ñ ≠ N);
-    búsqueda en todo el nombre junto y en cada palabra al revés (ATUP);
-    excepciones que perdonan sólo lo que cubren. 209 prohibidas (con siglas
-    chilenas: WN, CTM, HDP, PTM, QL...) y 27 excepciones. Para palabras con
-    género conviene la raíz (BOLUD atrapa BOLUDO/BOLUDA/BOLUDOS).
-    Listas en las tablas `palabras_prohibidas` (con `entera` para las cortas)
-    y `palabras_permitidas`, **ampliables desde el Table Editor** sin tocar el
-    juego. `js/filtroNombres.js` es una copia (procedimiento + foto de las
-    listas) para avisar al instante y sin red; si se cambia el procedimiento,
-    cambiarlo en los dos lados. Con un nombre prohibido, el juego avisa y pide
-    otro (`revisar_nombre`); igual, al guardar, la base lo cambia a JUGADOR.
-    Probado con 172 nombres que deben caer y 244 reales que deben pasar
-    (las listas de prueba están en el historial de esta sesión; rehacerlas
-    si se toca el filtro). Se pasaron por el filtro los puntajes ya
-    guardados (3 nombres quedaron como JUGADOR).
+  - **Filtro de nombres (v5, 2026-10-03; el usuario pidió reforzarlo "lo más
+    posible"; todo en `herramientas/filtro_nombres/`, ver su LEEME):**
+    - Listas en `prohibidas.txt` (297, por tema; `*` = sólo palabra entera,
+      `~` = también al revés como palabra suelta) y `permitidas.txt` (39).
+      `armar.py` las copia a `js/filtroNombres.js` y escribe
+      `sincronizar.sql` (para la base; sólo toca filas con nota "lista:") e
+      imprime una huella md5 + la consulta que la compara con la base.
+    - Procedimiento (igual en JS y en SQL, `herramientas/tabla_en_linea.sql`):
+      teléfono (7+ cifras), 69/420/1488/KKK; forma canónica (tildes, leet
+      con 2=Z, letras sueltas seguidas se juntan, vocales repetidas, PH=F,
+      X=CH, QU/C/K, V/B, Z/S, Y/I, NB=MB, CE/CI=SE/SI, HUE/GUE/UE=WE,
+      GE/GI=JE/JI, H muda, LL=I (yeísmo), repetidas salvo RR, Ñ ≠ N);
+      lecturas extra: 1/!/| como L, V como U, LL como L. Se busca en cada
+      palabra y en "tramos" (palabras pegadas a una vecina de ≤3 letras: PU
+      TA, MARI CON; JOSÉ MÉNDEZ no se junta). Enteras y al revés: sólo
+      palabra suelta o tramo entero. Permitidas largas perdonan lo que cubren.
+    - Las cortas o comunes son enteras a propósito (TETA, NAZI, CACA, POLLA,
+      SEMEN, NEPE, NIGGA, FUCK, ASSHOLE...): como subcadena tumbaban nombres
+      reales (DANTE TAPIA, IGNACIO, JOSÉ MÉNDEZ, SOFÍA 2013...).
+    - Pruebas: `herramientas/pruebas/filtro.html` (deben_pasar ≈1.150,
+      deben_caer ≈370, ≈2.800 variantes automáticas, comparación JS↔base por
+      la RPC, y ~107.000 combinaciones naturales: caen 22). Al tocar el
+      filtro: correrla entera, incluida la comparación con la base, y que la
+      huella de `armar.py` coincida.
+    - En la base: `records.oculto` (moderación a mano, no aparece ni cuenta
+      para el puesto), check de formato del nombre, y `mejores_records`
+      vuelve a revisar el nombre al leer (si después se prohíbe una palabra,
+      los puntajes viejos salen como JUGADOR). Medido: ~0,7 ms por nombre,
+      ~1 ms la tabla.
+    - Con un nombre prohibido, el juego avisa y pide otro (`revisar_nombre`);
+      igual, al guardar, la base lo cambia a JUGADOR.
   - **Respaldo en el aparato** (localStorage `zas_tabla_v1`): se anota
     siempre ahí también; si no hay red (3,5 s sin respuesta), se muestra ésa
     ("de este aparato (sin conexión)").
-  - Puntajes truchos: se borran en Supabase → Table Editor → records, o con
-    `execute_sql` (`delete from public.records where nombre = '...'`).
+  - Puntajes truchos: `oculto = true` en Supabase → Table Editor → records
+    (o borrarlos: `delete from public.records where nombre = '...'`). El
+    2026-10-03 el usuario pidió vaciar la tabla antes del torneo (se hizo
+    con `truncate ... restart identity`).
   - El plan gratis **pausa el proyecto tras 7 días sin uso**: antes del
     torneo, jugar/abrir Récords al menos una vez; si se pausó, se reactiva
     desde el panel de Supabase (el juego mientras usa la tabla local).
@@ -223,6 +237,8 @@ acierta ~55 % en niveles 1-2 y ~35 % en el 3). Un jefe dura `PULSOS × pulso × 
   consigna, mecha, telón del intermedio, jefes, medallas).
 - `js/escenas/Practica.js`: las lecciones de la práctica y su cartel.
 - `js/tabla.js`: la tabla de récords (guardar, leer, limpiar nombres).
+- `js/filtroNombres.js`: copia local del filtro de nombres (las listas entre
+  `<listas>` las escribe `herramientas/filtro_nombres/armar.py`).
 - `js/escenas/Micro.js`: base de todos los microjuegos (ayudas: `fondo()`,
   `tema()`, `emoji()`, `boton()`, `chispas()`, `confeti()`, `cartel()`,
   `alTocar/alMover/alSoltar`...). Leer su encabezado antes de hacer uno nuevo.

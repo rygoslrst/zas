@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pruebas del filtro</title>
+<style>
+  :root { --fondo: #14121f; --texto: #f3f0ff; --suave: #a59fc4; --bien: #3ddc84; --mal: #ff5a6e; --caja: #221e33; }
+  body { margin: 0; padding: 16px; background: var(--fondo); color: var(--texto); font: 15px/1.45 system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p { color: var(--suave); margin: 4px 0 12px; }
+  .fila { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+  input, button { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid #3a3456; background: var(--caja); color: var(--texto); }
+  button { cursor: pointer; }
+  #veredicto { font-weight: 600; }
+  .bien { color: var(--bien); } .mal { color: var(--mal); }
+  section { background: var(--caja); border-radius: 10px; padding: 12px 14px; margin: 12px 0; }
+  h2 { font-size: 16px; margin: 0 0 6px; }
+  ul { margin: 6px 0 0; padding-left: 20px; columns: 2 260px; }
+  code { color: var(--suave); }
+</style>
+</head>
+<body>
+<h1>Pruebas del filtro de nombres</h1>
+<p>Compara <code>js/filtroNombres.js</code> (el juego) con la base de datos (Supabase) sobre
+  <code>herramientas/filtro_nombres/deben_pasar.txt</code>, <code>deben_caer.txt</code> y variantes
+  armadas de cada palabra prohibida.</p>
+
+<div class="fila">
+  <input id="nombre" placeholder="Probar un nombre" maxlength="40" autocomplete="off">
+  <span id="veredicto"></span>
+</div>
+<div class="fila">
+  <button id="bd">Comparar con la base de datos</button>
+  <span id="avance"></span>
+</div>
+<div id="resultados"></div>
+
+<script type="module">
+import { nombreProhibido, formaCanonica, LISTAS } from '/js/filtroNombres.js';
+import { limpiarNombre } from '/js/tabla.js';
+
+const URL_RPC = 'https://eouuvfqpktumfwlebmqz.supabase.co/rest/v1/rpc/revisar_nombre';
+const LLAVE = 'sb_publishable_bEC0jMG9Ls2YGHzx2faIcg_xFMQU6WG';
+const $ = id => document.getElementById(id);
+
+// Lo mismo que hace el juego: se rechaza si lo escrito o cómo queda es prohibido
+const rechazaJuego = t => nombreProhibido(t) || nombreProhibido(limpiarNombre(t) || 'JUGADOR');
+
+async function leerLista(archivo) {
+  const texto = await (await fetch('/herramientas/filtro_nombres/' + archivo, { cache: 'no-store' })).text();
+  return texto.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+}
+
+// Variantes de cada prohibida, como las escribiría alguien que quiere colarla
+function variantes(p) {
+  const w = p.replace(/[*~]/g, ''), entera = p.includes('*');
+  const v = new Set([w, w.toLowerCase()]);
+  v.add(w.replace(/A/g, '4').replace(/E/g, '3').replace(/I/g, '1').replace(/O/g, '0').replace(/S/g, '5').replace(/T/g, '7'));
+  v.add(w.replace(/([AEIOU])/g, '$1$1'));
+  v.add(w.replace(/([AEIOU])/, '$1H'));
+  if (w.length <= 8) v.add([...w].join(' '));
+  v.add(w.replace(/C([AOU])/g, 'K$1'));
+  v.add(w.includes('V') ? w.replace(/V/g, 'B') : w.replace(/B/g, 'V'));
+  v.add(w.replace(/S/g, 'Z'));
+  v.add(w.replace(/LL/g, 'Y'));
+  v.add(w.replace(/CH/g, 'X'));
+  v.add(w.replace(/I/g, 'Y'));
+  if (entera) { v.add('JUAN ' + w); v.add(w + ' 10'); }
+  else { v.add('JUAN' + w); v.add(w + 'XD'); v.add('EL' + w + '123'); }
+  if (p.includes('~')) v.add([...w].reverse().join(''));
+  return [...v];
+}
+
+// Combinaciones como las escribiría un niño (nombre + apellido, inicial, año
+// o número; dos nombres), sin pasarse de 10 letras. No son fallas seguras:
+// algunas sí se leen feo (PIPOTOMÁS). Sirven para ver cuánto molesta el filtro.
+async function combinaciones() {
+  const texto = await (await fetch('/herramientas/filtro_nombres/deben_pasar.txt', { cache: 'no-store' })).text();
+  const sec = {};
+  let actual = '';
+  for (const l of texto.split('\n').map(s => s.trim())) {
+    if (l.startsWith('## ')) { actual = l.slice(3); sec[actual] = []; }
+    else if (l && !l.startsWith('#')) sec[actual].push(l);
+  }
+  const nombres = [...sec['nombres de hombre'], ...sec['nombres de mujer'], ...sec['apodos']].filter(n => !n.includes(' '));
+  const apellidos = [...sec['apellidos'], ...sec['nombres mapuches y del sur']];
+  const sufijos = ['1', '2', '3', '7', '10', '12', '13', '23', '99', 'XD', 'PRO', 'GG', '777', '007'];
+  for (let a = 2005; a <= 2020; a++) sufijos.push(String(a));
+  const caen = new Map();
+  let total = 0;
+  const probar = t => {
+    if (t.length > 10) return;
+    total++;
+    if (rechazaJuego(t)) caen.set(t, formaCanonica(t));
+  };
+  for (const n of nombres) {
+    for (const a of apellidos) { probar(n + ' ' + a); probar(n + a); probar(a + ' ' + n); }
+    for (const l of 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ') { probar(n + ' ' + l); probar(l + ' ' + n); }
+    for (const s of sufijos) { probar(n + s); probar(n + ' ' + s); }
+    for (const m of nombres) probar(n + ' ' + m);
+  }
+  return { total, caen: [...caen].map(([n, f]) => ({ n, debe: false, origen: f })) };
+}
+
+const casos = [];
+const pasar = await leerLista('deben_pasar.txt');
+const caer = await leerLista('deben_caer.txt');
+for (const n of pasar) casos.push({ n, debe: false, origen: 'deben_pasar' });
+for (const n of caer) casos.push({ n, debe: true, origen: 'deben_caer' });
+for (const p of LISTAS.PROHIBIDAS) for (const n of variantes(p)) casos.push({ n, debe: true, origen: 'variante de ' + p });
+for (const c of casos) c.js = rechazaJuego(c.n);
+const combis = await combinaciones();
+
+function lista(titulo, filas, clase) {
+  const s = document.createElement('section');
+  s.innerHTML = `<h2 class="${clase}">${titulo} (${filas.length})</h2>`;
+  if (filas.length) {
+    const ul = document.createElement('ul');
+    for (const c of filas.slice(0, 400)) {
+      const li = document.createElement('li');
+      li.textContent = c.origen === formaCanonica(c.n) ? `${c.n} → ${c.origen}` : `${c.n} → ${formaCanonica(c.n)}  (${c.origen})`;
+      ul.append(li);
+    }
+    s.append(ul);
+  }
+  return s;
+}
+
+function mostrar() {
+  const r = $('resultados');
+  r.innerHTML = '';
+  const conBD = casos.every(c => c.bd !== undefined);
+  const fallasJS = casos.filter(c => c.js !== c.debe);
+  r.append(lista(`Juego: ${casos.length - fallasJS.length} de ${casos.length} bien`, [], fallasJS.length ? 'mal' : 'bien'));
+  r.append(lista('Pasan y deberían caer (juego)', fallasJS.filter(c => c.debe), 'mal'));
+  r.append(lista('Caen y deberían pasar (juego)', fallasJS.filter(c => !c.debe), 'mal'));
+  if (conBD) {
+    r.append(lista('El juego y la base no coinciden', casos.filter(c => c.bd !== c.js), 'mal'));
+  }
+  const pct = (100 * combis.caen.length / combis.total).toFixed(2);
+  r.append(lista(`Combinaciones naturales que caen: ${combis.caen.length} de ${combis.total} (${pct} %)`, combis.caen, ''));
+  window.__filtro = {
+    combis: { total: combis.total, caen: combis.caen.map(c => `${c.n} [${c.origen}]`) },
+    total: casos.length,
+    fallasJS: fallasJS.map(c => ({ n: c.n, debe: c.debe, forma: formaCanonica(c.n), origen: c.origen })),
+    conBD,
+    distintas: conBD ? casos.filter(c => c.bd !== c.js).map(c => ({ n: c.n, js: c.js, bd: c.bd })) : null,
+    errores: casos.filter(c => c.error).length,
+  };
+}
+
+// La base: revisar_nombre devuelve null (prohibido) o el nombre limpio
+// ("JUGADOR" si lo que queda es prohibido)
+async function rechazaBD(n) {
+  for (let intento = 0; intento < 3; intento++) {
+    try {
+      const r = await fetch(URL_RPC, {
+        method: 'POST',
+        headers: { apikey: LLAVE, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_nombre: n }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      const v = await r.json();
+      const limpio = limpiarNombre(n);
+      return v === null || (v === 'JUGADOR' && limpio !== 'JUGADOR');
+    } catch (e) {
+      await new Promise(f => setTimeout(f, 500));
+    }
+  }
+  throw new Error('sin respuesta');
+}
+
+async function compararBD() {
+  $('bd').disabled = true;
+  let hechos = 0, i = 0;
+  const unicos = [...new Map(casos.map(c => [c.n, c])).keys()];
+  const res = new Map();
+  async function trabajador() {
+    while (i < unicos.length) {
+      const n = unicos[i++];
+      try { res.set(n, await rechazaBD(n)); } catch (e) { res.set(n, 'error'); }
+      if (++hechos % 50 === 0) $('avance').textContent = `${hechos} / ${unicos.length}`;
+    }
+  }
+  await Promise.all(Array.from({ length: 8 }, trabajador));
+  for (const c of casos) { c.bd = res.get(c.n); if (c.bd === 'error') c.error = true; }
+  $('avance').textContent = `listo: ${unicos.length} nombres`;
+  $('bd').disabled = false;
+  mostrar();
+}
+
+$('bd').onclick = compararBD;
+window.__compararBD = compararBD;
+$('nombre').oninput = e => {
+  const t = e.target.value;
+  if (!t) { $('veredicto').textContent = ''; return; }
+  const no = rechazaJuego(t);
+  $('veredicto').className = no ? 'mal' : 'bien';
+  $('veredicto').textContent = `${no ? 'NO se puede' : 'Se puede'} · se guardaría «${limpiarNombre(t) || 'JUGADOR'}» · forma: ${formaCanonica(t)}`;
+};
+mostrar();
+</script>
+</body>
+</html>
