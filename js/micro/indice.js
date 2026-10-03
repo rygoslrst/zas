@@ -29,7 +29,7 @@ import { Grande } from './Grande.js';
 import { Orden } from './Orden.js';
 import { Limpia } from './Limpia.js';
 import { Avanza } from './Avanza.js';
-import { Apila } from './Apila.js';
+import { Ritmo } from './Ritmo.js';
 import { Memoria } from './Memoria.js';
 import { Despega } from './Despega.js';
 import { Duelo } from './Duelo.js';
@@ -46,7 +46,7 @@ import { Carrera } from './Carrera.js';
 export const MICROS = [
   // tocar
   Reventa, Aplasta, Distinto, NoToques, Cuantos, Frena, Salta, Pesca, Foto, Topo, Vuela, Suma, Grande, Orden,
-  Apila, Memoria, Duelo, Colores, Ataja, Ruleta,
+  Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta,
   // arrastrar
   Atrapa, Esquiva, Comer, Limpia, Sigue, SinChocar,
   // deslizar

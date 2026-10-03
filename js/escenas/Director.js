@@ -14,7 +14,8 @@
 //  microjuego en las transiciones y la consigna y la mecha van siempre encima.
 // ============================================================================
 
-import { ANCHO, VISTA, ESCALA, RITMO, PARTIDA, COLOR, DEBUG, CLAVE_RECORD, CLAVE_ESCALA, CLAVE_PRACTICA } from '../config.js';
+import { ANCHO, VISTA, ESCALA, RITMO, PARTIDA, COLOR, DEBUG, CLAVE_RECORD, CLAVE_ESCALA, CLAVE_PRACTICA,
+  CLAVE_PUNTAJE } from '../config.js';
 import { crearAtlas } from '../motor/Atlas.js';
 import { EMOJI, TAM_EMOJI, CELDA_EMOJI } from '../datos/emoji.js';
 import { MICROS, JEFES } from '../micro/indice.js';
@@ -34,6 +35,7 @@ const COLOR_MECHA = 0xffc14d;
 const MEDALLAS = [[40, 'diamante'], [30, 'trofeo'], [20, 'medalla_oro'], [10, 'medalla_plata'], [5, 'medalla_bronce']];
 
 const limitar = (v, a, b) => (v < a ? a : v > b ? b : v);
+const conPuntos = n => n.toLocaleString('es-CL');          // 12.340
 function leer(clave, porDefecto) {
   try { const v = localStorage.getItem(clave); return v === null ? porDefecto : v; } catch (e) { return porDefecto; }
 }
@@ -53,7 +55,8 @@ export class Director extends Phaser.Scene {
   create() {
     this.cameras.main.setOrigin(0, 0).setZoom(ESCALA.k);
     this.prepararTexturas();
-    this.record = parseInt(leer(CLAVE_RECORD, '0'), 10) || 0;
+    this.record = parseInt(leer(CLAVE_RECORD, '0'), 10) || 0;              // microjuegos
+    this.recordPuntaje = parseInt(leer(CLAVE_PUNTAJE, '0'), 10) || 0;
     this.color = 3;
     this.crearTelon();
     this.crearConsigna();
@@ -117,6 +120,8 @@ export class Director extends Phaser.Scene {
     this.dientes = this.add.tileSprite(0, 0, ANCHO, 32, 'atlas', 'dientes').setOrigin(0, 0);
     this.sombraPuntos = bt(190, COLOR.OSCURO).setAlpha(0.25);
     this.puntosTxt = bt(190, COLOR.TEXTO);
+    this.puntajeTxt = bt(40, COLOR.ORO);
+    this.sumaTxt = bt(40, COLOR.BIEN).setOrigin(0, 0.5);
     this.corazones = [];
     for (let i = 0; i < PARTIDA.VIDAS; i++) this.corazones.push(this.add.image(0, 0, 'emoji', 'corazon').setDisplaySize(82, 82));
     this.sombraCara = this.add.image(0, 0, 'atlas', 'circulo').setTint(COLOR.OSCURO).setAlpha(0.22).setDisplaySize(130, 30);
@@ -125,10 +130,10 @@ export class Director extends Phaser.Scene {
     this.mensaje = bt(64, COLOR.TEXTO);
     this.velTxt = bt(30, COLOR.TEXTO).setAlpha(0.9);
     this.telon.add([this.fondoCapa, this.fondoDeg, this.rayos, this.vinetaCapa, this.dientes,
-      this.sombraPuntos, this.puntosTxt, ...this.corazones, this.sombraCara, this.reaccion,
-      this.cinta, this.mensaje, this.velTxt]);
-    this.detalles = [this.sombraPuntos, this.puntosTxt, ...this.corazones, this.sombraCara, this.reaccion,
-      this.cinta, this.mensaje, this.velTxt];
+      this.sombraPuntos, this.puntosTxt, this.puntajeTxt, this.sumaTxt, ...this.corazones, this.sombraCara,
+      this.reaccion, this.cinta, this.mensaje, this.velTxt]);
+    this.detalles = [this.sombraPuntos, this.puntosTxt, this.puntajeTxt, this.sumaTxt, ...this.corazones,
+      this.sombraCara, this.reaccion, this.cinta, this.mensaje, this.velTxt];
     // Emoji que desfilan detrás del título y del final
     this.desfile = DESFILE.map((n, i) => ({
       img: this.add.image(0, 0, 'emoji', n).setDisplaySize(90, 90).setAlpha(0.75).setDepth(11),
@@ -304,6 +309,8 @@ export class Director extends Phaser.Scene {
     this.velTxt.setPosition(cx, cy - 352);
     this.puntosTxt.setPosition(cx, cy - 130);
     this.sombraPuntos.setPosition(cx, cy - 120);
+    this.puntajeTxt.setPosition(cx, cy - 14);
+    this.sumaTxt.setY(cy - 14);
     this.corazones.forEach((c, i) => c.setPosition(cx + (i - (PARTIDA.VIDAS - 1) / 2) * 98, cy + 50));
     this.reaccion.setPosition(cx, cy + 215);
     this.sombraCara.setPosition(cx, cy + 305);
@@ -320,6 +327,7 @@ export class Director extends Phaser.Scene {
 
   modoTitulo() {
     this.estado = 'titulo';
+    this.ui.mostrarEnJuego(false);
     this.telonAbajo(false);
     this.pintarTelon(COLOR.FONDOS[3]);
     this.mostrarDetalles(false);
@@ -337,11 +345,14 @@ export class Director extends Phaser.Scene {
     const hacer = practica === true || (practica === null && leer(CLAVE_PRACTICA, '') !== '1');
     this.practica = hacer && !this.soloEste ? { paso: 0, intentos: 0 } : null;
     this.ui.mostrarSaltar(!!this.practica);
+    this.ui.mostrarEnJuego(true);
     this.reiniciarPartida();
     this.intermedio(null);
   }
 
   reiniciarPartida() {
+    this.puntaje = 0;
+    this.sumado = 0;
     this.vidas = PARTIDA.VIDAS;
     this.puntos = 0;
     this.rondas = 0;
@@ -428,11 +439,22 @@ export class Director extends Phaser.Scene {
     const arriba = p ? `${p.paso + 1}/${LECCIONES.length}` : String(this.puntos);
     this.puntosTxt.setText(arriba).setScale(1);
     this.sombraPuntos.setText(arriba);
+    this.puntajeTxt.setText(p ? '' : `${conPuntos(this.puntaje)} PUNTOS`).setScale(1);
+    this.sumaTxt.setText('').setAlpha(0);
     this.corazones.forEach((c, i) => c.setFrame(i < this.vidas ? 'corazon' : 'corazon_negro').setDisplaySize(82, 82)
       .setAngle(0).setAlpha(1).setVisible(!p));
     if (gano === true) {
       this.puntosTxt.setScale(1.5);
       this.tweens.add({ targets: this.puntosTxt, scale: 1, duration: 280, ease: 'Back.easeOut' });
+      if (!p && this.sumado) {
+        // "+160" al lado del puntaje, que salta y se va
+        this.sumaTxt.setText(`+${conPuntos(this.sumado)}`).setX(ANCHO / 2 + this.puntajeTxt.width / 2 + 14)
+          .setAlpha(1).setScale(0.4);
+        this.tweens.add({ targets: this.sumaTxt, scale: 1, duration: 260, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: this.sumaTxt, alpha: 0, delay: 700, duration: 250 });
+        this.puntajeTxt.setScale(1.25);
+        this.tweens.add({ targets: this.puntajeTxt, scale: 1, duration: 300, ease: 'Back.easeOut' });
+      }
       this.confeti(ANCHO / 2, VISTA.alto / 2 - 130, 22);
       this.audio.gano();
       if (jefeGanado) {
@@ -563,6 +585,7 @@ export class Director extends Phaser.Scene {
     if (this.estado !== 'micro' || this.decididoEn !== null) return;
     this.gano = gano;
     this.decididoEn = this.audio.ahora();
+    this.restante = limitar(1 - (this.decididoEn - this.t0) / this.dur, 0, 1);
     if (gano) {
       this.audio.bien();
       this.cuerda.setTint(COLOR.BIEN);
@@ -601,6 +624,8 @@ export class Director extends Phaser.Scene {
     this.rondas++;
     if (this.gano) {
       this.puntos++;
+      this.sumado = this.puntosPorMicro();
+      this.puntaje += this.sumado;
       if (this.Clase.JEFE) this.vidas = Math.min(PARTIDA.VIDAS, this.vidas + 1);
     } else this.vidas--;
     this.mostrarMecha(false);
@@ -608,12 +633,26 @@ export class Director extends Phaser.Scene {
     else this.intermedio(this.gano);
   }
 
+  // Puntaje de un microjuego superado: 100, más hasta 100 por terminarlo rápido,
+  // todo por la velocidad. Los jefes valen el triple. (Los que se ganan
+  // aguantando hasta el final cuentan como "a medias" de rápido.)
+  puntosPorMicro() {
+    const rapidez = this.Clase.GANA_AL_FINAL ? 0.5 : this.restante;
+    const base = (100 + 100 * rapidez) * this.vel * (this.Clase.JEFE ? 3 : 1);
+    return Math.round(base / 10) * 10;
+  }
+
   fin() {
     this.estado = 'fin';
-    const nuevo = this.puntos > this.record;
-    if (nuevo) {
+    this.ui.mostrarEnJuego(false);
+    if (this.puntos > this.record) {
       this.record = this.puntos;
       guardar(CLAVE_RECORD, String(this.record));
+    }
+    const nuevo = this.puntaje > this.recordPuntaje;
+    if (nuevo) {
+      this.recordPuntaje = this.puntaje;
+      guardar(CLAVE_PUNTAJE, String(this.recordPuntaje));
     }
     this.telonAbajo(false);
     this.pintarTelon(0x3a2a6b);
@@ -622,14 +661,37 @@ export class Director extends Phaser.Scene {
     this.audio.finPartida();
     if (nuevo) this.time.delayedCall(1300, () => this.audio.record());
     const medalla = (MEDALLAS.find(([min]) => this.puntos >= min) || [0, null])[1];
-    this.ui.mostrarFin({ puntos: this.puntos, record: this.record, nuevo, ultimo: this.orden || '', medalla });
+    this.ui.mostrarFin({
+      puntos: this.puntos, puntaje: this.puntaje, record: this.record, recordPuntaje: this.recordPuntaje,
+      nuevo, ultimo: this.orden || '', medalla,
+    });
+  }
+
+  // Vuelve al menú principal (desde la pausa o desde el final). Si había una
+  // partida en curso, se abandona.
+  irAlMenu() {
+    if (this.estado !== 'pausa' && this.estado !== 'fin') return;
+    if (this.clave) { this.scene.stop(this.clave); this.clave = null; }
+    this.tweens.resumeAll();
+    this.congelado = false;
+    this.cartelLeccion.ocultar();
+    this.audio.detenerPista();
+    this.audio.chorro(false);
+    this.mostrarMecha(false);
+    this.ocultarConsigna();
+    this.proximo = null;
+    this.practica = null;
+    this.ui.mostrarSaltar(false);
+    this.modoTitulo();
+    this.audio.reanudar();              // si venía de la pausa, el audio estaba suspendido
+    this.ui.mostrarMenu();
   }
 
   // --------------------------------------------------------------------------
   //  Pausa (al salir de la pestaña o apagar la pantalla)
   // --------------------------------------------------------------------------
   pausar() {
-    if (!['micro', 'intermedio', 'cerrando'].includes(this.estado)) return;
+    if (!['micro', 'intermedio', 'cerrando', 'leccion'].includes(this.estado)) return;
     this.previo = this.estado;
     this.estado = 'pausa';
     if (this.clave) this.scene.pause(this.clave);

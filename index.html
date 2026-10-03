@@ -26,14 +26,18 @@
   <p class="bajada">Microjuegos de 4 segundos.<br>¿Cuántos aguantas?</p>
   <p class="cta"><span class="solo-tactil">Toca para jugar</span><span class="solo-mouse">Haz clic para jugar</span></p>
   <p id="titulo-record" class="record"></p>
+  <div class="fila-botones">
+    <button class="boton texto ancho" data-accion="records" type="button">Récords</button>
+    <button class="boton texto ancho" data-accion="practica" type="button">Cómo jugar</button>
+  </div>
   <div class="esquina">
     <button class="boton icono" data-accion="sonido" type="button"></button>
-    <button class="boton texto" data-accion="practica" type="button">Cómo jugar</button>
     <button class="boton texto" data-accion="creditos" type="button">Créditos</button>
   </div>
 </section>
 
 <button id="saltar" class="boton texto saltar" type="button" hidden>Saltar práctica ›</button>
+<button id="btn-pausa" class="boton icono btn-pausa" type="button" aria-label="Pausa" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg></button>
 
 <section id="fin" class="capa" hidden>
   <canvas id="fin-medalla" class="medalla" width="304" height="304" hidden></canvas>
@@ -42,7 +46,19 @@
   <p id="fin-detalle" class="detalle"></p>
   <p id="fin-veredicto" class="bajada"></p>
   <p id="fin-record" class="record"></p>
-  <p class="cta"><span class="solo-tactil">Toca para jugar otra vez</span><span class="solo-mouse">Haz clic para jugar otra vez</span></p>
+  <div id="fin-nombre" class="caja-nombre" hidden>
+    <p class="caja-titulo">¡Entraste a la tabla de récords!</p>
+    <form id="form-nombre" class="fila-nombre">
+      <input id="nombre" type="text" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="TU NOMBRE" aria-label="Tu nombre">
+      <button class="boton texto primario" type="submit">Guardar</button>
+    </form>
+    <button id="no-guardar" class="boton texto chico" type="button">No, gracias</button>
+  </div>
+  <p id="fin-cta" class="cta"><span class="solo-tactil">Toca para jugar otra vez</span><span class="solo-mouse">Haz clic para jugar otra vez</span></p>
+  <div class="fila-botones">
+    <button class="boton texto ancho" data-accion="menu" type="button">Menú</button>
+    <button class="boton texto ancho" data-accion="records" type="button">Récords</button>
+  </div>
   <div class="esquina">
     <button class="boton icono" data-accion="sonido" type="button"></button>
   </div>
@@ -51,6 +67,19 @@
 <section id="pausa" class="capa" hidden>
   <p class="grande">Pausa</p>
   <p class="cta"><span class="solo-tactil">Toca para seguir</span><span class="solo-mouse">Haz clic para seguir</span></p>
+  <div class="fila-botones">
+    <button class="boton texto ancho" data-accion="menu" type="button">Menú principal</button>
+  </div>
+</section>
+
+<section id="records" class="panel" hidden role="dialog" aria-modal="true" aria-labelledby="records-titulo">
+  <div class="panel-cuerpo desplazable">
+    <h2 id="records-titulo">Récords</h2>
+    <p class="nota-tabla">Los 10 mejores puntajes de este aparato.</p>
+    <ol id="tabla" class="tabla"></ol>
+    <p id="tabla-vacia" class="nota-tabla" hidden>Todavía no hay récords. ¡Juega una partida!</p>
+    <button id="cerrar-records" class="boton texto" type="button">Cerrar</button>
+  </div>
 </section>
 
 <section id="creditos" class="panel" hidden role="dialog" aria-modal="true" aria-labelledby="creditos-titulo">
@@ -63,6 +92,7 @@
       <li>Aparece una orden: <b>¡ATRAPA!</b>, <b>¡CORTA!</b>, <b>¡ESQUIVA!</b>… Tienes unos segundos para cumplirla.</li>
       <li>Se juega solo con el dedo (o el mouse): tocar, arrastrar, deslizar o mantener presionado.</li>
       <li>Tienes 4 vidas. Cada cierto tiempo todo va <b>más rápido</b>.</li>
+      <li>Cada microjuego superado da puntos: más si lo terminas rápido y más a mayor velocidad. Los jefes valen el triple.</li>
       <li>Cada 12 microjuegos aparece un <b>JEFE</b>: si lo ganas, vida extra.</li>
       <li>Abajo se quema la mecha: cuando llega a la bomba, se acabó el tiempo.</li>
     </ul>

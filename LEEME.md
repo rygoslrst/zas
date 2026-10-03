@@ -19,6 +19,9 @@ detiene y muestra con una mano qué gesto hacer (también desde "Cómo jugar").
   después los microjuegos se vuelven **más difíciles** (nivel 1, 2 y 3).
 - Al final, según cuántos superaste, una medalla: bronce (5), plata (10), oro
   (20), trofeo (30) y diamante (40).
+- Cada microjuego superado da puntos (más si lo terminas rápido y a mayor
+  velocidad; los jefes, el triple). Los 10 mejores puntajes quedan en la
+  tabla de **Récords** del aparato, con nombre.
 - Se juega con el dedo (o el mouse): tocar, arrastrar, deslizar, mantener
   presionado o tocar muchas veces seguidas. Debajo de la orden aparece cuál.
 

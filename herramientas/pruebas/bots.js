@@ -157,9 +157,10 @@ B.Avanza = m => {
 };
 
 // --- tercera tanda y jefes ---
-B.Apila = m => {
-  const c = m.colgada, tope = m.pila[m.pila.length - 1];
-  if (c && !m.cayendo && m.vale() && Math.abs(c.x - tope.x) < 16) { ev('pointerdown', 270, 500); ev('pointerup', 270, 500); }
+// Ritmo: toca cuando la nota llega al aro (con el retraso del toque descontado)
+B.Ritmo = m => {
+  const o = m.notas.find(n => !n.hecha);
+  if (o && m.t - 0.03 >= o.t - 0.008) { ev('pointerdown', 270, 500); ev('pointerup', 270, 500); }
 };
 B.Memoria = m => {
   if (!m.vueltas) return;
@@ -176,11 +177,16 @@ B.Flechas = m => {
   ev('pointermove', 270 + f.d[0] * 30, 500 + f.d[1] * 30); window.__paso(1);
   ev('pointerup', 270 + f.d[0] * 80, 500 + f.d[1] * 80);
 };
-let agarrado = false;
+// Sigue: como una persona, el dedo va adonde estaba el bicho hace 0,1 s y
+// se acerca de a poco (si el bicho pega un salto, el dedo lo pierde)
+let agarrado = false, dedo = null, historia = [];
 B.Sigue = m => {
-  if (m.t < 0.3) { agarrado = false; return; }
-  if (!agarrado) { ev('pointerdown', m.bicho.x, m.bicho.y); agarrado = true; }
-  ev('pointermove', m.bicho.x, m.bicho.y);
+  if (m.t < 0.3) { agarrado = false; historia = []; return; }
+  historia.push({ x: m.bicho.x, y: m.bicho.y });
+  if (!agarrado) { dedo = { x: m.bicho.x, y: m.bicho.y }; ev('pointerdown', dedo.x, dedo.y); agarrado = true; return; }
+  const meta = historia[Math.max(0, historia.length - 7)];
+  dedo.x += (meta.x - dedo.x) * 0.5; dedo.y += (meta.y - dedo.y) * 0.5;
+  ev('pointermove', dedo.x, dedo.y);
 };
 B.Simon = m => {
   if (m.fase !== 'turno' || ++cuadro % 8) return;

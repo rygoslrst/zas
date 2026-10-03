@@ -67,6 +67,11 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 7. 2026-10-03: la orden tapaba el juego mientras corría el tiempo → ahora
    sale sobre el telón y queda chica junto a la mecha. El aviso de pantalla
    completa tapaba la mecha → el primer microjuego espera a que se vaya.
+8. 2026-10-03: ¡NO LO SUELTES! "se teletransportaba" al agarrarlo (el
+   recorrido no empezaba donde esperaba el bicho) → arreglado. ¡APILA! "no era
+   bueno" → reemplazado por ¡TOCA AL RITMO!. Pidió un botón para ir al menú
+   principal y una tabla de récords con puntaje y rondas → botón de pausa con
+   "Menú principal", puntaje por microjuego y tabla de los 10 mejores.
 
 ## Cómo es el juego hoy
 
@@ -99,7 +104,23 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   la pista (`audio.correrPista`), así todo sigue donde quedó sin suspender
   el audio. Para agregar una lección: una entrada en `LECCIONES` con
   `listo(m)` (cuándo congelar) y `objetivo(m)` (dónde va la mano).
-- Al final, **medalla**: bronce 5, plata 10, oro 20, trofeo 30, diamante 40.
+- Al final, **medalla**: bronce 5, plata 10, oro 20, trofeo 30, diamante 40
+  (por microjuegos superados).
+- **Puntaje** (`Director.puntosPorMicro`): cada microjuego superado da 100 +
+  hasta 100 por terminarlo rápido (lo que sobró de mecha), todo × velocidad;
+  los jefes ×3; los que se ganan aguantando cuentan "medio rápido". Se ve en
+  el telón debajo del número grande ("440 PUNTOS +150").
+- **Tabla de récords** (`js/tabla.js`): los 10 mejores puntajes **de este
+  aparato** (localStorage `zas_tabla_v1`), con nombre, puntos y microjuegos.
+  Al final, si entra, se pide el nombre (hasta 10 letras, con el último ya
+  escrito; filtro de groserías → "JUGADOR"). Las funciones son async para
+  poder pasarla a una tabla en línea sin tocar la interfaz.
+- **Menú principal** = la pantalla de título (Jugar, Récords, Cómo jugar,
+  Créditos). Durante la partida hay un botón de pausa (arriba a la
+  izquierda; también Escape) con "Menú principal" (`Director.irAlMenu`, la
+  partida se abandona). Al final: "Menú" y "Récords". Los botones sobre el
+  juego se acomodan a la columna del juego (`--col-izq/--col-der`, ver
+  `ui.ajustarColumna`).
 - Celular en **vertical**. Todo se juega con el dedo (o el mouse).
 
 **Microjuegos (34)**, por control:
@@ -107,7 +128,8 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENA!, Salta
   ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Topo ¡GOLPÉALO!, Vuela ¡VUELA!,
   Suma ¿CUÁNTO ES?, Grande ¡EL MÁS GRANDE!/¡EL MÁS CHICO!, Orden ¡EN ORDEN!,
-  Apila ¡APILA!, Memoria ¿DÓNDE ESTABA?, Duelo ¡DISPARA!, Colores ¡TOCA EL
+  Ritmo ¡TOCA AL RITMO! (notas que bajan al compás del bombo; tocar a lo
+  loco pierde), Memoria ¿DÓNDE ESTABA?, Duelo ¡DISPARA!, Colores ¡TOCA EL
   AZUL! (y otros colores; desde el nivel 2 la palabra miente), Ataja ¡ATAJA
   EL PENAL! (eres el arquero), Ruleta ¡FRENA EN LA ESTRELLA!
 - *arrastrar:* Atrapa ¡ATRAPA!, Esquiva ¡ESQUIVA!, Comer ¡DALE DE COMER!,
@@ -128,6 +150,7 @@ te persigue, 3 choques y pierdes). Un jefe dura `PULSOS × pulso × √vel`.
 - `js/escenas/Director.js`: maneja la partida (elige y lanza cada microjuego,
   consigna, mecha, telón del intermedio, jefes, medallas).
 - `js/escenas/Practica.js`: las lecciones de la práctica y su cartel.
+- `js/tabla.js`: la tabla de récords (guardar, leer, limpiar nombres).
 - `js/escenas/Micro.js`: base de todos los microjuegos (ayudas: `fondo()`,
   `tema()`, `emoji()`, `boton()`, `chispas()`, `confeti()`, `cartel()`,
   `alTocar/alMover/alSoltar`...). Leer su encabezado antes de hacer uno nuevo.

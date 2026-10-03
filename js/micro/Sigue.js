@@ -1,4 +1,4 @@
-// ¡NO LO SUELTES! — Poné el dedo sobre la mariquita y seguila hasta el final.
+// ¡NO LO SUELTES! — Pon el dedo sobre el bicho y síguelo hasta el final.
 import { Micro } from '../escenas/Micro.js';
 import { COLOR } from '../config.js';
 
@@ -10,8 +10,11 @@ export class Sigue extends Micro {
   armar() {
     this.tema('pasto');
     this.nombre = this.elegir(['mariquita', 'abeja', 'mariposa']);
-    this.bicho = this.emoji(this.nombre, this.cx, this.cy + 150, 90);
-    this.aro = this.add.image(this.cx, this.cy + 150, 'atlas', 'anillo').setDisplaySize(150, 150).setTint(0xffffff).setAlpha(0.8);
+    // El bicho espera justo donde empieza su recorrido: al agarrarlo no salta
+    this.u = 0;
+    const p0 = this.curva(0);
+    this.bicho = this.emoji(this.nombre, p0.x, p0.y, 90);
+    this.aro = this.add.image(p0.x, p0.y, 'atlas', 'anillo').setDisplaySize(150, 150).setTint(0xffffff).setAlpha(0.8);
     this.dedo = null;
     this.tLejos = 0;
     // Hasta que no lo agarrás, el bicho te espera (y la consigna se lee)
@@ -24,16 +27,23 @@ export class Sigue extends Micro {
 
   alGanar() { this.cartel(this.cx, this.cy - 150, '¡PEGADITO!', COLOR.ORO, 60); }
 
+  // El recorrido: una curva que cambia (Lissajous). En u = 0, el centro.
+  curva(u) {
+    return {
+      x: this.cx + Math.sin(u * 1.3) * 170 + Math.sin(u * 2.9) * 30,
+      y: this.cy + 60 + Math.sin(u * 0.9) * 220,
+    };
+  }
+
   paso(dt, t) {
     if (this.decidido) return;
     const cerca = this.dedo && Math.hypot(this.dedo.x - this.bicho.x, this.dedo.y - this.bicho.y) < 80;
     if (!this.tArranca && cerca) this.tArranca = t;
-    // Se mueve en una curva que cambia (Lissajous)
     if (this.tArranca) {
-      const u = (t - this.tArranca) * this.rapidez;
-      const x = this.cx + Math.sin(u * 1.3) * 170 + Math.sin(u * 2.9) * 30;
-      const y = this.cy + 60 + Math.sin(u * 0.9 + 1.2) * 220;
-      this.bicho.setPosition(x, y).setAngle(Math.sin(u * 5) * 15);
+      // Arranca despacito (medio segundo): el dedo que recién lo agarró no lo pierde
+      this.u += dt * this.rapidez * Math.min(1, (t - this.tArranca) / 0.5);
+      const p = this.curva(this.u);
+      this.bicho.setPosition(p.x, p.y).setAngle(Math.sin(this.u * 5) * 15);
       // Si el dedo se aleja más de un instante, se escapó
       this.tLejos = cerca ? 0 : this.tLejos + dt;
       if (this.tLejos > 0.3) {
