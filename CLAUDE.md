@@ -83,6 +83,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 10. 2026-10-03: emoji "pixelados" → se dibujaban hasta 5 veces más grandes que
    su imagen (128 px). Atlas de 192 y 256 px, transparencia sin pérdida y
    mipmaps; el de 128 queda de respaldo.
+13. 2026-10-03: jefe nuevo Marciano; se sacaron Topo (¡GOLPÉALO!) y
+   SinChocar (¡SIN CHOCAR!, "el de la abeja") y entraron Vasos y Honda. En el
+   cartel del stand, la orden ¡GOLPÉALO! pasó a ¡ENCESTA! (PDF rehechos).
 12. 2026-10-03: 6 microjuegos nuevos (Rebota, Cruza, Encesta, Equilibra,
    Encaja, Sopla) → 40. Probados con bots en los 3 niveles y, además, que
    ninguno se gane sin hacer nada.
@@ -184,7 +187,8 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 **Microjuegos (40)**, por control:
 - *tocar:* Reventa ¡REVIENTA!, Aplasta ¡APLASTA!, Distinto ¡EL DISTINTO!,
   NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENA!, Salta
-  ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Topo ¡GOLPÉALO!, Vuela ¡VUELA!,
+  ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Vasos ¡ENCUENTRA EL DIAMANTE!
+  (el juego de los vasos), Vuela ¡VUELA!,
   Suma ¿CUÁNTO ES?, Grande ¡EL MÁS GRANDE!/¡EL MÁS CHICO!, Orden ¡EN ORDEN!,
   Ritmo ¡TOCA AL RITMO! (notas que bajan al compás del bombo; tocar a lo
   loco pierde), Memoria ¿DÓNDE ESTABA?, Duelo ¡DISPARA!, Colores ¡TOCA EL
@@ -194,8 +198,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   autos; al armarse, comprueba con un planificador que haya un cruce posible
   y si no, reacomoda los autos)
 - *arrastrar:* Atrapa ¡ATRAPA!, Esquiva ¡ESQUIVA!, Comer ¡DALE DE COMER!,
-  Limpia ¡LIMPIA!, Sigue ¡NO LO SUELTES!, SinChocar ¡SIN CHOCAR! (llevar la
-  abeja por un pasillo en zigzag), Encaja ¡PONLO EN SU LUGAR! (a su sombra)
+  Limpia ¡LIMPIA!, Sigue ¡NO LO SUELTES!, Honda ¡TUMBA AL CERDO! (honda: tirar
+  hacia atrás y soltar; puntos muestran el camino), Encaja ¡PONLO EN SU
+  LUGAR! (a su sombra)
 - *deslizar:* Corta ¡CORTA!, Patea ¡PATEA!, Cable ¡CORTA EL ROJO! (y otros
   colores), Flechas ¡SIGUE LAS FLECHAS!, Encesta ¡ENCESTA! (la pelota va
   adonde apunta el gesto; el aro se mueve desde el nivel 2)
@@ -204,9 +209,12 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   la pantalla inclina el tablón; sin apretar, se va hacia la pelota), Sopla
   ¡APAGA LAS VELAS!
 
-**Jefes (3):** Simon ¡REPITE! (secuencia de colores), Torta ¡DEFIENDE EL
-PASTEL! (hormigas) y Carrera ¡ESCAPA! (tocar para saltar obstáculos; un ogro
-te persigue, 3 choques y pierdes). Un jefe dura `PULSOS × pulso × √vel`.
+**Jefes (4):** Simon ¡REPITE! (secuencia de colores), Torta ¡DEFIENDE EL
+PASTEL! (hormigas), Carrera ¡ESCAPA! (tocar para saltar obstáculos; un ogro
+te persigue, 3 choques y pierdes) y Marciano ¡DERROTA AL MARCIANO! (arrastrar
+la nave, que dispara sola; el marciano tira meteoros; su vida es una parte de
+los tiros posibles —36/32/25 %—, calibrada con un bot que esquiva perfecto y
+acierta ~55 % en niveles 1-2 y ~35 % en el 3). Un jefe dura `PULSOS × pulso × √vel`.
 
 ## Cómo está hecho (lo esencial)
 

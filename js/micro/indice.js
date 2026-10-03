@@ -21,7 +21,6 @@ import { Infla } from './Infla.js';
 import { Llena } from './Llena.js';
 import { Pesca } from './Pesca.js';
 import { Foto } from './Foto.js';
-import { Topo } from './Topo.js';
 import { Vuela } from './Vuela.js';
 import { Cable } from './Cable.js';
 import { Suma } from './Suma.js';
@@ -38,7 +37,6 @@ import { Sigue } from './Sigue.js';
 import { Simon } from './Simon.js';
 import { Torta } from './Torta.js';
 import { Colores } from './Colores.js';
-import { SinChocar } from './SinChocar.js';
 import { Ataja } from './Ataja.js';
 import { Ruleta } from './Ruleta.js';
 import { Carrera } from './Carrera.js';
@@ -48,13 +46,16 @@ import { Encesta } from './Encesta.js';
 import { Equilibra } from './Equilibra.js';
 import { Encaja } from './Encaja.js';
 import { Sopla } from './Sopla.js';
+import { Vasos } from './Vasos.js';
+import { Honda } from './Honda.js';
+import { Marciano } from './Marciano.js';
 
 export const MICROS = [
   // tocar
-  Reventa, Aplasta, Distinto, NoToques, Cuantos, Frena, Salta, Pesca, Foto, Topo, Vuela, Suma, Grande, Orden,
+  Reventa, Aplasta, Distinto, NoToques, Cuantos, Frena, Salta, Pesca, Foto, Vasos, Vuela, Suma, Grande, Orden,
   Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta, Rebota, Cruza,
   // arrastrar
-  Atrapa, Esquiva, Comer, Limpia, Sigue, SinChocar, Encaja,
+  Atrapa, Esquiva, Comer, Limpia, Sigue, Honda, Encaja,
   // deslizar
   Corta, Patea, Cable, Flechas, Encesta,
   // machacar y mantener
@@ -62,4 +63,4 @@ export const MICROS = [
 ];
 
 // Jefes: cada 12 microjuegos, uno de estos (más largo; si lo ganás, vida extra)
-export const JEFES = [Simon, Torta, Carrera];
+export const JEFES = [Simon, Torta, Carrera, Marciano];

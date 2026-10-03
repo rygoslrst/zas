@@ -115,7 +115,6 @@ B.Foto = m => {
   const b = m.bicho, l = m.lado / 2 - 40;
   if (m.t > 0.3 && Math.abs(b.x - m.mx) < l && Math.abs(b.y - m.my) < l) { ev('pointerdown', 270, 500); ev('pointerup', 270, 500); }
 };
-B.Topo = m => { const h = m.hoyos.find(o => o.fuera); if (h && m.vale()) { ev('pointerdown', h.x, h.y - 20); ev('pointerup', h.x, h.y - 20); } };
 B.Vuela = m => {
   const c = m.canos.find(o => o.x > m.x - 60);
   const meta = c ? (c.arribaAlto + c.abajoY) / 2 + 25 : m.cy;
@@ -204,17 +203,6 @@ B.Torta = m => {
 
 // --- cuarta tanda y jefe Carrera ---
 B.Colores = m => { if (m.t > 0.5) { const o = m.circulos.find(k => k.c === m.pedido); ev('pointerdown', o.base.x, o.base.y); ev('pointerup', o.base.x, o.base.y); } };
-B.SinChocar = m => {
-  if (m.t < 0.3) { m.__i = 1; return; }      // (la escena se reusa: se reinicia el tramo)
-  if (!m.agarrada) { ev('pointerdown', m.abeja.x, m.abeja.y); return; }
-  // Avanza por el camino: hacia el próximo vértice que todavía no pasó, de a 14 px
-  m.__i = m.__i || 1;
-  const p = m.camino[m.__i];
-  const dx = p.x - m.abeja.x, dy = p.y - m.abeja.y, d = Math.hypot(dx, dy);
-  if (d < 6 && m.__i < m.camino.length - 1) { m.__i++; return; }
-  const k = Math.min(1, 14 / Math.max(1, d));
-  ev('pointermove', m.abeja.x + dx * k, m.abeja.y + dy * k);
-};
 // Ataja: reacciona como una persona, 0,22 s después de la patada
 B.Ataja = m => {
   if (m.salto || m.t < m.tPatada + 0.22) return;
@@ -312,3 +300,56 @@ B.Encaja = m => {
 };
 // Sopla: unos 6,7 toques por segundo
 B.Sopla = m => { if (++cuadro % 9 === 0) { ev('pointerdown', 270, 400); ev('pointerup', 270, 400); } };
+
+// --- sexta tanda: reemplazos y el jefe Marciano ---
+// Vasos: toca el vaso que tiene el diamante cuando se puede elegir
+B.Vasos = m => {
+  if (m.estadoV !== 'elegir') return;
+  const v = m.vasos.find(o => o.lugar === m.conDiamante);
+  ev('pointerdown', v.x, m.yMesa - 60); ev('pointerup', v.x, m.yMesa - 60);
+};
+// Honda: prueba estiradas y ángulos, simula el vuelo y tira el que pasa más cerca del cerdo
+B.Honda = m => {
+  if (m.estado !== 'listo' || m.t < 0.3 || m.decidido) return;
+  const FUERZA = 6.2, G = 900;
+  let mejor = null, dMejor = 1e9;
+  for (let ang = 95; ang <= 215; ang += 3) {
+    for (let largo = 40; largo <= 115; largo += 5) {
+      const dx = Math.cos(ang * Math.PI / 180) * largo, dy = Math.sin(ang * Math.PI / 180) * largo;
+      const x0 = m.reposo.x + dx, y0 = m.reposo.y + dy, vx = -dx * FUERZA, vy = -dy * FUERZA;
+      for (let t = 0.02; t < 2; t += 0.02) {
+        const x = x0 + vx * t, y = y0 + vy * t + 0.5 * G * t * t;
+        if (y > m.ySuelo) break;
+        const tt = m.t + t + 0.12;
+        const yc = m.yCerdo0 - (m.subeBaja ? Math.abs(Math.sin(tt * 2.2)) * m.subeBaja : 0);
+        const d = Math.hypot(x - m.xTorre, y - yc);
+        if (d < dMejor) { dMejor = d; mejor = { dx, dy }; }
+      }
+    }
+  }
+  const x0 = m.pajaro.x, y0 = m.pajaro.y;
+  ev('pointerdown', x0, y0); window.__paso(1);
+  for (let k = 1; k <= 4; k++) { ev('pointermove', x0 + mejor.dx * k / 4, y0 + mejor.dy * k / 4); window.__paso(1); }
+  ev('pointerup', x0 + mejor.dx, y0 + mejor.dy);
+};
+// Marciano: simula el próximo segundo yendo a cada lugar posible (la nave se
+// acerca un 16·dt por cuadro, como en el juego); entre los lugares seguros,
+// elige el que queda más cerca de abajo del marciano
+B.Marciano = m => {
+  if (m.t < 0.2 || m.decidido) return;
+  const dt = 1 / 60;
+  let mejor = m.nave.x, puntaje = -1e9;
+  for (let x = 50; x <= m.W - 50; x += 15) {
+    let nx = m.nave.x, dMin = 1e9;
+    for (let k = 1; k <= 60; k++) {
+      nx += (x - nx) * Math.min(1, dt * 16);
+      for (const o of m.meteoros) {
+        const ox = o.img.x + o.vx * dt * k, oy = o.img.y + o.vy * dt * k;
+        dMin = Math.min(dMin, Math.hypot(ox - nx, oy - m.yNave));
+      }
+    }
+    const p = (dMin > 80 ? 0 : (dMin - 80) * 20) - Math.abs(x - m.jefe.x);
+    if (p > puntaje) { puntaje = p; mejor = x; }
+  }
+  ev('pointermove', mejor, m.yNave);
+};
