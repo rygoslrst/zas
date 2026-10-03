@@ -9,6 +9,7 @@
 import { EMOJI, CELDA_EMOJI } from './datos/emoji.js';
 
 const $ = id => document.getElementById(id);
+const AVISO_PANTALLA_S = 3.8;      // lo que tarda en irse el aviso de pantalla completa (Chrome en Android)
 
 const ICONO_SONIDO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const ICONO_MUDO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -111,8 +112,12 @@ export class UI {
     try {
       const p = pedir.call(el, { navigationUI: 'hide' });
       if (p && p.then) {
-        p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('portrait').catch(() => {}))
-         .catch(() => {});
+        p.then(() => {
+          // El aviso del navegador ("desliza para salir") dura unos segundos y
+          // no se puede quitar: el primer microjuego espera a que se vaya.
+          if (this.director) this.director.esperarAviso(AVISO_PANTALLA_S);
+          if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {});
+        }).catch(() => {});
       }
     } catch (e) { /* nada */ }
   }

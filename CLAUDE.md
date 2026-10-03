@@ -64,11 +64,25 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    instrucciones; el torneo es en Chile) y un **tutorial como el de FUGA**,
    donde el juego se detiene para enseñar → texto neutro en todo (juego,
    HTML, cartel y tarjetas, PDF rehechos) y la **práctica guiada**.
+7. 2026-10-03: la orden tapaba el juego mientras corría el tiempo → ahora
+   sale sobre el telón y queda chica junto a la mecha. El aviso de pantalla
+   completa tapaba la mecha → el primer microjuego espera a que se vaya.
 
 ## Cómo es el juego hoy
 
 - Una orden ("¡ATRAPA!") sobre un estallido, con una manito que muestra el
   gesto; ~4 s para cumplirla; abajo se quema una mecha. **4 vidas.**
+- La orden sale **sobre el telón**, al final del intermedio (después del
+  resultado), y al subir el telón se achica y queda chica junto a la bomba
+  (`ordenChica`) como recordatorio. Así el microjuego se ve entero desde el
+  primer instante: antes la orden tapaba el centro ~1 s con el reloj
+  corriendo (el usuario lo pidió el 2026-10-03). Tiempos en `intermedio()`
+  (resultado) y `prepararMicro()` (orden).
+- Pantalla completa en el celular: Chrome en Android muestra abajo un aviso
+  ("desliza para salir") que la página no puede quitar. El primer microjuego
+  espera a que se vaya (`esperarAviso`, 3,8 s supuestos: duración de un
+  aviso largo de Android; si en el teléfono real sigue tapando, subirlo en
+  `AVISO_PANTALLA_S` de `js/ui.js`).
 - Cada 5 microjuegos, **más rápido** (+12%, hasta ×1,85). Cada 12, un **JEFE**
   (si lo ganás, vida extra) y después **más difícil** (nivel 1 → 2 → 3).
 - **Práctica guiada** (`js/escenas/Practica.js`): la primera vez en cada

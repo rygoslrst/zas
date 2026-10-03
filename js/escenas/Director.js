@@ -3,6 +3,9 @@
 // ----------------------------------------------------------------------------
 //  Elige el próximo microjuego, lo lanza, mide el tiempo con la música, dibuja
 //  la consigna y la mecha, y entre uno y otro baja el TELÓN del intermedio:
+//  primero el resultado y después, con el telón todavía abajo, la ORDEN del
+//  próximo. Al subir el telón la orden se achica y queda chiquita junto a la
+//  mecha: el microjuego se ve entero desde el primer instante.
 //  puntos, vidas y la carita de cómo te fue. Cada tanto, "¡MÁS RÁPIDO!", y
 //  cada 12 microjuegos, un JEFE (más largo; si lo ganás, vida extra).
 //  La primera vez, antes de la partida, corre la PRÁCTICA (ver Practica.js).
@@ -60,6 +63,8 @@ export class Director extends Phaser.Scene {
     this.clave = null;
     this.practica = null;
     this.congelado = false;
+    this.proximo = null;
+    this.avisoHasta = 0;
     // En una lección de la práctica, el primer toque descongela el juego. (El
     // Director está arriba: recibe el toque antes que el microjuego, que
     // después lo recibe también y lo cuenta como jugada.)
@@ -132,7 +137,7 @@ export class Director extends Phaser.Scene {
   }
 
   mostrarDesfile(v) { for (const d of this.desfile) d.img.setVisible(v); }
-  mostrarDetalles(v) { for (const o of this.detalles) o.setVisible(v); }
+  mostrarDetalles(v) { for (const o of this.detalles) o.setVisible(v).setAlpha(1); }
 
   // Colores del telón: un color vivo, más claro arriba y más oscuro abajo
   pintarTelon(color) {
@@ -180,7 +185,9 @@ export class Director extends Phaser.Scene {
     this.ayuda = this.add.bitmapText(0, 0, 'anton', '', 38).setOrigin(0, 0.5).setTint(COLOR.ORO).setDepth(31);
     this.anilloMano = this.add.image(0, 0, 'atlas', 'anillo').setTint(0xffffff).setDepth(31);
     this.mano = this.add.image(0, 0, 'emoji', 'dedo').setDisplaySize(64, 64).setDepth(32);
-    this.hudConsigna = [this.consignaGrupo, this.ayuda, this.anilloMano, this.mano];
+    // La orden en chico, junto a la mecha, mientras se juega (de recordatorio)
+    this.ordenChica = this.add.bitmapText(0, 0, 'anton', '', 34).setOrigin(0, 0.5).setTint(COLOR.TEXTO).setDepth(26);
+    this.hudConsigna = [this.consignaGrupo, this.ayuda, this.anilloMano, this.mano, this.ordenChica];
     for (const o of this.hudConsigna) o.setVisible(false);
   }
 
@@ -208,12 +215,27 @@ export class Director extends Phaser.Scene {
     this.mano.setVisible(true).setAlpha(1).setFrame(control === 'nada' ? 'diablo' : 'dedo').setDisplaySize(64, 64);
     this.anilloMano.setVisible(control !== 'nada' && control !== 'arrastrar').setAlpha(0);
     this.tManoCero = this.time.now;
-    // Salida: todo se agranda y se desvanece
-    const quieta = Math.max(0.6, 0.95 / this.vel) * 1000;
-    this.tFinConsigna = (quieta + 200) / 1000;
-    this.tweens.add({ targets: this.consignaGrupo, scale: 1.2, alpha: 0, delay: quieta, duration: 170, ease: 'Quad.easeIn' });
-    this.tweens.add({ targets: [this.ayuda, this.mano, this.anilloMano], alpha: 0, delay: quieta, duration: 170 });
   }
+
+  // Sube el telón: la consigna se achica hacia la mecha y queda en chico ahí
+  // abajo (la franja que los microjuegos dejan libre) mientras se juega.
+  consignaAlJuego() {
+    this.tweens.killTweensOf([...this.hudConsigna, this.estallido, this.estallidoSombra, this.consigna]);
+    this.tweens.add({
+      targets: this.consignaGrupo, x: ANCHO / 2, y: this.mechaY - 30, scale: 0.12, alpha: 0,
+      duration: 200, ease: 'Quad.easeIn',
+    });
+    this.tweens.add({ targets: [this.ayuda, this.mano, this.anilloMano], alpha: 0, duration: 120 });
+    this.ordenChica.setText(this.orden).setScale(1).setVisible(true).setAlpha(0);
+    const k = Math.min(1, (ANCHO - this.ordenChica.x - 24) / Math.max(1, this.ordenChica.width));
+    this.ordenChica.setScale(k * 1.5);
+    this.tweens.add({ targets: this.ordenChica, scale: k, alpha: 1, delay: 140, duration: 200, ease: 'Back.easeOut' });
+  }
+
+  // Al entrar en pantalla completa, el navegador muestra unos segundos un
+  // aviso ("desliza para salir...") que la página no puede quitar: el primer
+  // microjuego espera a que se vaya, con el telón abajo.
+  esperarAviso(seg) { this.avisoHasta = performance.now() + seg * 1000; }
 
   ocultarConsigna() {
     this.tweens.killTweensOf(this.hudConsigna);
@@ -288,6 +310,7 @@ export class Director extends Phaser.Scene {
     this.mechaY = h - 38;
     this.mechaX0 = 82;
     this.mechaLargo = ANCHO - 26 - this.mechaX0;
+    this.ordenChica.setPosition(this.mechaX0 + 4, this.mechaY - 34);
     this.mechaFondo.setPosition(this.mechaX0 - 6, this.mechaY).setDisplaySize(this.mechaLargo + 12, 26);
     this.cuerda.setPosition(this.mechaX0, this.mechaY).setSize(this.mechaLargo, 14);
     this.quemado.setPosition(this.mechaX0 + this.mechaLargo, this.mechaY).setDisplaySize(1, 16);
@@ -393,10 +416,12 @@ export class Director extends Phaser.Scene {
     this.nivel = p ? nivelNuevo : this.nivelForzado || nivelNuevo;
 
     this.telonAbajo(false);
+    this.tweens.killTweensOf(this.detalles);
     this.mostrarDetalles(true);
     this.mostrarDesfile(false);
     this.ocultarConsigna();
     this.mostrarMecha(false);
+    this.proximo = null;
     this.velTxt.setText(p ? 'PRÁCTICA' : this.vel > 1.001 ? `VELOCIDAD ×${this.vel.toFixed(2).replace('.', ',')}` : '');
 
     // Puntos y vidas (en la práctica: qué lección va, y sin corazones)
@@ -442,7 +467,8 @@ export class Director extends Phaser.Scene {
     if (acelera) carteles.push(['¡MÁS RÁPIDO!', () => this.audio.acelera(), 0xff7a1a]);
     if (this.tocaJefe()) carteles.push(['¡JEFE!', () => this.audio.jefe(), 0x1b1030]);
 
-    let dur = Math.max(0.8, 1.25 / this.vel);
+    // Cuánto se ve el resultado; después viene la consigna (prepararMicro)
+    let dur = Math.max(0.65, 0.9 / this.vel);
     this.fases = [];
     this.mensaje.setText('');
     this.cinta.setAlpha(0);
@@ -451,7 +477,20 @@ export class Director extends Phaser.Scene {
       this.fases.push({ t, fn: () => this.cartelTelon(txt, color, sonido) });
     });
     if (carteles.length) dur += 0.95 * carteles.length - (gano === null ? 0.3 : 0);
-    this.finIntermedio = a + dur;
+    this.tConsigna = a + dur;
+  }
+
+  // Con el telón todavía abajo: elige el próximo microjuego y muestra su orden
+  // en grande (los puntos y las vidas se apagan para dejarle el lugar).
+  prepararMicro() {
+    const Clase = this.siguiente();
+    // Algunos microjuegos traen variantes con su propia consigna ("¡CORTA EL ROJO!")
+    const variante = Clase.VARIANTES ? Phaser.Utils.Array.GetRandom(Clase.VARIANTES) : null;
+    this.proximo = { Clase, variante, orden: variante ? variante.orden : Clase.ORDEN };
+    this.tweens.killTweensOf(this.detalles);
+    this.tweens.add({ targets: this.detalles, alpha: 0, duration: 120 });
+    this.mostrarConsigna(this.proximo.orden, Clase.CONTROL);
+    this.finIntermedio = this.audio.ahora() + Math.max(0.55, 0.75 / this.vel);
   }
 
   // Un cartel sobre un estallido en el telón ("¡MÁS RÁPIDO!")
@@ -491,7 +530,9 @@ export class Director extends Phaser.Scene {
   }
 
   empezarMicro() {
-    const Clase = this.siguiente();
+    if (!this.proximo) this.prepararMicro();
+    const { Clase, variante, orden } = this.proximo;
+    this.proximo = null;
     this.Clase = Clase;
     this.clave = Clase.name;
     const bpm = RITMO.BPM_BASE * this.vel;
@@ -503,16 +544,15 @@ export class Director extends Phaser.Scene {
     this.gano = null;
     this.tics = 0;
     this.leccionMostrada = false;
-    // Algunos microjuegos traen variantes con su propia consigna ("¡CORTA EL ROJO!")
-    const variante = Clase.VARIANTES ? Phaser.Utils.Array.GetRandom(Clase.VARIANTES) : null;
-    this.orden = variante ? variante.orden : Clase.ORDEN;
+    this.tFinConsigna = 0.3;          // la práctica congela recién con el juego a la vista
+    this.orden = orden;
     this.audio.empezarPista(bpm, this.t0, (Math.random() * 1e9) | 0);
     this.scene.launch(this.clave, {
       director: this, audio: this.audio, nivel: this.nivel, vel: this.vel, dur: this.dur, t0: this.t0, variante,
     });
     this.estado = 'micro';
     this.telonArriba();
-    this.mostrarConsigna(this.orden, Clase.CONTROL);
+    this.consignaAlJuego();
     this.mostrarMecha(true);
     this.cuerda.setTint(COLOR_MECHA);
     this.bomba.setFrame('bomba').setDisplaySize(74, 74);
@@ -626,11 +666,12 @@ export class Director extends Phaser.Scene {
         while (this.fases.length && this.fases[0].t <= a) this.fases.shift().fn();
         this.reaccion.y = VISTA.alto / 2 + 215 + Math.sin(time / 120) * 7;
         this.reaccion.angle = Math.sin(time / 200) * 6;
+        if (!this.proximo && a >= this.tConsigna && performance.now() >= this.avisoHasta) this.prepararMicro();
         break;
       case 'micro': this.cuadroMicro(a); break;
       case 'leccion': this.cartelLeccion.animar(time); break;
     }
-    if (this.estado === 'intermedio' && a >= this.finIntermedio) this.empezarMicro();
+    if (this.estado === 'intermedio' && this.proximo && a >= this.finIntermedio) this.empezarMicro();
   }
 
   cuadroMicro(a) {
@@ -685,7 +726,7 @@ export class Director extends Phaser.Scene {
     this.leccionDesde = this.time.now + 250;  // un dedo que ya estaba apoyado no cuenta
     // Si el aparato se trabó, las animaciones pueden ir atrasadas respecto
     // del reloj: el telón y la consigna se sacan igual, que no tapen nada.
-    this.tweens.killTweensOf([this.telon, this.rayos, ...this.hudConsigna]);
+    this.tweens.killTweensOf([this.telon, this.rayos, this.consignaGrupo, this.ayuda, this.anilloMano, this.mano]);
     this.telon.setVisible(false).setY(-(VISTA.alto + 40));
     this.tweens.add({ targets: this.consignaGrupo, alpha: 0, duration: 120 });
     // La mano hace el gesto sobre el objeto (la punta del dedo, en el objeto)

@@ -24,6 +24,7 @@ window.__ver = (nombre, tCap, nivel = 1, vel = 1) => {
   d.estado = 'fin';
   for (const id of ['titulo', 'fin', 'pausa']) document.getElementById(id).hidden = true;
   d.empezar();
+  d.prepararMicro();
   d.finIntermedio = T;
   let g = 0;
   while (g++ < 3000 && !(d.estado === 'micro' && T - d.t0 >= tCap)) window.__paso(1);
