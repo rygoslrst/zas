@@ -7,6 +7,7 @@ import { Audio } from './motor/Audio.js';
 import { UI } from './ui.js';
 import { Director } from './escenas/Director.js';
 import { MICROS, JEFES } from './micro/indice.js';
+import { ARCHIVO_EMOJI, LADO_ATLAS, usarAtlas } from './datos/emoji.js';
 
 // ----------------------------------------------------------------------------
 //  Que el navegador no se coma los toques: sin esto, arrastrar el dedo hace
@@ -29,11 +30,27 @@ function blindarGestos() {
   }, { passive: false });
 }
 
-function hayWebGL() {
+// El atlas de emoji más nítido que el aparato aguante: el de 256 px sólo con
+// pantalla nítida (k alto) y memoria de sobra (Chrome la informa; si no se
+// sabe, el de 192). El de 128 si la placa no admite texturas de 4096.
+function elegirAtlas(maxTextura, k) {
+  const memoria = navigator.deviceMemory || 0;
+  if (maxTextura >= LADO_ATLAS.uhd && k >= 1.75 && memoria >= 4) return 'uhd';
+  if (maxTextura >= LADO_ATLAS.hd) return 'hd';
+  return 'sd';
+}
+
+// Devuelve el lado máximo de textura que admite la placa de video (0: sin WebGL)
+function texturaMaxima() {
   try {
     const c = document.createElement('canvas');
-    return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')));
-  } catch (e) { return false; }
+    const gl = window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl'));
+    if (!gl) return 0;
+    const max = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 2048;
+    const perder = gl.getExtension('WEBGL_lose_context');
+    if (perder) perder.loseContext();             // este contexto era sólo para preguntar
+    return max;
+  } catch (e) { return 0; }
 }
 
 // WebP pesa la mitad; los iPhone muy viejos no lo leen y reciben el PNG.
@@ -96,7 +113,8 @@ function vigilarVisibilidad(director, audio) {
 
 async function arrancar() {
   blindarGestos();
-  if (!hayWebGL()) {
+  const maxTextura = texturaMaxima();
+  if (!maxTextura) {
     document.getElementById('error').hidden = false;
     document.getElementById('cargando').hidden = true;
     return;
@@ -105,15 +123,17 @@ async function arrancar() {
   // La tipografía y los emoji tienen que estar antes de armar las texturas.
   const fuente = Promise.race([document.fonts.load('128px Anton'), new Promise(r => setTimeout(r, 3000))])
     .catch(() => { /* seguimos con la de respaldo */ });
+  VISTA.alto = altoParaPantalla(window.innerWidth, window.innerHeight);
+  ESCALA.k = escalaParaPantalla(window.innerWidth, window.innerHeight, VISTA.alto);
+  const atlas = new URLSearchParams(location.search).get('atlas');      // para probar: ?atlas=sd
+  usarAtlas(LADO_ATLAS[atlas] ? atlas : elegirAtlas(maxTextura, ESCALA.k));
   const imagenEmoji = new Image();
-  imagenEmoji.src = (await soportaWebp()) ? 'assets/emoji.webp' : 'assets/emoji.png';
+  imagenEmoji.src = ARCHIVO_EMOJI + ((await soportaWebp()) ? '.webp' : '.png');
   await Promise.all([fuente, imagenEmoji.decode()]);
 
   const audio = new Audio(CLAVE_SONIDO);
   const ui = new UI(audio, imagenEmoji);
 
-  VISTA.alto = altoParaPantalla(window.innerWidth, window.innerHeight);
-  ESCALA.k = escalaParaPantalla(window.innerWidth, window.innerHeight, VISTA.alto);
   const juego = new Phaser.Game({
     type: Phaser.WEBGL,
     parent: 'juego',
@@ -121,7 +141,9 @@ async function arrancar() {
     height: Math.round(VISTA.alto * ESCALA.k),
     backgroundColor: '#1b1030',
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-    render: { antialias: true, pixelArt: false, roundPixels: false, powerPreference: 'high-performance' },
+    // mipmaps: la placa guarda versiones reducidas de los emoji y los achica sin "dientes"
+    render: { antialias: true, pixelArt: false, roundPixels: false, powerPreference: 'high-performance',
+      mipmapFilter: 'LINEAR_MIPMAP_LINEAR' },
     fps: { target: 60, min: 20 },
     audio: { noAudio: true },                  // el audio es nuestro: un solo AudioContext
     input: { activePointers: 3, keyboard: false, gamepad: false },

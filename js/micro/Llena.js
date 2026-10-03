@@ -1,5 +1,6 @@
 // ¡LLENÁ EL VASO! — Mantené apretado para que caiga agua; soltá en la franja.
 import { Micro } from '../escenas/Micro.js';
+import { CELDA_EMOJI } from '../datos/emoji.js';
 import { COLOR } from '../config.js';
 
 const AGUA = 0x4d96ff, AGUA_CLARA = 0x9fd0ff, VIDRIO = 0xdff3ff;
@@ -47,7 +48,7 @@ export class Llena extends Micro {
     const yCanilla = this.yBorde - 130;
     this.yCanilla = yCanilla + 14 * k;
     this.chorro = this.rect(this.cx, this.yCanilla, 20, 1, AGUA, 0.9).setOrigin(0.5, 0).setVisible(false);
-    this.emojiEntero('canilla', this.cx + 38 * k, yCanilla, 160).setCrop(0, 0, 152, 94);   // encima del chorro
+    this.emojiEntero('canilla', this.cx + 38 * k, yCanilla, 160).setCrop(0, 0, CELDA_EMOJI, CELDA_EMOJI * 0.62);   // encima del chorro
 
     this.alTocar(() => { this.sirviendo = true; this.audio.chorro(true); });
     this.input.on('pointerup', () => this.cortar());

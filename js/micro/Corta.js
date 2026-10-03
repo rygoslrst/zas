@@ -1,6 +1,7 @@
 // ¡CORTÁ! — Saltan frutas: deslizá el dedo a través de ellas. La bomba, no.
 import { Micro } from '../escenas/Micro.js';
 import { COLOR } from '../config.js';
+import { CELDA_EMOJI } from '../datos/emoji.js';
 
 const FRUTAS = [['sandia', 0xff4d6d], ['anana', 0xffd23f], ['coco', 0xf5f5f5], ['naranja', 0xff9f1c],
                 ['limon', 0xfff04d], ['manzana', 0xff4d5a], ['durazno', 0xffa07a]];
@@ -57,7 +58,8 @@ export class Corta extends Micro {
     // Dos mitades que se separan
     f.img.destroy();
     for (const lado of [-1, 1]) {
-      const m = this.emojiEntero(f.nombre, f.x, f.y, 100).setCrop(lado < 0 ? 0 : 76, 0, 76, 152).setAngle(angulo * 57.3 + 90);
+      const c = CELDA_EMOJI;
+      const m = this.emojiEntero(f.nombre, f.x, f.y, 100).setCrop(lado < 0 ? 0 : c / 2, 0, c / 2, c).setAngle(angulo * 57.3 + 90);
       this.tweens.add({
         targets: m, x: f.x + lado * 90, y: f.y + 160, angle: m.angle + lado * 120, alpha: 0,
         duration: 600, ease: 'Quad.easeIn', onComplete: () => m.destroy(),

@@ -80,6 +80,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    con plato, ¿DÓNDE ESTABA? mesa de madera, ¡INFLA! fiesta con banderines
    —tema nuevo `fiesta`—, ¡LIMPIA! baño con azulejos y burbujas, ¡QUE NO TE
    VEA! cerros y camino); destello dorado/rojo en los bordes al ganar/perder.
+10. 2026-10-03: emoji "pixelados" → se dibujaban hasta 5 veces más grandes que
+   su imagen (128 px). Atlas de 192 y 256 px, transparencia sin pérdida y
+   mipmaps; el de 128 queda de respaldo.
 
 ## Cómo es el juego hoy
 
@@ -195,10 +198,18 @@ te persigue, 3 choques y pierdes). Un jefe dura `PULSOS × pulso × √vel`.
 - **Las escenas se reutilizan:** Phaser relanza la misma instancia de cada
   microjuego. Todo el estado se inicializa en `armar()` (nada en el
   constructor ni en campos de clase que "sobrevivan").
-- **Emoji = Noto "2D"** (Apache 2.0) con borde blanco y sombra, en
-  `assets/emoji.webp`, armados por `herramientas/armar_emoji.py`. El marco
-  `nombre` mide lo que el dibujo (borde por fuera, con `setTrim`); `nombre#` es
-  la celda entera, para `setCrop`.
+- **Emoji = Noto "2D"** (Apache 2.0) con borde blanco y sombra, armados por
+  `herramientas/armar_emoji.py` en **tres atlas** (desde el 2026-10-03, porque
+  el usuario los veía pixelados): `emoji-uhd.webp` (dibujo de 256, 4096x4096,
+  1,8 MB), `emoji.webp` (192, 4096x2048, 1,2 MB) y `emoji-sd.webp` (128,
+  2048x2048). `main.js` (`elegirAtlas`) usa UHD sólo con k ≥ 1,75 y
+  `navigator.deviceMemory` ≥ 4 (Chrome); SD si la placa no admite 4096; si
+  no, HD. Para probar: `?atlas=uhd|hd|sd`. Transparencia sin pérdida (con
+  pérdida, los bordes salían dentados) y **mipmaps** (`render.mipmapFilter`;
+  por eso los atlas tienen lado potencia de 2). El marco `nombre` mide lo que
+  el dibujo (borde por fuera, con `setTrim`); `nombre#` es la celda entera,
+  para `setCrop`: **nunca usar números fijos de celda**, siempre
+  `CELDA_EMOJI` (cambia según el atlas).
 - **Texto:** la fuente trae un borde oscuro horneado. **Nunca teñir texto de
   oscuro** (queda un manchón ilegible). Para números en botones, `boton()`.
 

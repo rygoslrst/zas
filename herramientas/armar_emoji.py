@@ -6,9 +6,15 @@
 #  Apache 2.0). Bajar 150 imágenes sueltas en cada celular sería lento: este
 #  script las baja una vez (en alta resolución), a cada una le pone un borde
 #  blanco y una sombra suave —el estilo "sticker" del juego: se lee sobre
-#  cualquier fondo— y las pega en una grilla. Genera
-#      assets/emoji.webp   (y assets/emoji.png, para navegadores viejos)
-#      js/datos/emoji.js   (dónde quedó cada una)
+#  cualquier fondo— y las pega en una grilla. Genera TRES atlas (main.js
+#  elige uno según el aparato):
+#      assets/emoji-uhd.webp emoji de 256 px en 4096x4096: celulares con
+#                            pantalla nítida y memoria de sobra
+#      assets/emoji.webp     emoji de 192 px en 4096x2048: el de siempre
+#      assets/emoji-sd.webp  emoji de 128 px en 2048x2048: aparatos que no
+#                            admiten texturas de 4096
+#      (y los .png, para navegadores sin WebP)
+#      js/datos/emoji.js     dónde quedó cada una en cada atlas
 #
 #  Para usar un emoji nuevo: agregalo a la tabla EMOJI (nombre → código),
 #  corré el script y usalo en el juego por su nombre.
@@ -26,13 +32,22 @@ RAIZ = os.path.dirname(AQUI)
 CACHE = os.path.join(AQUI, 'cache_emoji_512')
 URL = 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/2D/png/512/emoji_u{}.png'
 
+# Medidas base (k = 1). Cada atlas las multiplica por su k.
 TAM = 128          # el emoji en sí mide 128x128...
 BORDE = 6          # ...con un borde blanco de 6 px...
 MARGEN = 12        # ...centrado en una celda de 152 (sobra lugar para la sombra)
-CELDA = TAM + 2 * MARGEN
 SOMBRA = (3, 6)    # la sombra cae abajo a la derecha
 SEP = 2            # píxeles vacíos entre celdas: evita que se "filtre" el vecino
-ANCHO = 2048
+
+# Los dos atlas. El HD tiene el margen un poco más justo para entrar en
+# 4096x2048: así su alto es potencia de 2 y la placa de video puede armarle
+# versiones reducidas (mipmaps), que achican los emoji sin "dientes".
+ATLAS = [
+    # (el UHD no lleva .png: sólo lo usa Chrome, que siempre lee WebP)
+    {'archivo': 'emoji-uhd', 'k': 2, 'margen': 24, 'ancho': 4096, 'png': False},
+    {'archivo': 'emoji', 'k': 1.5, 'margen': 16, 'ancho': 4096},
+    {'archivo': 'emoji-sd', 'k': 1, 'margen': 12, 'ancho': 2048},
+]
 
 # nombre → código Unicode (en minúsculas, como lo nombra Noto)
 EMOJI = {
@@ -91,22 +106,27 @@ def bajar(codigo):
     return ruta
 
 
-def sticker(ruta, k=1):
+def sticker(ruta, k=1, margen=None):
     """El emoji con borde blanco y sombra. k = 1: dibujo de 128 en una celda de
-    152 (el juego). k = 3: lo mismo, tres veces más grande (el cartel impreso)."""
-    tam, borde, margen = TAM * k, BORDE * k, MARGEN * k
+    152. k = 1,5: el atlas HD del juego. k = 3: el cartel impreso."""
+    tam, borde = round(TAM * k), round(BORDE * k)
+    margen = round(MARGEN * k) if margen is None else margen
     celda_lado = tam + 2 * margen
     im = Image.open(ruta).convert('RGBA').resize((tam, tam), Image.LANCZOS)
     alfa = Image.new('L', (celda_lado, celda_lado), 0)
     alfa.paste(im.getchannel('A'), (margen, margen))
-    # Borde: el contorno del emoji "engordado" (se engorda de a poco: rinde más)
+    # Borde: el contorno del emoji "engordado" (de a poco, hasta 6 px por vez:
+    # rinde más y queda más redondo)
     gordo = alfa.point(lambda a: 255 if a > 40 else 0)
-    for _ in range(k):
-        gordo = gordo.filter(ImageFilter.MaxFilter(2 * BORDE + 1))
+    falta = borde
+    while falta > 0:
+        r = min(BORDE, falta)
+        gordo = gordo.filter(ImageFilter.MaxFilter(2 * r + 1))
+        falta -= r
     gordo = gordo.filter(ImageFilter.GaussianBlur(0.8 * k))
     # Sombra: la misma silueta, corrida y difuminada
     sombra = Image.new('L', (celda_lado, celda_lado), 0)
-    sombra.paste(gordo, (SOMBRA[0] * k, SOMBRA[1] * k))
+    sombra.paste(gordo, (round(SOMBRA[0] * k), round(SOMBRA[1] * k)))
     sombra = sombra.filter(ImageFilter.GaussianBlur(3 * k)).point(lambda a: int(a * 0.32))
     celda = Image.new('RGBA', (celda_lado, celda_lado), (0, 0, 0, 0))
     celda.paste((27, 16, 48, 255), (0, 0), sombra)
@@ -117,49 +137,74 @@ def sticker(ruta, k=1):
     return celda
 
 
-def main():
-    nombres = list(EMOJI)
-    por_fila = ANCHO // (CELDA + SEP)
+def armar_atlas(a, nombres):
+    tam = round(TAM * a['k'])
+    celda = tam + 2 * a['margen']
+    por_fila = a['ancho'] // (celda + SEP)
     filas = (len(nombres) + por_fila - 1) // por_fila
     alto = 1
-    while alto < filas * (CELDA + SEP) + SEP:
+    while alto < filas * (celda + SEP) + SEP:
         alto *= 2
-    hoja = Image.new('RGBA', (ANCHO, alto), (0, 0, 0, 0))
+    hoja = Image.new('RGBA', (a['ancho'], alto), (0, 0, 0, 0))
     pos = {}
-    faltan = []
     for i, nombre in enumerate(nombres):
-        try:
-            im = sticker(bajar(EMOJI[nombre]))
-        except Exception as e:                       # noqa: BLE001 — se informa y se sigue
-            faltan.append(f'{nombre} ({EMOJI[nombre]}): {e}')
-            continue
-        x = SEP + (i % por_fila) * (CELDA + SEP)
-        y = SEP + (i // por_fila) * (CELDA + SEP)
+        im = sticker(bajar(EMOJI[nombre]), a['k'], a['margen'])
+        x = SEP + (i % por_fila) * (celda + SEP)
+        y = SEP + (i // por_fila) * (celda + SEP)
         hoja.alpha_composite(im, (x, y))
         pos[nombre] = (x, y)
+    # Transparencia sin pérdida: con pérdida, los bordes salen "dentados"
+    hoja.save(os.path.join(RAIZ, 'assets', a['archivo'] + '.webp'), 'WEBP', quality=90, alpha_quality=100, method=6)
+    if a.get('png', True):
+        hoja.save(os.path.join(RAIZ, 'assets', a['archivo'] + '.png'), 'PNG', optimize=True)
+    kb = lambda p: os.path.getsize(os.path.join(RAIZ, 'assets', p)) // 1024
+    print(f"{a['archivo']}: {len(nombres)} emoji de {tam} en {a['ancho']}x{alto}: webp {kb(a['archivo'] + '.webp')} KB")
+    return {'tam': tam, 'celda': celda, 'ancho': a['ancho'], 'pos': pos}
+
+
+def main():
+    nombres = list(EMOJI)
+    faltan = []
+    for nombre in nombres:
+        try:
+            bajar(EMOJI[nombre])
+        except Exception as e:                       # noqa: BLE001 — se informa y se sigue
+            faltan.append(f'{nombre} ({EMOJI[nombre]}): {e}')
     if faltan:
         print('NO SE PUDIERON BAJAR:\n  ' + '\n  '.join(faltan))
         sys.exit(1)
+    uhd, hd, sd = (armar_atlas(a, nombres) for a in ATLAS)
 
-    hoja.save(os.path.join(RAIZ, 'assets', 'emoji.webp'), 'WEBP', quality=82, alpha_quality=75, method=6)
-    hoja.save(os.path.join(RAIZ, 'assets', 'emoji.png'), 'PNG', optimize=True)
+    def tabla(t):
+        return '{\n' + '\n'.join(f"    {n}: [{t['pos'][n][0]}, {t['pos'][n][1]}]," for n in nombres) + '\n  }'
 
     lineas = [
         '// Generado por herramientas/armar_emoji.py — no editar a mano.',
         '// Emoji Noto (Google), estilo 2D, licencia Apache 2.0.',
-        f'export const TAM_EMOJI = {TAM};      // el dibujo',
-        f'export const CELDA_EMOJI = {CELDA};  // la celda: dibujo + borde + sombra',
-        'export const EMOJI = {',
+        '//',
+        '// Tres atlas: UHD (emoji de 256 en 4096x4096), HD (192 en 4096x2048, el de',
+        '// siempre) y SD (128 en 2048x2048). main.js elige antes de arrancar con',
+        '// usarAtlas(): como estos valores se exportan con "let", todos los que los',
+        '// importan ven el cambio.',
+        f"const ATLAS = {{",
+        f"  uhd: {{ archivo: 'assets/emoji-uhd', lado: {uhd['ancho']}, tam: {uhd['tam']}, celda: {uhd['celda']}, pos: {tabla(uhd)} }},",
+        f"  hd: {{ archivo: 'assets/emoji', lado: {hd['ancho']}, tam: {hd['tam']}, celda: {hd['celda']}, pos: {tabla(hd)} }},",
+        f"  sd: {{ archivo: 'assets/emoji-sd', lado: {sd['ancho']}, tam: {sd['tam']}, celda: {sd['celda']}, pos: {tabla(sd)} }},",
+        '};',
+        '',
+        'export let ARCHIVO_EMOJI = ATLAS.hd.archivo;',
+        'export let TAM_EMOJI = ATLAS.hd.tam;        // el dibujo',
+        'export let CELDA_EMOJI = ATLAS.hd.celda;    // la celda: dibujo + borde + sombra',
+        'export let EMOJI = ATLAS.hd.pos;',
+        "// El lado de textura que necesita cada atlas (para saber si la placa lo admite)",
+        'export const LADO_ATLAS = { uhd: ATLAS.uhd.lado, hd: ATLAS.hd.lado, sd: ATLAS.sd.lado };',
+        'export function usarAtlas(cual) {',
+        '  const a = ATLAS[cual];',
+        '  ARCHIVO_EMOJI = a.archivo; TAM_EMOJI = a.tam; CELDA_EMOJI = a.celda; EMOJI = a.pos;',
+        '}',
     ]
-    for nombre in nombres:
-        x, y = pos[nombre]
-        lineas.append(f"  {nombre}: [{x}, {y}],")
-    lineas.append('};')
     with open(os.path.join(RAIZ, 'js', 'datos', 'emoji.js'), 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(lineas) + '\n')
-
-    kb = lambda p: os.path.getsize(os.path.join(RAIZ, 'assets', p)) // 1024
-    print(f'{len(nombres)} emoji en {ANCHO}x{alto}: emoji.webp {kb("emoji.webp")} KB, emoji.png {kb("emoji.png")} KB')
 
 
 if __name__ == '__main__':
