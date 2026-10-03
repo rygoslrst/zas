@@ -7,7 +7,7 @@
 // ============================================================================
 
 import { EMOJI, CELDA_EMOJI } from './datos/emoji.js';
-import { leerTabla, entraEnTabla, anotar, limpiarNombre, ultimoNombre, recordarNombre } from './tabla.js';
+import { leerTabla, entraEnTabla, anotar, limpiarNombre, ultimoNombre, recordarNombre, precargar, enLinea } from './tabla.js';
 
 const $ = id => document.getElementById(id);
 const AVISO_PANTALLA_S = 3.8;      // lo que tarda en irse el aviso de pantalla completa (Chrome en Android)
@@ -149,6 +149,7 @@ export class UI {
     if (d.estado === 'fin' && performance.now() - this.finDesde < 700) return;
     this.arrancando = true;
     this.pantallaCompleta();
+    precargar();                // la tabla de récords, para saber al final si entras
     if (!this.audio.audioVivo) await this.audio.desbloquear();
     this.titulo.hidden = true;
     this.fin.hidden = true;
@@ -214,22 +215,34 @@ export class UI {
 
   async guardarNombre() {
     const p = this.ultimaPartida;
-    if (!p) return;
+    if (!p || this.guardando) return;
+    this.guardando = true;
+    const boton = $('form-nombre').querySelector('button');
+    boton.textContent = 'Guardando…';
     const nombre = limpiarNombre(this.inputNombre.value) || 'JUGADOR';
     recordarNombre(nombre);
-    const puesto = await anotar(nombre, p.puntaje, p.rondas);
+    const r = await anotar(nombre, p.puntaje, p.rondas);
+    this.guardando = false;
+    boton.textContent = 'Guardar';
     this.ultimaPartida = null;
     this.cerrarNombre();
     this.finDesde = performance.now();
-    this.abrirRecords(true, puesto);
+    if (!this.fin.hidden) this.abrirRecords(true, r.puesto, !r.enLinea);
   }
 
-  // La tabla de récords (puesto: la fila que se acaba de anotar, resaltada)
-  async abrirRecords(v, puesto = 0) {
+  // La tabla de récords (puesto: la fila que se acaba de anotar, resaltada).
+  // Se abre al instante y se llena cuando llega (de internet puede tardar).
+  async abrirRecords(v, puesto = 0, soloLocal = false) {
     if (!v) { this.records.hidden = true; return; }
-    const tabla = await leerTabla();
-    const ol = $('tabla');
+    const ol = $('tabla'), nota = $('nota-tabla');
     ol.textContent = '';
+    $('tabla-vacia').hidden = true;
+    nota.textContent = 'Cargando…';
+    this.records.hidden = false;
+    $('cerrar-records').focus();
+    const tabla = await leerTabla(soloLocal);
+    if (this.records.hidden) return;
+    nota.textContent = enLinea ? 'Los 10 mejores puntajes de todos.' : 'Los 10 mejores de este aparato (sin conexión).';
     $('tabla-vacia').hidden = tabla.length > 0;
     if (tabla.length) {
       const cabeza = document.createElement('li');
@@ -253,8 +266,6 @@ export class UI {
       }
       ol.appendChild(li);
     });
-    this.records.hidden = false;
-    $('cerrar-records').focus();
   }
 
   // La medalla (un emoji del atlas, dibujado en un canvas del HTML)

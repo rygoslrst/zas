@@ -110,11 +110,26 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   hasta 100 por terminarlo rápido (lo que sobró de mecha), todo × velocidad;
   los jefes ×3; los que se ganan aguantando cuentan "medio rápido". Se ve en
   el telón debajo del número grande ("440 PUNTOS +150").
-- **Tabla de récords** (`js/tabla.js`): los 10 mejores puntajes **de este
-  aparato** (localStorage `zas_tabla_v1`), con nombre, puntos y microjuegos.
-  Al final, si entra, se pide el nombre (hasta 10 letras, con el último ya
-  escrito; filtro de groserías → "JUGADOR"). Las funciones son async para
-  poder pasarla a una tabla en línea sin tocar la interfaz.
+- **Tabla de récords** (`js/tabla.js`): los 10 mejores, con nombre, puntos y
+  microjuegos. Al final, si entra, se pide el nombre (hasta 10 letras, con el
+  último ya escrito; filtro de groserías → "JUGADOR").
+  - **En línea, una para todos:** Supabase, proyecto **zas** (ref
+    `eouuvfqpktumfwlebmqz`, São Paulo, plan gratis) en la organización del
+    usuario (que también tiene "talentorh", ajeno: no tocarlo). Autorizado
+    por el usuario el 2026-10-03. Esquema y reglas en
+    `herramientas/tabla_en_linea.sql`: nadie toca la tabla directo; el juego
+    sólo llama `mejores_records` y `anotar_record` (valida tope de puntaje
+    según `Director.puntosPorMicro` — si cambia el puntaje, cambiar el tope —,
+    múltiplos de 10, limpia el nombre, 20 anotaciones/minuto entre todos).
+    La llave publishable en `js/tabla.js` es pública a propósito.
+  - **Respaldo en el aparato** (localStorage `zas_tabla_v1`): se anota
+    siempre ahí también; si no hay red (3,5 s sin respuesta), se muestra ésa
+    ("de este aparato (sin conexión)").
+  - Puntajes truchos: se borran en Supabase → Table Editor → records, o con
+    `execute_sql` (`delete from public.records where nombre = '...'`).
+  - El plan gratis **pausa el proyecto tras 7 días sin uso**: antes del
+    torneo, jugar/abrir Récords al menos una vez; si se pausó, se reactiva
+    desde el panel de Supabase (el juego mientras usa la tabla local).
 - **Menú principal** = la pantalla de título (Jugar, Récords, Cómo jugar,
   Créditos). Durante la partida hay un botón de pausa (arriba a la
   izquierda; también Escape) con "Menú principal" (`Director.irAlMenu`, la
