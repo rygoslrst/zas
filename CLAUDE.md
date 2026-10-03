@@ -141,17 +141,22 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     según `Director.puntosPorMicro` — si cambia el puntaje, cambiar el tope —,
     múltiplos de 10, limpia el nombre, 20 anotaciones/minuto entre todos).
     La llave publishable en `js/tabla.js` es pública a propósito.
-  - **Filtro de nombres (v2, 2026-10-03, el usuario lo pidió "mucho"):**
-    forma canónica según cómo suena (tildes, leet, C/K/QU, V/B, Z/S, Y/I,
-    HUE/GUE/WE, H muda, letras repetidas salvo RR/LL, Ñ ≠ N), búsqueda en
-    todo el nombre junto, excepciones que perdonan sólo lo que cubren.
+  - **Filtro de nombres (v4, 2026-10-03; el usuario lo pidió "mucho" y
+    después "más filtros y entradas"):** nada que parezca teléfono (7+
+    cifras), números/siglas con mala fama (69, 420, 1488, KKK); forma
+    canónica según cómo suena (tildes, leet, C/K/QU, V/B, Z/S, Y/I, X=CH como
+    en XUXA, HUE/GUE/WE, H muda, letras repetidas salvo RR/LL, Ñ ≠ N);
+    búsqueda en todo el nombre junto y en cada palabra al revés (ATUP);
+    excepciones que perdonan sólo lo que cubren. 209 prohibidas (con siglas
+    chilenas: WN, CTM, HDP, PTM, QL...) y 27 excepciones. Para palabras con
+    género conviene la raíz (BOLUD atrapa BOLUDO/BOLUDA/BOLUDOS).
     Listas en las tablas `palabras_prohibidas` (con `entera` para las cortas)
     y `palabras_permitidas`, **ampliables desde el Table Editor** sin tocar el
     juego. `js/filtroNombres.js` es una copia (procedimiento + foto de las
     listas) para avisar al instante y sin red; si se cambia el procedimiento,
     cambiarlo en los dos lados. Con un nombre prohibido, el juego avisa y pide
     otro (`revisar_nombre`); igual, al guardar, la base lo cambia a JUGADOR.
-    Probado con 105 nombres que deben caer y 193 reales que deben pasar
+    Probado con 172 nombres que deben caer y 244 reales que deben pasar
     (las listas de prueba están en el historial de esta sesión; rehacerlas
     si se toca el filtro). Se pasaron por el filtro los puntajes ya
     guardados (3 nombres quedaron como JUGADOR).

@@ -15,7 +15,8 @@
 --  anotar_record rechaza puntajes imposibles, limpia el nombre (si es
 --  prohibido, "JUGADOR") y acepta como mucho 20 anotaciones por minuto.
 --
---  FILTRO DE NOMBRES (desde el 2026-10-03; el usuario lo pidió "mucho"):
+--  FILTRO DE NOMBRES (v4, 2026-10-03; el usuario lo pidió "mucho" y después
+--  "más filtros y entradas"):
 --  las palabras prohibidas y las excepciones son DOS TABLAS que se pueden
 --  ampliar desde el panel (Table Editor), escribiendo la palabra normal: su
 --  forma canónica se calcula sola. js/filtroNombres.js tiene una copia del
@@ -46,8 +47,9 @@ revoke all on public.records from anon, authenticated;
 -- ---------------------------------------------------------------- filtro
 -- La forma canónica: lo que importa es cómo SUENA. Mayúsculas, sin tildes (la
 -- Ñ sí cuenta: AÑO no es ANO), números y símbolos que imitan letras (P3N3,
--- 5EX0, @), letras que suenan igual (C/K/QU, V/B, Z/S, Y/I, HUE/GUE/WE), sin
--- H muda y sin letras repetidas (PUUUTA), salvo RR y LL (PERRA no es PERA).
+-- 5EX0, @), letras que suenan igual (C/K/QU, V/B, Z/S, Y/I, X/CH como en
+-- XUXA, HUE/GUE/WE), sin H muda y sin letras repetidas (PUUUTA), salvo RR y
+-- LL (PERRA no es PERA).
 create or replace function public.forma_canonica(texto text) returns text
 language plpgsql immutable set search_path = '' as $$
 declare
@@ -58,6 +60,7 @@ begin
   t := translate(t, '013456789@$!|€', 'OIEASGTBGASIIE');
   t := regexp_replace(t, '[^A-ZÑ ]', '', 'g');
   t := replace(t, 'CH', '#');
+  t := replace(t, 'X', '#');
   t := replace(t, 'QU', 'K');
   t := translate(t, 'CQVZY', 'KKBSI');
   t := replace(t, 'HUE', 'WE');
@@ -96,24 +99,16 @@ alter table public.palabras_permitidas enable row level security;
 revoke all on public.palabras_prohibidas from anon, authenticated;
 revoke all on public.palabras_permitidas from anon, authenticated;
 
--- ¿El nombre tiene algo prohibido? Se saca lo permitido suelto, se junta todo
--- (atrapa "P U T A" y "MIPENE") y se buscan las prohibidas. Una aparición se
+-- La búsqueda en sí, sobre el nombre junto y sus palabras. Una aparición se
 -- perdona sólo si queda entera dentro de una permitida larga (PENÉLOPE sí,
 -- PENELOPENE no).
-create or replace function public.nombre_prohibido(texto text) returns boolean
+create or replace function public.contiene_prohibida(junto text, palabras text[]) returns boolean
 language plpgsql stable security definer set search_path = '' as $$
 declare
-  palabras text[];
-  junto text;
   p record;
   inicio integer;
   pos integer;
 begin
-  select coalesce(array_agg(u.w order by u.i), '{}') into palabras
-  from unnest(string_to_array(public.forma_canonica(left(texto, 40)), ' ')) with ordinality as u(w, i)
-  where u.w <> '' and not exists (select 1 from public.palabras_permitidas a where a.forma = u.w);
-  junto := array_to_string(palabras, '');
-  if junto = '' then return false; end if;
   for p in select forma, entera from public.palabras_prohibidas where forma <> '' loop
     if p.entera then
       if p.forma = any(palabras) or p.forma = junto then return true; end if;
@@ -134,6 +129,40 @@ begin
         end if;
         inicio := pos + 1;
       end loop;
+    end if;
+  end loop;
+  return false;
+end $$;
+
+-- ¿El nombre tiene algo prohibido? Nada que parezca un teléfono, ni números o
+-- siglas con mala fama; después, las palabras (sin las permitidas sueltas),
+-- todo junto (atrapa "P U T A" y "MIPENE") y cada palabra al revés (ATUP).
+create or replace function public.nombre_prohibido(texto text) returns boolean
+language plpgsql stable security definer set search_path = '' as $$
+declare
+  crudo text;
+  palabras text[];
+  junto text;
+  w text;
+begin
+  crudo := upper(coalesce(left(texto, 40), ''));
+  if char_length(regexp_replace(crudo, '[^0-9]', '', 'g')) >= 7 then return true; end if;
+  if crudo ~ '(^|[^0-9])(69|420|1488)([^0-9]|$)' or regexp_replace(crudo, '[^A-Z]', '', 'g') like '%KKK%' then
+    return true;
+  end if;
+  select coalesce(array_agg(u.w order by u.i), '{}') into palabras
+  from unnest(string_to_array(public.forma_canonica(crudo), ' ')) with ordinality as u(w, i)
+  where u.w <> '' and not exists (select 1 from public.palabras_permitidas a where a.forma = u.w);
+  junto := array_to_string(palabras, '');
+  if junto = '' then return false; end if;
+  if public.contiene_prohibida(junto, palabras) then return true; end if;
+  foreach w in array palabras loop
+    if exists (
+      select 1 from public.palabras_prohibidas p
+      where char_length(p.forma) >= 4
+        and ((not p.entera and position(p.forma in reverse(w)) > 0) or (p.entera and p.forma = reverse(w)))
+    ) then
+      return true;
     end if;
   end loop;
   return false;
@@ -199,6 +228,7 @@ $$;
 
 -- ---------------------------------------------------------------- permisos
 revoke all on function public.forma_canonica(text) from public, anon, authenticated;
+revoke all on function public.contiene_prohibida(text, text[]) from public, anon, authenticated;
 revoke all on function public.nombre_prohibido(text) from public, anon, authenticated;
 revoke all on function public.limpiar_nombre(text) from public, anon, authenticated;
 revoke all on function public.revisar_nombre(text) from public, authenticated;
@@ -213,16 +243,25 @@ grant execute on function public.mejores_records(integer) to anon;
 insert into public.palabras_prohibidas (palabra, entera)
 select trim(trailing '*' from w), w like '%*'
 from unnest(string_to_array(
-  'ANAL*,ANO*,ASSHOLE*,AWEONAO,BITCH,CABRON,CACA,CAGADA,CAGAR,CAGON,CALLAMPA,CHUCHA,CHUCHETUMARE,CHUPA*,' ||
-  'CHUPALA,CHUPALO,CHUPAMELA,CHUPAPICO,CONCHA,CONCHESUMADRE,CONCHESUMARE,CONCHETUMADRE,CONCHETUMARE,CONDON,' ||
-  'CONO*,COÑO*,CSM,CTM,CTMR*,CULEAR,CULIA,CULIAO,CULIAR,CULICAGADO,CULITO,CULO,CUNT,DESNUD,DICK*,ESPERMA,' ||
-  'ESTUPIDA,ESTUPIDO,FAGGOT,FEMBOY,FOLLAR,FUCK,HITLER,IDIOTA,IMBECIL,LACRA,MAMADA,MAMAR*,MARACO,MARICA,' ||
-  'MARICON,MIERD,MIERDA,MONGO*,MONGOLICO,NAZI,NIGGA,NIGGER,ORGASM,PAJA,PAJERA,PAJERO,PEDO,PENDEJ,PENE,PENIS,' ||
-  'PERKIN,PERRA,PEZON,PICHULA,PICO,PIRULA,POLLA,PORNO,POTO,PUSSY*,PUTA,PUTITA,PUTO,QL*,QLIA,QLIAO,RAJA*,' ||
-  'RETRASADO,SACOWEA,SEMEN,SEXI,SEXO,SHIT*,SIDA*,SIDOSO,TARADA,TARADO,TETA,TETAS,TETON,TETONA,TRAVELO,TULA*,' ||
-  'TUMADRE,TUMARE,VAGIN,VAGINA,VERGA,VIOLADOR,VIOLAR,WEA*,WEBON,WEON,ZORRA,ZORRITA,ZORRON', ',')) as w;
+  'ANAL*,ANO*,ANUS*,ASSHOLE*,AWEONAO,BASTARD,BITCH,BOLUD,BOLUDO,BOOBS*,CABRON,CACA,CACHOND,CACHONDO,' ||
+  'CAGADA,CAGAO,CAGAR,CAGON,CALLAMPA,CAMIONA,CARAJO,CHINGA,CHOTA*,CHUCHA,CHUCHETUMARE,CHUPA*,CHUPALA,' ||
+  'CHUPALO,CHUPAME,CHUPAMELA,CHUPAPICO,CLITORI,COCAINA,COCK*,COJONES,COLIZA,CONCHA,CONCHESUMADRE,' ||
+  'CONCHESUMARE,CONCHETUMADRE,CONCHETUMARE,CONCHUD,CONDON,CONO*,COÑO*,CORNUD,CORNUDO,CSM,CSMRE*,CSTM*,' ||
+  'CTM,CTMR*,CTMRE*,CULEAR,CULER,CULERO,CULIA,CULIAD,CULIAO,CULIAR,CULICAGADO,CULITO,CULO,CUNT,DESNUD,' ||
+  'DICK*,ESCROTO,ESPERMA,ESTUPIDA,ESTUPIDO,EYACUL,FAGGOT,FCK*,FELACION,FEMBOY,FLETO,FOLLAR,FUCK,' ||
+  'GILIPOLLAS,GONORREA,HDLGP*,HDP*,HITLER,HORNY*,HUEVADA,HUEVEO,IDIOTA,IMBECIL,JOTO*,LACRA,LAMEME,LCTM*,' ||
+  'LPM*,MALPARID,MALPARIDO,MAMADA,MAMAGUEBO,MAMAME,MAMAR*,MARACA*,MARACO,MARICA,MARICON,MARIGUANA,' ||
+  'MARIHUANA,MASTURB,MIERD,MIERDA,MILF,MONGO*,MONGOLICO,MRD*,NALGA,NAZI,NECROFIL,NEGRATA,NEPE,NIGGA,' ||
+  'NIGGER,NUDES,OJETE,ORGASM,PAJA,PAJEAR,PAJERA,PAJERO,PAJIAR,PANOCHA,PEDO,PEDOFIL,PELOTUD,PELOTUDO,' ||
+  'PENDEJ,PENE,PENIS,PERKIN,PERRA,PEZON,PICHULA,PICO,PINGA,PIRULA,POLLA,PORN,PORNO,POTO,PROSTITUT,PTM*,' ||
+  'PUSSY*,PUTA,PUTEAR,PUTITA,PUTO,PUTONA,QL*,QLA*,QLIA,QLIAO,QLO*,RAJA*,RAPE*,RETRASADO,SACOWEA,SEMEN,' ||
+  'SEXI,SEXO,SEXUAL,SHIT*,SIDA*,SIDOSO,SLUT,STFU*,SUBNORMAL,SUDACA,SUICID,TARADA,TARADO,TERRORIST,' ||
+  'TESTICUL,TETA,TETAS,TETON,TETONA,TITS*,TORTILLERA,TRAGASABLE,TRAVELO,TROLO*,TULA*,TUMADRE,TUMARE,' ||
+  'VAGIN,VAGINA,VERGA,VIOLADOR,VIOLAR,WEA*,WEAS*,WEBON,WEON,WHORE,WN*,WNA*,WNS*,WTF*,ZOOFIL,ZORRA,' ||
+  'ZORRITA,ZORRON', ',')) as w;
 
 insert into public.palabras_permitidas (palabra)
 select w from unnest(string_to_array(
-  'ANA,CACAO,CACATÚA,CONCHALÍ,ÉPICO,ESCULAPIO,ESPERANZA,KAKASHI,PAJARITO,PÁJARO,PENÉLOPE,PERA,PICCOLO,' ||
-  'PICOLO,POLA,POTOSÍ,SORA,SORAYA,TÓPICO,TORPEDO,TRÓPICO', ',')) as w;
+  'ANA,CACAO,CACATÚA,CHINGANA,COMPUTADOR,COMPUTADORA,CONCHALÍ,DISPUTA,ÉPICO,ESCULAPIO,ESPERANZA,KAKASHI,' ||
+  'PAJARITO,PÁJARO,PENÉLOPE,PERA,PICCOLO,PICOLO,POLA,POTOSÍ,PUTAENDO,REPUTACIÓN,SORA,SORAYA,TÓPICO,' ||
+  'TORPEDO,TRÓPICO', ',')) as w;
