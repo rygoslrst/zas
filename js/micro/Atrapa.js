@@ -9,8 +9,10 @@ export class Atrapa extends Micro {
   static CONTROL = 'arrastrar';
 
   armar() {
-    this.fondo();
+    this.tema('cielo');
     this.cy0 = this.bajo - 55;
+    this.piso(this.cy0 + 46, 0x6fc24a);
+    this.sombraCanasta = this.sombra(this.cx, this.cy0 + 58, 120, 0.3);
     this.canasta = this.emoji('canasta', this.cx, this.cy0, 132);
     this.objetivoX = this.cx;
     // Qué cae: 1, 2 o 3 cosas; en el nivel 3, una bomba en el medio
@@ -27,6 +29,7 @@ export class Atrapa extends Micro {
 
   paso(dt, t) {
     this.canasta.x += (this.objetivoX - this.canasta.x) * Math.min(1, dt * 22);
+    this.sombraCanasta.x = this.canasta.x;
     for (const c of this.caen) {
       if (c.estado === 'espera') {
         if (t < c.tSale) continue;

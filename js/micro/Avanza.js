@@ -12,8 +12,14 @@ export class Avanza extends Micro {
     this.yPista = this.cy + 170;
     this.x0 = 70;
     this.meta = 400;
-    this.rect(this.cx, this.yPista + 40, this.W, 16, 0xc9971a);
+    // El paisaje: el sol que se pone detrás de unos cerros, y un camino de tierra
+    this.emoji('sol', 120, this.yPista - 150, 150).setAlpha(0.95);
+    for (const [x, w, h, c] of [[40, 380, 250, 0xd8704a], [330, 460, 290, 0xc45a3c], [580, 320, 220, 0xd8704a]]) {
+      this.add.image(x, this.yPista + 44, 'atlas', 'circulo').setDisplaySize(w, h).setTint(c);
+    }
+    this.piso(this.yPista + 44, 0xd9a35a);
     this.rect(this.meta + 20, this.yPista + 10, 8, 80, 0xffffff);
+    this.sombraCorredor = this.sombra(this.x0, this.yPista + 50, 70, 0.3);
     this.emoji('bandera', this.meta + 40, this.yPista - 40, 80);
     // El guardia: duerme (se puede avanzar), bosteza (aviso) y mira (quieto)
     this.guardia = this.emoji('dormido', 430, this.cy - 110, 170);
@@ -70,6 +76,7 @@ export class Avanza extends Micro {
       }
       this.x += this.rapidez * dt;
       this.corredor.setPosition(this.x, this.yPista - Math.abs(Math.sin(t * 16)) * 8);
+      this.sombraCorredor.x = this.x;
       if (this.x >= this.meta) {
         this.ganar();
         this.chispas(this.x, this.yPista - 40, 12);

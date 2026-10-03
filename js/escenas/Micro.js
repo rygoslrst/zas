@@ -38,6 +38,7 @@ export const TEMAS = {
   madera:    { colores: [0xb87945, 0x5c3a1e], patron: 'rayas', deco: null },
   cocina:    { colores: [0xfff4e0, 0xffc9a0], patron: 'cuadros', deco: null },
   oscuro:    { colores: [0x44476a, 0x17182b], patron: 'rayas', deco: null },
+  fiesta:    { colores: [0xffb3e6, 0x7b3fa0], patron: 'lunares', deco: 'fiesta' },
 };
 
 // Mezcla de colores (k = 0: a; k = 1: b)
@@ -103,6 +104,7 @@ export class Micro extends Phaser.Scene {
     if (this.resultado) return false;
     this.resultado = 'gano';
     this.director.decidir(true);
+    this.destello(0xffd23f, 0.75);
     this.alGanar();
     return true;
   }
@@ -111,9 +113,17 @@ export class Micro extends Phaser.Scene {
     if (this.resultado) return false;
     this.resultado = 'perdio';
     this.director.decidir(false);
+    this.destello(COLOR.MAL, 0.85);
     this.cameras.main.shake(180, 0.012);
     this.alPerder();
     return true;
+  }
+
+  // Un brillo de color en los bordes de la pantalla, que se apaga enseguida
+  destello(color, alfa) {
+    const v = this.add.image(0, 0, 'atlas', 'vineta').setOrigin(0).setDisplaySize(this.W, this.H)
+      .setTint(color).setAlpha(alfa).setDepth(60);
+    this.tweens.add({ targets: v, alpha: 0, duration: 420, ease: 'Quad.easeOut', onComplete: () => v.destroy() });
   }
 
   // --------------------------------------------------------------------------
@@ -140,14 +150,24 @@ export class Micro extends Phaser.Scene {
   }
 
   // --------------------------------------------------------------------------
-  //  Fondos: degradé vertical (claro arriba, oscuro abajo), un patrón suave y
+  //  Fondos: degradé vertical (claro arriba, oscuro abajo), una luz suave en
+  //  el centro, un patrón, luces desenfocadas que flotan (dan profundidad) y
   //  una viñeta en los bordes. fondo() sin nada elige un color vivo al azar.
   // --------------------------------------------------------------------------
   fondo(color = this.elegir(COLOR.FONDOS), patron = this.elegir(['rayas', 'lunares', null])) {
     const [c1, c2] = Array.isArray(color) ? color : [mezcla(color, 0xffffff, 0.28), mezcla(color, 0x000000, 0.22)];
     this.add.image(0, 0, 'atlas', 'blanco').setOrigin(0).setDisplaySize(this.W, this.H).setTint(c2);
     this.add.image(0, 0, 'atlas', 'degradeV').setOrigin(0).setDisplaySize(this.W, this.H).setTint(c1);
+    this.add.image(this.cx, this.cy - 60, 'atlas', 'brillo').setDisplaySize(this.W * 1.5, this.H * 0.85)
+      .setTint(mezcla(c1, 0xffffff, 0.45)).setAlpha(0.3);
     if (patron) this.add.tileSprite(0, 0, this.W, this.H, 'atlas', patron).setOrigin(0).setAlpha(0.1);
+    const luz = mezcla(c1, 0xffffff, 0.55);
+    for (let i = 0; i < 7; i++) {
+      const tam = this.azar(70, 210);
+      const obj = this.add.image(this.azar(0, this.W), this.azar(0, this.H), 'atlas', i % 2 ? 'circulo' : 'brillo')
+        .setDisplaySize(tam, tam).setTint(luz).setAlpha(i % 2 ? this.azar(0.05, 0.09) : this.azar(0.12, 0.22));
+      this.deco.push({ obj, tipo: 'bokeh', vx: this.azar(-8, 8), vy: -this.azar(6, 18), r: tam / 2 });
+    }
     this.add.image(0, 0, 'atlas', 'vineta').setOrigin(0).setDisplaySize(this.W, this.H).setTint(COLOR.OSCURO).setAlpha(0.42);
     this.colorFondo = Array.isArray(color) ? c2 : color;
     return this.colorFondo;
@@ -159,6 +179,7 @@ export class Micro extends Phaser.Scene {
     if (t.deco === 'nubes') this.nubes(3);
     else if (t.deco === 'estrellas') this.estrellas(28);
     else if (t.deco === 'mar') { this.haces(3); this.burbujas(12); }
+    else if (t.deco === 'fiesta') { this.papelitos(16); this.banderines(); }
     return t.colores[1];
   }
 
@@ -202,6 +223,32 @@ export class Micro extends Phaser.Scene {
     }
   }
 
+  // Guirnaldas de banderines arriba (para las fiestas)
+  banderines() {
+    const g = this.add.graphics();
+    const colores = [0xff4d5a, 0xffd23f, 0x2f7dff, 0x3ddc84, 0xff70a6, 0xff9f1c];
+    [[Math.max(26, this.arriba + 6), 0], [Math.max(78, this.arriba + 58), 1]].forEach(([y0, fila]) => {
+      const curva = x => y0 + Math.sin((x / this.W) * Math.PI) * 34;
+      g.lineStyle(3, COLOR.OSCURO, 0.7).beginPath();
+      for (let x = -10; x <= this.W + 10; x += 10) (x === -10 ? g.moveTo(x, curva(x)) : g.lineTo(x, curva(x)));
+      g.strokePath();
+      for (let i = 0, x = 14 + fila * 22; x < this.W; x += 44, i++) {
+        const y = curva(x), c = colores[(i + fila * 3) % colores.length];
+        g.fillStyle(COLOR.OSCURO, 0.25).fillTriangle(x - 15, y + 3, x + 17, y + 3, x + 1, y + 37);
+        g.fillStyle(c, 1).fillTriangle(x - 16, y, x + 16, y, x, y + 34);
+      }
+    });
+  }
+
+  // Papelitos de colores que caen despacio
+  papelitos(n) {
+    for (let i = 0; i < n; i++) {
+      const obj = this.add.image(this.azar(0, this.W), this.azar(0, this.H), 'atlas', 'blanco')
+        .setDisplaySize(9, 15).setTint(this.elegir(COLOR.FONDOS)).setAlpha(0.8).setAngle(this.azar(0, 180));
+      this.deco.push({ obj, tipo: 'papelito', vy: this.azar(30, 60), giro: this.azar(-160, 160), fase: this.azar(0, 6) });
+    }
+  }
+
   animarDeco(dt, t) {
     for (const d of this.deco) {
       const o = d.obj;
@@ -212,6 +259,16 @@ export class Micro extends Phaser.Scene {
         o.x += Math.sin(t * 3 + d.fase) * 12 * dt;
         if (o.y < -20) { o.y = this.H + 20; o.x = this.azar(0, this.W); }
       } else if (d.tipo === 'haz') o.setAngle(d.angulo + Math.sin(t * 0.8 + d.fase) * 4);
+      else if (d.tipo === 'bokeh') {
+        o.x += d.vx * dt; o.y += d.vy * dt;
+        if (o.y < -d.r) { o.y = this.H + d.r; o.x = this.azar(0, this.W); }
+        if (o.x < -d.r) o.x = this.W + d.r; else if (o.x > this.W + d.r) o.x = -d.r;
+      } else if (d.tipo === 'papelito') {
+        o.y += d.vy * dt;
+        o.x += Math.sin(t * 2 + d.fase) * 20 * dt;
+        o.angle += d.giro * dt;
+        if (o.y > this.H + 20) { o.y = -20; o.x = this.azar(0, this.W); }
+      }
     }
   }
 

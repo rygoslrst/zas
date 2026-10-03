@@ -9,12 +9,16 @@ export class Comer extends Micro {
   static CONTROL = 'arrastrar';
 
   armar() {
-    this.fondo();
+    this.tema('cocina');
     this.yCara = this.arriba + 160;
     this.cara = this.emoji('boca', this.cx, this.yCara, 180);
     this.amplitud = [0, 120, 150][this.nivel - 1];
     this.faltan = this.nivel >= 3 ? 2 : 1;
     this.origen = { x: this.cx, y: this.bajo - 80 };
+    this.piso(this.origen.y + 22, 0xc98a52);
+    this.circulo(this.origen.x, this.origen.y + 44, 100, COLOR.OSCURO, 0.2).setScale(1, 0.3);
+    this.circulo(this.origen.x, this.origen.y + 38, 100, 0xffffff).setScale(1, 0.3);
+    this.circulo(this.origen.x, this.origen.y + 38, 70, 0xe8e4f0).setScale(1, 0.3);
     this.nuevaComida();
     this.agarrada = false;
     this.alTocar((x, y) => {

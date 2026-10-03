@@ -9,7 +9,7 @@ export class Infla extends Micro {
   static CONTROL = 'machacar';
 
   armar() {
-    this.fondo();
+    this.tema('fiesta');
     // Los toques que se piden salen del tiempo que hay: 4, 5 o 6 por segundo
     // (se puede tocar a 7-8 por segundo sin problema).
     this.necesarios = Math.max(6, Math.round([4, 5, 6][this.nivel - 1] * (this.dur - 0.3)));
@@ -19,6 +19,7 @@ export class Infla extends Micro {
     this.xGlobo = this.cx - 80;
     this.yPico = this.bajo - 30;
     const xb = this.cx + 140, yb = this.yPico - 60;
+    this.piso(this.yPico + 16, 0x5b2b78);
     this.sombra(xb, this.yPico + 14, 150, 0.3);
     this.sombra(this.xGlobo, this.yPico + 14, 90, 0.2);
     // La manguera: una curva del pie del inflador al pico del globo
@@ -50,7 +51,7 @@ export class Infla extends Micro {
       this.add.image(62, 0, 'atlas', 'circulo').setDisplaySize(34, 34).setTint(0xff4d5a),
     ]);
     this.globo = this.emoji('globo', this.xGlobo, this.yPico - 40, 80);
-    this.cuenta = this.texto(this.cx, this.arriba + 110, '', 72);
+    this.cuenta = this.texto(this.cx, this.arriba + 190, '', 72);       // debajo de los banderines
     this.alTocar(() => this.inflar());
   }
 

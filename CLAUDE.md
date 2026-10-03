@@ -72,6 +72,14 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    bueno" → reemplazado por ¡TOCA AL RITMO!. Pidió un botón para ir al menú
    principal y una tabla de récords con puntaje y rondas → botón de pausa con
    "Menú principal", puntaje por microjuego y tabla de los 10 mejores.
+   Autorizó crear el proyecto de Supabase → tabla de récords en línea.
+9. 2026-10-03: "me gustaría que se viera mejor" → auditoría visual de los
+   37 (hoja de contacto) y mejoras de costo acotado: el fondo genérico ganó
+   luz central y luces desenfocadas que flotan (15 juegos de una vez);
+   escenarios para los más vacíos (¡ATRAPA! picnic, ¡DALE DE COMER! cocina
+   con plato, ¿DÓNDE ESTABA? mesa de madera, ¡INFLA! fiesta con banderines
+   —tema nuevo `fiesta`—, ¡LIMPIA! baño con azulejos y burbujas, ¡QUE NO TE
+   VEA! cerros y camino); destello dorado/rojo en los bordes al ganar/perder.
 
 ## Cómo es el juego hoy
 

@@ -10,7 +10,7 @@ export class Memoria extends Micro {
   static PULSOS = 10;
 
   armar() {
-    this.fondo();
+    this.tema('madera');
     const n = [3, 4, 5][this.nivel - 1];
     const cosas = this.mezclar(COSAS).slice(0, n);
     this.buscada = this.elegir(cosas);

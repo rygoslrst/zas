@@ -9,7 +9,8 @@ export class Limpia extends Micro {
   static CONTROL = 'arrastrar';
 
   armar() {
-    this.fondo();
+    this.fondo([0xdff6ff, 0x5aa9e6], 'cuadros');
+    this.burbujas(14);
     const cosa = this.elegir(['perro', 'gato', 'auto', 'cerdo', 'panda', 'vaca']);
     this.cosa = this.emoji(cosa, this.cx, this.cy + 20, 320);
     const n = [4, 6, 8][this.nivel - 1];
