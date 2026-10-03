@@ -8,7 +8,7 @@ export class Suma extends Micro {
   static PULSOS = 10;
 
   armar() {
-    this.fondo();
+    this.tema('escenario');
     let a, b, op, r;
     if (this.nivel === 1) { a = this.entero(1, 5); b = this.entero(1, 4); op = '+'; r = a + b; }
     else if (this.nivel === 2) {

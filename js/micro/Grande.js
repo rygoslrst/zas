@@ -9,7 +9,7 @@ export class Grande extends Micro {
   static VARIANTES = [{ orden: '¡EL MÁS GRANDE!', grande: true }, { orden: '¡EL MÁS CHICO!', grande: false }];
 
   armar() {
-    this.fondo();
+    this.tema('escenario');
     const grande = this.variante ? this.variante.grande : true;
     const n = [4, 5, 6][this.nivel - 1];
     const factor = [1.5, 1.28, 1.16][this.nivel - 1];     // cuánto se distingue del resto

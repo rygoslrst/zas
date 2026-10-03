@@ -8,8 +8,12 @@ export class NoToques extends Micro {
   static GANA_AL_FINAL = true;
 
   armar() {
-    this.fondo(0x2ec4b6, 'rayas');
+    this.tema('oscuro');
     const by = this.cy + 150;
+    this.circulo(this.cx, by + 22, 172, COLOR.OSCURO, 0.4);
+    this.circulo(this.cx, by + 8, 168, 0x3b3f5c);
+    this.add.image(this.cx, by + 8, 'atlas', 'anillo').setDisplaySize(330, 330).setTint(0xffd23f);
+    this.circulo(this.cx, by + 8, 150, 0x23263a);
     this.circulo(this.cx, by + 16, 128, 0x7a1020);                // sombra del botón
     this.boton = this.circulo(this.cx, by, 128, 0xe63946);
     this.brillo = this.circulo(this.cx - 40, by - 50, 34, 0xffffff, 0.35);

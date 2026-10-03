@@ -13,7 +13,7 @@ export class Ruleta extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    this.fondo(0x3a2a6b, 'rayas');
+    this.tema('escenario');
     this.n = [6, 8, 8][this.nivel - 1];
     this.radio = 200;
     this.rx = this.cx; this.ry = this.cy + 80;

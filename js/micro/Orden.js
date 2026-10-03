@@ -7,7 +7,12 @@ export class Orden extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    const fondo = this.fondo();
+    const fondo = this.fondo([0x3fae6a, 0x175a35], null);
+    // El borde de madera de la mesa
+    for (const [x, y, w, h] of [[this.cx, 12, this.W, 24], [12, this.cy, 24, this.H], [this.W - 12, this.cy, 24, this.H]]) {
+      this.rect(x, y, w, h, 0x7a4a24);
+    }
+    this.rect(this.cx, 26, this.W - 48, 4, 0x4a2c14, 0.6);
     const n = [3, 4, 5][this.nivel - 1];
     const colores = this.mezclar(COLOR.FONDOS.filter(c => c !== fondo));
     // Desde el nivel 2 los números no son 1, 2, 3...: saltean

@@ -83,6 +83,14 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 10. 2026-10-03: emoji "pixelados" → se dibujaban hasta 5 veces más grandes que
    su imagen (128 px). Atlas de 192 y 256 px, transparencia sin pérdida y
    mipmaps; el de 128 queda de respaldo.
+11. 2026-10-03: escenario para todos los que quedaban con fondo genérico:
+   tema nuevo `escenario` (concurso con focos y ampolletas: ¿CUÁNTO ES?,
+   ¡EL MÁS GRANDE!, ruleta), ¿CUÁNTOS HAY? según lo que se cuenta (mar,
+   noche, cielo, cocina o campo), ¡EN ORDEN! mesa de pool, ¡SIGUE LAS
+   FLECHAS! pista de baile, ¡NO TOQUES NADA! botón con base de peligro,
+   ¡EL DISTINTO! tablero sobre un panel. ¡TOCA EL COLOR! queda con fondo
+   neutro a propósito (que no confunda los colores). Además: jugar sólo con
+   el botón y el filtro de nombres v2 (ver arriba).
 
 ## Cómo es el juego hoy
 

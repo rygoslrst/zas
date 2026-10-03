@@ -8,8 +8,11 @@ export class Cuantos extends Micro {
   static PULSOS = 10;
 
   armar() {
-    this.fondo();
     const cosa = this.elegir(['oveja', 'pollito', 'estrella', 'dona', 'pez', 'mariquita', 'globo', 'cerdo', 'pinguino']);
+    // El lugar según lo que hay que contar (los animales de granja, en el campo)
+    const escena = { pez: 'mar', pinguino: 'mar', estrella: 'noche', globo: 'cielo', dona: 'cocina' }[cosa];
+    if (escena) this.tema(escena);
+    else { this.tema('cielo'); this.piso(this.cy + 150, 0x7cc95a); }
     const [min, max] = [[2, 4], [3, 6], [5, 8]][this.nivel - 1];
     const k = this.entero(min, max);
     // Lugares sin encimarse, en la parte de arriba

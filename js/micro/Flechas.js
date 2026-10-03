@@ -9,9 +9,20 @@ export class Flechas extends Micro {
   static CONTROL = 'deslizar';
 
   armar() {
-    this.fondo();
+    this.tema('noche');
+    this.haces(4);
     const n = [3, 4, 5][this.nivel - 1];
     const paso = Math.min(120, 480 / n), y = this.cy + 150;
+    // La pista: baldosas de colores que se encienden con la música
+    this.piso(y - 110, 0x2a1450);
+    this.baldosas = [];
+    const colores = [0xff4d6d, 0x2f7dff, 0xffd23f, 0x3ddc84, 0x9b5de5];
+    for (let fila = 0, yb = y - 80; yb < this.H; yb += 72, fila++) {
+      for (let col = 0, xb = 36; xb < this.W; xb += 72, col++) {
+        const b = this.rect(xb, yb, 66, 66, colores[(fila * 2 + col) % colores.length], 0.22);
+        this.baldosas.push({ b, fase: (fila + col) % 3 });
+      }
+    }
     this.flechas = [];
     for (let i = 0; i < n; i++) {
       const d = this.elegir(DIRS);
@@ -60,6 +71,8 @@ export class Flechas extends Micro {
   }
 
   paso(dt, t) {
+    const pulso = Math.floor(t * 3);
+    for (const o of this.baldosas) o.b.setAlpha((pulso + o.fase) % 3 === 0 ? 0.45 : 0.18);
     const f = this.flechas[this.actual];
     if (f && !this.decidido) f.img.setPosition(f.x + f.d[0] * Math.sin(t * 10) * 6, f.y + f.d[1] * Math.sin(t * 10) * 6);
   }

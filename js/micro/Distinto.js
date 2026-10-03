@@ -1,5 +1,6 @@
 // ¡EL DISTINTO! — Una grilla de emoji iguales y uno distinto: encontralo.
 import { Micro } from '../escenas/Micro.js';
+import { COLOR } from '../config.js';
 
 // Parejas [el de todos, el distinto], cada vez más parecidas
 const PAREJAS = [
@@ -18,7 +19,7 @@ export class Distinto extends Micro {
   static CONTROL = 'tocar';
 
   armar() {
-    this.fondo();
+    this.tema('cielo');
     const lado = [3, 4, 5][this.nivel - 1];
     let comun, raro, espejo = false;
     if (this.nivel >= 2 && Math.random() < 0.3) {
@@ -30,6 +31,11 @@ export class Distinto extends Micro {
     const paso = Math.min(140, 470 / lado);
     const tam = paso * 0.84;
     const y0 = this.cy + 40 - (paso * (lado - 1)) / 2;
+    // El panel donde están las figuras
+    const anchoP = paso * lado + 30, g = this.add.graphics();
+    g.fillStyle(COLOR.OSCURO, 0.25).fillRoundedRect(this.cx - anchoP / 2 + 6, y0 - paso / 2 - 15 + 10, anchoP, anchoP, 28);
+    g.fillStyle(0xffffff, 0.82).fillRoundedRect(this.cx - anchoP / 2, y0 - paso / 2 - 15, anchoP, anchoP, 28);
+    g.lineStyle(5, 0x4d96ff, 1).strokeRoundedRect(this.cx - anchoP / 2, y0 - paso / 2 - 15, anchoP, anchoP, 28);
     this.distinto = Math.floor(Math.random() * lado * lado);
     this.celdas = [];
     for (let i = 0; i < lado * lado; i++) {

@@ -39,6 +39,7 @@ export const TEMAS = {
   cocina:    { colores: [0xfff4e0, 0xffc9a0], patron: 'cuadros', deco: null },
   oscuro:    { colores: [0x44476a, 0x17182b], patron: 'rayas', deco: null },
   fiesta:    { colores: [0xffb3e6, 0x7b3fa0], patron: 'lunares', deco: 'fiesta' },
+  escenario: { colores: [0xb83a8a, 0x2a0f3d], patron: 'rayas', deco: 'escenario' },
 };
 
 // Mezcla de colores (k = 0: a; k = 1: b)
@@ -180,6 +181,7 @@ export class Micro extends Phaser.Scene {
     else if (t.deco === 'estrellas') this.estrellas(28);
     else if (t.deco === 'mar') { this.haces(3); this.burbujas(12); }
     else if (t.deco === 'fiesta') { this.papelitos(16); this.banderines(); }
+    else if (t.deco === 'escenario') { this.haces(3); this.ampolletas(); }
     return t.colores[1];
   }
 
@@ -240,6 +242,18 @@ export class Micro extends Phaser.Scene {
     });
   }
 
+  // Una fila de ampolletas arriba, que se prenden y apagan como en un concurso
+  ampolletas() {
+    const y = Math.max(20, this.arriba + 4);
+    this.rect(this.cx, y, this.W, 34, COLOR.OSCURO, 0.55);
+    for (let i = 0, x = 20; x < this.W; x += 40, i++) {
+      this.circulo(x, y, 11, 0x5a3a2a);
+      const obj = this.add.image(x, y, 'atlas', 'brillo').setDisplaySize(44, 44).setTint(0xffd23f);
+      this.circulo(x, y, 8, 0xfff1a8);
+      this.deco.push({ obj, tipo: 'ampolleta', par: i % 2 });
+    }
+  }
+
   // Papelitos de colores que caen despacio
   papelitos(n) {
     for (let i = 0; i < n; i++) {
@@ -263,6 +277,8 @@ export class Micro extends Phaser.Scene {
         o.x += d.vx * dt; o.y += d.vy * dt;
         if (o.y < -d.r) { o.y = this.H + d.r; o.x = this.azar(0, this.W); }
         if (o.x < -d.r) o.x = this.W + d.r; else if (o.x > this.W + d.r) o.x = -d.r;
+      } else if (d.tipo === 'ampolleta') {
+        o.setAlpha(Math.floor(t * 4) % 2 === d.par ? 1 : 0.25);
       } else if (d.tipo === 'papelito') {
         o.y += d.vy * dt;
         o.x += Math.sin(t * 2 + d.fase) * 20 * dt;
