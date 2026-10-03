@@ -42,17 +42,23 @@ import { SinChocar } from './SinChocar.js';
 import { Ataja } from './Ataja.js';
 import { Ruleta } from './Ruleta.js';
 import { Carrera } from './Carrera.js';
+import { Rebota } from './Rebota.js';
+import { Cruza } from './Cruza.js';
+import { Encesta } from './Encesta.js';
+import { Equilibra } from './Equilibra.js';
+import { Encaja } from './Encaja.js';
+import { Sopla } from './Sopla.js';
 
 export const MICROS = [
   // tocar
   Reventa, Aplasta, Distinto, NoToques, Cuantos, Frena, Salta, Pesca, Foto, Topo, Vuela, Suma, Grande, Orden,
-  Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta,
+  Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta, Rebota, Cruza,
   // arrastrar
-  Atrapa, Esquiva, Comer, Limpia, Sigue, SinChocar,
+  Atrapa, Esquiva, Comer, Limpia, Sigue, SinChocar, Encaja,
   // deslizar
-  Corta, Patea, Cable, Flechas,
+  Corta, Patea, Cable, Flechas, Encesta,
   // machacar y mantener
-  Infla, Llena, Avanza, Despega,
+  Infla, Llena, Avanza, Despega, Equilibra, Sopla,
 ];
 
 // Jefes: cada 12 microjuegos, uno de estos (más largo; si lo ganás, vida extra)

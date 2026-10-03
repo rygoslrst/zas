@@ -83,6 +83,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 10. 2026-10-03: emoji "pixelados" → se dibujaban hasta 5 veces más grandes que
    su imagen (128 px). Atlas de 192 y 256 px, transparencia sin pérdida y
    mipmaps; el de 128 queda de respaldo.
+12. 2026-10-03: 6 microjuegos nuevos (Rebota, Cruza, Encesta, Equilibra,
+   Encaja, Sopla) → 40. Probados con bots en los 3 niveles y, además, que
+   ninguno se gane sin hacer nada.
 11. 2026-10-03: escenario para todos los que quedaban con fondo genérico:
    tema nuevo `escenario` (concurso con focos y ampolletas: ¿CUÁNTO ES?,
    ¡EL MÁS GRANDE!, ruleta), ¿CUÁNTOS HAY? según lo que se cuenta (mar,
@@ -178,7 +181,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   `ui.ajustarColumna`).
 - Celular en **vertical**. Todo se juega con el dedo (o el mouse).
 
-**Microjuegos (34)**, por control:
+**Microjuegos (40)**, por control:
 - *tocar:* Reventa ¡REVIENTA!, Aplasta ¡APLASTA!, Distinto ¡EL DISTINTO!,
   NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENA!, Salta
   ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Topo ¡GOLPÉALO!, Vuela ¡VUELA!,
@@ -186,14 +189,20 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   Ritmo ¡TOCA AL RITMO! (notas que bajan al compás del bombo; tocar a lo
   loco pierde), Memoria ¿DÓNDE ESTABA?, Duelo ¡DISPARA!, Colores ¡TOCA EL
   AZUL! (y otros colores; desde el nivel 2 la palabra miente), Ataja ¡ATAJA
-  EL PENAL! (eres el arquero), Ruleta ¡FRENA EN LA ESTRELLA!
+  EL PENAL! (eres el arquero), Ruleta ¡FRENA EN LA ESTRELLA!, Rebota ¡NO LO
+  DEJES CAER! (globo sobre cactus), Cruza ¡CRUZA LA CALLE! (el pollito entre
+  autos; al armarse, comprueba con un planificador que haya un cruce posible
+  y si no, reacomoda los autos)
 - *arrastrar:* Atrapa ¡ATRAPA!, Esquiva ¡ESQUIVA!, Comer ¡DALE DE COMER!,
   Limpia ¡LIMPIA!, Sigue ¡NO LO SUELTES!, SinChocar ¡SIN CHOCAR! (llevar la
-  abeja por un pasillo en zigzag)
+  abeja por un pasillo en zigzag), Encaja ¡PONLO EN SU LUGAR! (a su sombra)
 - *deslizar:* Corta ¡CORTA!, Patea ¡PATEA!, Cable ¡CORTA EL ROJO! (y otros
-  colores), Flechas ¡SIGUE LAS FLECHAS!
+  colores), Flechas ¡SIGUE LAS FLECHAS!, Encesta ¡ENCESTA! (la pelota va
+  adonde apunta el gesto; el aro se mueve desde el nivel 2)
 - *tocar rápido / mantener:* Infla ¡INFLA!, Despega ¡DESPEGA!, Llena ¡LLENA EL
-  VASO!, Avanza ¡QUE NO TE VEA!
+  VASO!, Avanza ¡QUE NO TE VEA!, Equilibra ¡EQUILIBRA! (mantener un lado de
+  la pantalla inclina el tablón; sin apretar, se va hacia la pelota), Sopla
+  ¡APAGA LAS VELAS!
 
 **Jefes (3):** Simon ¡REPITE! (secuencia de colores), Torta ¡DEFIENDE EL
 PASTEL! (hormigas) y Carrera ¡ESCAPA! (tocar para saltar obstáculos; un ogro
@@ -251,6 +260,8 @@ te persigue, 3 choques y pierdes). Un jefe dura `PULSOS × pulso × √vel`.
 - **Jugadores automáticos:** `herramientas/pruebas/` (ver su LEEME). Cada
   microjuego tiene un bot; si el bot pierde, casi seguro hay un caso
   imposible. Hoy todos se ganan en nivel 1 y en nivel 3 a velocidad 1,85.
+  Para un microjuego nuevo conviene probar también lo contrario: que sin
+  tocar nada se pierda (sobre todo si es GANA_AL_FINAL).
 - **Regresión completa** (en la consola, con el arnés cargado): para cada
   nombre de `window.director.scene.manager.scenes` (menos `Director`),
   `__probar(nombre, 1, 1, 3)` y `__probar(nombre, 3, 1.85, 4)`. Conviene de a

@@ -238,3 +238,77 @@ B.Carrera = m => {
   const centro = otro ? (otro.x - o.x) / 2 : 0;
   if (o && o.x + centro - m.x <= mitad) { ev('pointerdown', 270, 400); ev('pointerup', 270, 400); }
 };
+
+// --- quinta tanda ---
+// Rebota: toca cada globo cuando baja por la mitad de abajo (no más de 4 por segundo)
+B.Rebota = m => {
+  for (const g of m.globos) {
+    g.__ultimo = m.t < 0.3 ? -1 : (g.__ultimo ?? -1);
+    if (g.vy > 0 && g.y > m.cy + 10 && m.t - g.__ultimo > 0.25) {
+      g.__ultimo = m.t;
+      ev('pointerdown', g.x, g.y - 12); ev('pointerup', g.x, g.y - 12);
+      return;
+    }
+  }
+};
+// Cruza: planifica el cruce entero (saltar o esperar, de a 40 ms) y salta
+// sólo si saltar ahora lleva a cruzar sin que lo atropellen
+B.Cruza = m => {
+  if (m.saltando || m.t < 0.3 || m.decidido) return;
+  const PASO = 0.04, SALTO = 0.12, LIMITE = m.dur - m.t;
+  const choca = (i, t) => {
+    if (i < 0 || i >= m.n) return false;
+    const p = m.pistas[i];
+    return p.autos.some(a => {
+      const d = (((p.x0 + a.k * a.separacion + p.v * t) % p.largo) + p.largo) % p.largo - 110;
+      return Math.abs(d - m.pollo.x) < 66;
+    });
+  };
+  const libre = (i, t0, t1) => { for (let t = t0; t <= t1 + 1e-6; t += PASO / 2) if (choca(i, t)) return false; return true; };
+  const memo = new Map();
+  const llega = (i, t) => {
+    if (i >= m.n) return true;
+    if (t - m.t > LIMITE) return false;
+    const clave = i + ':' + Math.round(t / PASO);
+    if (memo.has(clave)) return memo.get(clave);
+    let r = false;
+    if (libre(i + 1, t, t + SALTO) && llega(i + 1, t + SALTO)) r = true;
+    else if (libre(i, t, t + PASO) && llega(i, t + PASO)) r = true;
+    memo.set(clave, r);
+    return r;
+  };
+  if (libre(m.carril + 1, m.t, m.t + SALTO) && llega(m.carril + 1, m.t + SALTO)) { ev('pointerdown', 270, 300); ev('pointerup', 270, 300); }
+};
+// Encesta: apunta adonde va a estar el aro cuando llegue la pelota
+B.Encesta = m => {
+  if (m.volando || m.t < 0.3 || m.decidido) return;
+  let x = m.xAro, v = m.vAro;
+  for (let t = 0; t < m.tVuelo; t += 1 / 120) {
+    x += v / 120;
+    if (x < 120) { x = 120; v = Math.abs(v); } else if (x > m.W - 120) { x = m.W - 120; v = -Math.abs(v); }
+  }
+  const pendiente = (x - m.xBase) / (m.yBase - m.yAro);
+  ev('pointerdown', m.xBase, m.yBase); window.__paso(1);
+  ev('pointermove', m.xBase + pendiente * 40, m.yBase - 40); window.__paso(1);
+  ev('pointermove', m.xBase + pendiente * 80, m.yBase - 80); window.__paso(1);
+  ev('pointerup', m.xBase + pendiente * 80, m.yBase - 80);
+};
+// Equilibra: inclina hacia el otro lado de donde se va la pelota (control PD)
+B.Equilibra = m => {
+  const e = m.s + 0.45 * m.v;
+  const quiere = e > 10 ? -1 : e < -10 ? 1 : 0;
+  if (quiere === m.lado) return;
+  if (m.lado !== 0) ev('pointerup', 270, 500);
+  if (quiere !== 0) ev('pointerdown', quiere < 0 ? 90 : 450, 500);
+};
+// Encaja: lleva la pieza a su sombra
+B.Encaja = m => {
+  if (m.t < 0.3 || m.decidido || m.agarrada) return;
+  const h = m.huecos.find(o => o.nombre === m.buscada);
+  const x0 = m.pieza.x, y0 = m.pieza.y;
+  ev('pointerdown', x0, y0); window.__paso(1);
+  for (let k = 1; k <= 5; k++) { ev('pointermove', x0 + (h.x - x0) * k / 5, y0 + (h.y - y0) * k / 5); window.__paso(1); }
+  ev('pointerup', h.x, h.y);
+};
+// Sopla: unos 6,7 toques por segundo
+B.Sopla = m => { if (++cuadro % 9 === 0) { ev('pointerdown', 270, 400); ev('pointerup', 270, 400); } };
