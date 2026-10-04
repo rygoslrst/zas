@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Orden extends Micro {
   static ORDEN = '¡EN ORDEN!';
+  static ICONO = 'dado';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

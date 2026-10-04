@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Patea extends Micro {
   static ORDEN = '¡PATEA!';
+  static ICONO = 'pelota';          // en la galería
   static CONTROL = 'deslizar';
 
   armar() {

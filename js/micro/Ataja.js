@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Ataja extends Micro {
   static ORDEN = '¡ATAJA EL PENAL!';
+  static ICONO = 'guante';          // en la galería
   static CONTROL = 'tocar';
   // La primera vez: se congela con la pelota ya pateada (tirarse antes no sirve)
   static LECCION = {

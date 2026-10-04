@@ -8,6 +8,7 @@ const COLORES = { ROJO: 0xff3b3b, AZUL: 0x2f6fff, AMARILLO: 0xffd23f, BLANCO: 0x
 
 export class Colores extends Micro {
   static ORDEN = '¡TOCA EL AZUL!';
+  static ICONO = 'arcoiris';          // en la galería
   static CONTROL = 'tocar';
   static VARIANTES = Object.keys(COLORES).map(c => ({ orden: `¡TOCA EL ${c}!`, color: c }));
 

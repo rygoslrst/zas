@@ -7,6 +7,7 @@ const AGUA = 0x4d96ff, AGUA_CLARA = 0x9fd0ff, VIDRIO = 0xdff3ff;
 
 export class Llena extends Micro {
   static ORDEN = '¡LLENA EL VASO!';
+  static ICONO = 'gota';          // en la galería
   static CONTROL = 'mantener';
   // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
   static LECCION = {

@@ -7,6 +7,7 @@ import { COLOR } from '../config.js';
 
 export class Rebota extends Micro {
   static ORDEN = '¡NO LO DEJES CAER!';
+  static ICONO = 'nube';          // en la galería
   static CONTROL = 'tocar';
   static GANA_AL_FINAL = true;
 

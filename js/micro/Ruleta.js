@@ -10,6 +10,7 @@ const FRENADA = 0.42;        // segundos que tarda en frenar
 
 export class Ruleta extends Micro {
   static ORDEN = '¡FRENA EN LA ESTRELLA!';
+  static ICONO = 'estrella';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

@@ -16,6 +16,7 @@ const ASIMETRICOS = ['auto', 'corredor', 'pollito', 'pez', 'pajaro', 'cohete', '
 
 export class Distinto extends Micro {
   static ORDEN = '¡EL DISTINTO!';
+  static ICONO = 'lupa';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

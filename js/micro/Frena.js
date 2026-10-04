@@ -6,6 +6,7 @@ const FRENADA = 70;          // px que recorre el auto desde que frenás hasta p
 
 export class Frena extends Micro {
   static ORDEN = '¡FRENA!';
+  static ICONO = 'auto';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

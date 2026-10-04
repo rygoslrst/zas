@@ -6,6 +6,7 @@ const VERDE = 0x3a9d23, VERDE_OSCURO = 0x1f6b12;
 
 export class Vuela extends Micro {
   static ORDEN = '¡VUELA!';
+  static ICONO = 'pajaro';          // en la galería
   static CONTROL = 'tocar';
   static GANA_AL_FINAL = true;
 

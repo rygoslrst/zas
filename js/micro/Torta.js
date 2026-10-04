@@ -5,6 +5,7 @@ import { COLOR } from '../config.js';
 
 export class Torta extends Micro {
   static ORDEN = '¡DEFIENDE EL PASTEL!';
+  static ICONO = 'hormiga';          // en la galería
   static CONTROL = 'tocar';
   static PULSOS = 24;
   static GANA_AL_FINAL = true;

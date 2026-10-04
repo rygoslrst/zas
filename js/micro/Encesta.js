@@ -9,6 +9,7 @@ const MARGEN = 40;                // cuánto puede errarle al centro del aro y e
 
 export class Encesta extends Micro {
   static ORDEN = '¡ENCESTA!';
+  static ICONO = 'basket';          // en la galería
   static CONTROL = 'deslizar';
   static PULSOS = 10;
   // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)

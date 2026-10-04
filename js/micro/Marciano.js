@@ -10,6 +10,7 @@ const TOCADO = 52;                // distancia a la que un meteoro le pega a la 
 
 export class Marciano extends Micro {
   static ORDEN = '¡DERROTA AL MARCIANO!';
+  static ICONO = 'marciano';          // en la galería
   static CONTROL = 'arrastrar';
   static PULSOS = 24;
   static JEFE = true;

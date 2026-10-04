@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Salta extends Micro {
   static ORDEN = '¡SALTA!';
+  static ICONO = 'cactus';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

@@ -3,6 +3,7 @@ import { Micro } from '../escenas/Micro.js';
 
 export class Aplasta extends Micro {
   static ORDEN = '¡APLASTA!';
+  static ICONO = 'cucaracha';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

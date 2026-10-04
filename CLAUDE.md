@@ -204,8 +204,15 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   - El plan gratis **pausa el proyecto tras 7 días sin uso**: antes del
     torneo, jugar/abrir Récords al menos una vez; si se pausó, se reactiva
     desde el panel de Supabase (el juego mientras usa la tabla local).
-- **Menú principal** = la pantalla de título (Jugar, Récords, Cómo jugar,
-  Créditos). Se empieza **sólo con el botón Jugar** (antes, tocar cualquier
+- **Galería** (2026-10-03): botón en el título. Los 44 con su ícono (`static
+  ICONO`, un emoji); los que no salieron en el aparato (`zas_vistos_v1`), en
+  silueta con "???". Tocar uno = **práctica libre** de ese microjuego
+  (`Director.empezarGaleria`, usa `soloEste`): 4 vidas, más rápido cada 2 y
+  más difícil cada 4, sin tabla ni racha; se guarda la mejor marca de cada uno
+  (`zas_galeria_v1`). Su final (`#fin.galeria`) dice "Práctica: ¡CORTA!",
+  cuántos seguidos y "tu mejor", con "Otra vez" (el mismo), Menú y Galería.
+- **Menú principal** = la pantalla de título (Jugar, Récords, Galería, Cómo
+  jugar, Créditos). Se empieza **sólo con el botón Jugar** (antes, tocar cualquier
   parte del fondo arrancaba; el usuario no lo quería). Igual al final:
   "Jugar otra vez" es un botón. Durante la partida hay un botón de pausa (arriba a la
   izquierda; también Escape) con "Menú principal" (`Director.irAlMenu`, la

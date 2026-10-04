@@ -12,6 +12,7 @@ const CERCA = 80;                 // a cuánto del centro de una sombra cuenta c
 
 export class Encaja extends Micro {
   static ORDEN = '¡PONLO EN SU LUGAR!';
+  static ICONO = 'iman';          // en la galería
   static CONTROL = 'arrastrar';
 
   armar() {

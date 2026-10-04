@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Despega extends Micro {
   static ORDEN = '¡DESPEGA!';
+  static ICONO = 'cohete';          // en la galería
   static CONTROL = 'machacar';
   // La primera vez que sale uno de "toca rápido" (este, ¡INFLA! o ¡APAGA LAS VELAS!)
   static LECCION = {

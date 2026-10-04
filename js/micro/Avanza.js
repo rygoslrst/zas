@@ -5,6 +5,7 @@ import { COLOR } from '../config.js';
 
 export class Avanza extends Micro {
   static ORDEN = '¡QUE NO TE VEA!';
+  static ICONO = 'dormido';          // en la galería
   static CONTROL = 'mantener';
   // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
   static LECCION = {

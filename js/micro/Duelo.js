@@ -5,6 +5,7 @@ import { COLOR } from '../config.js';
 
 export class Duelo extends Micro {
   static ORDEN = '¡DISPARA!';
+  static ICONO = 'vaquero';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

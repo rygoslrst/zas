@@ -6,6 +6,7 @@ const COSAS = ['sapo', 'gato', 'pizza', 'cohete', 'unicornio', 'pelota', 'hongo'
 
 export class Memoria extends Micro {
   static ORDEN = '¿DÓNDE ESTABA?';
+  static ICONO = 'hongo';          // en la galería
   static CONTROL = 'tocar';
   static PULSOS = 10;
 

@@ -12,6 +12,7 @@ const ESTIRA = 115;               // cuánto se puede estirar como mucho
 
 export class Honda extends Micro {
   static ORDEN = '¡TUMBA AL CERDO!';
+  static ICONO = 'cerdo';          // en la galería
   static CONTROL = 'arrastrar';
   static PULSOS = 10;
   // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)

@@ -6,6 +6,7 @@ const AZUL = 0x3a86ff, AZUL_OSCURO = 0x1d4ed8, GRIS = 0x4a4f63;
 
 export class Infla extends Micro {
   static ORDEN = '¡INFLA!';
+  static ICONO = 'confeti';          // en la galería
   static CONTROL = 'machacar';
   // La primera vez que sale uno de "toca rápido" (este, ¡DESPEGA! o ¡APAGA LAS VELAS!)
   static LECCION = {

@@ -10,6 +10,7 @@ const RADIO = 34;
 
 export class Equilibra extends Micro {
   static ORDEN = '¡EQUILIBRA!';
+  static ICONO = 'mono';          // en la galería
   static CONTROL = 'mantener';
   static GANA_AL_FINAL = true;
   // La primera vez: el juego se congela y enseña (la mano, del lado contrario a la pelota)

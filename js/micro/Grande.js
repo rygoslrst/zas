@@ -5,6 +5,7 @@ const COSAS = ['pelota', 'dona', 'sandia', 'gato', 'panda', 'hongo', 'dado', 'hu
 
 export class Grande extends Micro {
   static ORDEN = '¡EL MÁS GRANDE!';
+  static ICONO = 'sandia';          // en la galería
   static CONTROL = 'tocar';
   static VARIANTES = [{ orden: '¡EL MÁS GRANDE!', grande: true }, { orden: '¡EL MÁS CHICO!', grande: false }];
 

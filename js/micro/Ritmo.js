@@ -18,6 +18,7 @@ const CERCA = 0.5;           // un toque a menos de esto de una nota, cuenta
 
 export class Ritmo extends Micro {
   static ORDEN = '¡TOCA AL RITMO!';
+  static ICONO = 'campana';          // en la galería
   static CONTROL = 'tocar';
   // La primera vez: se congela con la primera figura justo en el círculo
   static LECCION = {

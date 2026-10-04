@@ -15,6 +15,7 @@ function cruzan(x1, y1, x2, y2, x3, y3, x4, y4) {
 
 export class Cable extends Micro {
   static ORDEN = '¡CORTA EL CABLE!';
+  static ICONO = 'tijera';          // en la galería
   static CONTROL = 'deslizar';
   static VARIANTES = [
     { orden: '¡CORTA EL ROJO!', color: 'rojo' }, { orden: '¡CORTA EL AZUL!', color: 'azul' },

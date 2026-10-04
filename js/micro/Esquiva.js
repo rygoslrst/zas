@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Esquiva extends Micro {
   static ORDEN = '¡ESQUIVA!';
+  static ICONO = 'roca';          // en la galería
   static CONTROL = 'arrastrar';
   static GANA_AL_FINAL = true;
 

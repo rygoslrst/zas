@@ -8,6 +8,7 @@ const CHOCA = 54;                 // distancia (en x) a la que un auto atropella
 
 export class Cruza extends Micro {
   static ORDEN = '¡CRUZA LA CALLE!';
+  static ICONO = 'pollito';          // en la galería
   static CONTROL = 'tocar';
   static PULSOS = 11;
   // La primera vez: se congela cuando la primera pista está libre

@@ -3,6 +3,7 @@ import { Micro } from '../escenas/Micro.js';
 
 export class Reventa extends Micro {
   static ORDEN = '¡REVIENTA!';
+  static ICONO = 'globo';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

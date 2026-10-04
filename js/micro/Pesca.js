@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Pesca extends Micro {
   static ORDEN = '¡PESCA!';
+  static ICONO = 'anzuelo';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

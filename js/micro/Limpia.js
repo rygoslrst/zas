@@ -6,6 +6,7 @@ const FROTE = 130;           // px de frotar que hacen falta para sacar una manc
 
 export class Limpia extends Micro {
   static ORDEN = '¡LIMPIA!';
+  static ICONO = 'esponja';          // en la galería
   static CONTROL = 'arrastrar';
 
   armar() {

@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Sigue extends Micro {
   static ORDEN = '¡NO LO SUELTES!';
+  static ICONO = 'mariposa';          // en la galería
   static CONTROL = 'arrastrar';
   static GANA_AL_FINAL = true;
   // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)

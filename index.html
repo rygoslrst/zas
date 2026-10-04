@@ -28,6 +28,7 @@
   <p id="titulo-record" class="record"></p>
   <div class="fila-botones">
     <button class="boton texto ancho" data-accion="records" type="button">Récords</button>
+    <button class="boton texto ancho" data-accion="galeria" type="button">Galería</button>
     <button class="boton texto ancho" data-accion="practica" type="button">Cómo jugar</button>
   </div>
   <div class="esquina">
@@ -60,7 +61,8 @@
   <button id="fin-cta" class="cta" type="button">Jugar otra vez</button>
   <div class="fila-botones">
     <button class="boton texto ancho" data-accion="menu" type="button">Menú</button>
-    <button class="boton texto ancho" data-accion="records" type="button">Récords</button>
+    <button class="boton texto ancho solo-partida" data-accion="records" type="button">Récords</button>
+    <button class="boton texto ancho solo-galeria" data-accion="galeria" type="button">Galería</button>
   </div>
   <div class="esquina">
     <button class="boton icono" data-accion="sonido" type="button"></button>
@@ -83,6 +85,15 @@
     <ol id="tabla" class="tabla"></ol>
     <p id="tabla-vacia" class="nota-tabla" hidden>Todavía no hay récords. ¡Juega una partida!</p>
     <button id="cerrar-records" class="boton texto" type="button">Cerrar</button>
+  </div>
+</section>
+
+<section id="galeria" class="panel" hidden role="dialog" aria-modal="true" aria-labelledby="galeria-titulo">
+  <div class="panel-cuerpo desplazable cuerpo-galeria">
+    <h2 id="galeria-titulo">Galería</h2>
+    <p id="galeria-nota" class="nota-tabla"></p>
+    <div id="galeria-grilla" class="grilla"></div>
+    <button id="cerrar-galeria" class="boton texto" type="button">Cerrar</button>
   </div>
 </section>
 

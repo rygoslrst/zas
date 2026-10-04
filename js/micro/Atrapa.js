@@ -6,6 +6,7 @@ const COMIDA = ['manzana', 'banana', 'uva', 'frutilla', 'sandia', 'cereza', 'dur
 
 export class Atrapa extends Micro {
   static ORDEN = '¡ATRAPA!';
+  static ICONO = 'canasta';          // en la galería
   static CONTROL = 'arrastrar';
 
   armar() {

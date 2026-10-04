@@ -15,7 +15,7 @@
 // ============================================================================
 
 import { ANCHO, VISTA, ESCALA, RITMO, PARTIDA, COLOR, DEBUG, CLAVE_RECORD, CLAVE_ESCALA, CLAVE_PRACTICA,
-  CLAVE_PUNTAJE, CLAVE_VISTOS, CLAVE_LECCIONES } from '../config.js';
+  CLAVE_PUNTAJE, CLAVE_VISTOS, CLAVE_LECCIONES, CLAVE_GALERIA } from '../config.js';
 import { crearAtlas } from '../motor/Atlas.js';
 import { EMOJI, TAM_EMOJI, CELDA_EMOJI } from '../datos/emoji.js';
 import { MICROS, JEFES } from '../micro/indice.js';
@@ -92,6 +92,8 @@ export class Director extends Phaser.Scene {
     const q = new URLSearchParams(location.search);
     const solo = q.get('micro');
     this.soloEste = solo ? [...MICROS, ...JEFES].find(M => M.name.toLowerCase() === solo.toLowerCase()) : null;
+    this.soloEsteUrl = this.soloEste;           // (la galería usa soloEste y después lo devuelve)
+    this.galeria = null;
     this.nivelForzado = q.has('nivel') ? parseInt(q.get('nivel'), 10) : null;
     this.velForzada = q.has('vel') ? parseFloat(q.get('vel')) : null;
     this.fps = DEBUG ? this.add.bitmapText(8, 8, 'anton', '', 22).setTint(COLOR.ORO).setDepth(100) : null;
@@ -381,10 +383,26 @@ export class Director extends Phaser.Scene {
   // fuerza ("Cómo jugar"); si no se dice nada, corre sólo si nunca se hizo acá.
   empezar(practica = null) {
     if (this.estado !== 'titulo' && this.estado !== 'fin') return;
+    if (this.galeria) { this.galeria = null; this.soloEste = this.soloEsteUrl; }
     this.audio.iniciarPartida();
     const hacer = practica === true || (practica === null && leer(CLAVE_PRACTICA, '') !== '1');
     this.practica = hacer && !this.soloEste ? { paso: 0, intentos: 0 } : null;
     this.ui.mostrarSaltar(!!this.practica);
+    this.ui.mostrarEnJuego(true);
+    this.reiniciarPartida();
+    this.intermedio(null);
+  }
+
+  // Práctica libre de un microjuego (desde la galería): siempre el mismo, cada
+  // vez más rápido (cada 2) y más difícil (cada 4), con las 4 vidas. No cuenta
+  // para la tabla; se guarda la mejor marca de ese microjuego.
+  empezarGaleria(Clase) {
+    if (this.estado !== 'titulo' && this.estado !== 'fin') return;
+    this.audio.iniciarPartida();
+    this.practica = null;
+    this.galeria = { Clase };
+    this.soloEste = Clase;
+    this.ui.mostrarSaltar(false);
     this.ui.mostrarEnJuego(true);
     this.reiniciarPartida();
     this.intermedio(null);
@@ -466,9 +484,12 @@ export class Director extends Phaser.Scene {
     this.estado = 'intermedio';
     this.aplicarResolucion();
     const a = this.audio.ahora();
-    const p = this.practica;
-    const velNueva = p ? VEL_PRACTICA : this.velocidadPara(this.rondas);
-    const nivelNuevo = p ? 1 : Math.min(3, 1 + Math.floor(this.rondas / PARTIDA.CADA_NIVEL));
+    const p = this.practica, gal = this.galeria;
+    // (en la galería todo sube más seguido: es un solo microjuego)
+    const velNueva = p ? VEL_PRACTICA
+      : gal ? Math.min(PARTIDA.VEL_MAX, 1 + PARTIDA.ACELERA * Math.floor(this.rondas / 2))
+      : this.velocidadPara(this.rondas);
+    const nivelNuevo = p ? 1 : Math.min(3, 1 + Math.floor(this.rondas / (gal ? 4 : PARTIDA.CADA_NIVEL)));
     const acelera = !p && velNueva > this.vel;
     const sube = !p && nivelNuevo > this.nivel;
     const jefeGanado = gano === true && this.Clase && this.Clase.JEFE;
@@ -482,20 +503,22 @@ export class Director extends Phaser.Scene {
     this.ocultarConsigna();
     this.mostrarMecha(false);
     this.proximo = null;
-    this.velTxt.setText(p ? 'PRÁCTICA' : this.vel > 1.001 ? `VELOCIDAD ×${this.vel.toFixed(2).replace('.', ',')}` : '');
+    const velocidad = this.vel > 1.001 ? `VELOCIDAD ×${this.vel.toFixed(2).replace('.', ',')}` : '';
+    this.velTxt.setText(p ? 'PRÁCTICA' : gal ? 'PRÁCTICA LIBRE' + (velocidad ? ` · ${velocidad}` : '') : velocidad);
 
-    // Puntos y vidas (en la práctica: qué lección va, y sin corazones)
+    // Puntos y vidas (en la práctica: qué lección va, y sin corazones; en la
+    // galería, tu mejor marca en vez del puntaje)
     const arriba = p ? `${p.paso + 1}/${LECCIONES.length}` : String(this.puntos);
     this.puntosTxt.setText(arriba).setScale(1);
     this.sombraPuntos.setText(arriba);
-    this.puntajeTxt.setText(p ? '' : `${conPuntos(this.puntaje)} PUNTOS`).setScale(1);
+    this.puntajeTxt.setText(p ? '' : gal ? `TU MEJOR: ${this.mejorGaleria(gal.Clase)}` : `${conPuntos(this.puntaje)} PUNTOS`).setScale(1);
     this.sumaTxt.setText('').setAlpha(0);
     this.corazones.forEach((c, i) => c.setFrame(i < this.vidas ? 'corazon' : 'corazon_negro').setDisplaySize(82, 82)
       .setAngle(0).setAlpha(1).setVisible(!p));
     if (gano === true) {
       this.puntosTxt.setScale(1.5);
       this.tweens.add({ targets: this.puntosTxt, scale: 1, duration: 280, ease: 'Back.easeOut' });
-      if (!p && this.sumado) {
+      if (!p && !gal && this.sumado) {
         // "+160" al lado del puntaje, que salta y se va
         this.sumaTxt.setText(`+${conPuntos(this.sumado)}`).setX(ANCHO / 2 + this.puntajeTxt.width / 2 + 14)
           .setAlpha(1).setScale(0.4);
@@ -525,14 +548,16 @@ export class Director extends Phaser.Scene {
     this.tweens.add({ targets: this.reaccion, displayWidth: 205, displayHeight: 205, duration: 150, yoyo: true, ease: 'Quad.easeOut' });
     this.nombreJefe.setText('');
 
-    // La racha
-    this.mostrarRacha(!p && gano === false);
+    // La racha (no en las prácticas: no hay puntaje)
+    this.mostrarRacha(!p && !gal && gano === false);
+    if (p || gal) { this.rachaTxt.setText(''); this.rachaFuego.setVisible(false); }
     const mult = multiplicador(this.racha);
-    const subeRacha = !p && gano === true && mult > multiplicador(this.racha - 1);
+    const subeRacha = !p && !gal && gano === true && mult > multiplicador(this.racha - 1);
 
     // Los carteles: se muestran uno después del otro
     const carteles = [];
     if (gano === null && p) carteles.push(['¡A PRACTICAR!', null, 0x2f7dff]);
+    else if (gano === null && gal) carteles.push(['¡PRÁCTICA LIBRE!', null, 0x2f7dff]);
     else if (gano === null && this.trasPractica) {
       carteles.push(['¡AHORA EN SERIO!', null, 0xe0339b], [`¡TIENES ${PARTIDA.VIDAS} VIDAS!`, () => this.audio.record(), 0x16a37a]);
     } else if (gano === null) carteles.push(['¡PREPÁRATE!', null, 0x2f7dff]);
@@ -748,7 +773,13 @@ export class Director extends Phaser.Scene {
     return Math.round(base / 10) * 10;
   }
 
+  // La mejor marca de un microjuego en la galería
+  mejorGaleria(Clase) {
+    try { return (JSON.parse(leer(CLAVE_GALERIA, '{}')) || {})[Clase.name] || 0; } catch (e) { return 0; }
+  }
+
   fin() {
+    if (this.galeria) { this.finGaleria(); return; }
     this.estado = 'fin';
     this.ui.mostrarEnJuego(false);
     if (this.puntos > this.record) {
@@ -773,10 +804,31 @@ export class Director extends Phaser.Scene {
     });
   }
 
+  // El final de una práctica de la galería: sin récords ni tabla, sólo la
+  // mejor marca de ese microjuego
+  finGaleria() {
+    const C = this.galeria.Clase;
+    this.estado = 'fin';
+    this.ui.mostrarEnJuego(false);
+    let mejores = {};
+    try { mejores = JSON.parse(leer(CLAVE_GALERIA, '{}')) || {}; } catch (e) { /* nada */ }
+    const antes = mejores[C.name] || 0;
+    if (this.puntos > antes) { mejores[C.name] = this.puntos; guardar(CLAVE_GALERIA, JSON.stringify(mejores)); }
+    this.telonAbajo(false);
+    this.pintarTelon(0x3a2a6b);
+    this.mostrarDetalles(false);
+    this.mostrarDesfile(true);
+    this.audio.finPartida();
+    this.ui.mostrarFin({ galeria: true, ultimo: C.ORDEN, puntos: this.puntos, mejor: Math.max(antes, this.puntos),
+      nuevoMejor: this.puntos > antes });
+  }
+
   // Vuelve al menú principal (desde la pausa o desde el final). Si había una
   // partida en curso, se abandona.
   irAlMenu() {
     if (this.estado !== 'pausa' && this.estado !== 'fin') return;
+    this.galeria = null;
+    this.soloEste = this.soloEsteUrl;
     if (this.clave) { this.scene.stop(this.clave); this.clave = null; }
     this.tweens.resumeAll();
     this.congelado = false;

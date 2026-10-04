@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Cuantos extends Micro {
   static ORDEN = '¿CUÁNTOS HAY?';
+  static ICONO = 'mariquita';          // en la galería
   static CONTROL = 'tocar';
   static PULSOS = 10;
 

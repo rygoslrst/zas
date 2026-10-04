@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Suma extends Micro {
   static ORDEN = '¿CUÁNTO ES?';
+  static ICONO = 'cien';          // en la galería
   static CONTROL = 'tocar';
   static PULSOS = 10;
 

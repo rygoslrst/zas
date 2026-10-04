@@ -6,6 +6,7 @@ const COMIDA = ['hamburguesa', 'pizza', 'papas', 'pancho', 'dona', 'helado', 'ga
 
 export class Comer extends Micro {
   static ORDEN = '¡DALE DE COMER!';
+  static ICONO = 'rico';          // en la galería
   static CONTROL = 'arrastrar';
 
   armar() {

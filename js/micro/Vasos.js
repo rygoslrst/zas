@@ -8,6 +8,7 @@ const ALZADO = 92;                // cuánto se levanta un vaso para mostrar
 
 export class Vasos extends Micro {
   static ORDEN = '¡ENCUENTRA EL DIAMANTE!';
+  static ICONO = 'diamante';          // en la galería
   static CONTROL = 'tocar';
   static PULSOS = 12;
 

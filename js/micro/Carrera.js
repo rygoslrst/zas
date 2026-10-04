@@ -11,6 +11,7 @@ const TIPOS = [
 
 export class Carrera extends Micro {
   static ORDEN = '¡ESCAPA!';
+  static ICONO = 'ogro';          // en la galería
   static CONTROL = 'tocar';
   static PULSOS = 26;
   static JEFE = true;

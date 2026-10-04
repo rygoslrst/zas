@@ -7,6 +7,8 @@
 // ============================================================================
 
 import { EMOJI, CELDA_EMOJI } from './datos/emoji.js';
+import { MICROS, JEFES } from './micro/indice.js';
+import { CLAVE_GALERIA } from './config.js';
 import { leerTabla, entraEnTabla, anotar, revisarNombre, ultimoNombre, recordarNombre, precargar, enLinea,
   hayPendientes, subirPendientes } from './tabla.js';
 
@@ -69,6 +71,11 @@ export class UI {
       b.addEventListener('click', () => this.abrirRecords(true));
     }
     $('cerrar-records').addEventListener('click', () => this.abrirRecords(false));
+    this.galeria = $('galeria');
+    for (const b of document.querySelectorAll('[data-accion="galeria"]')) {
+      b.addEventListener('click', () => this.abrirGaleria(true));
+    }
+    $('cerrar-galeria').addEventListener('click', () => this.abrirGaleria(false));
     for (const b of document.querySelectorAll('[data-accion="menu"]')) {
       b.addEventListener('click', () => this.director && this.director.irAlMenu());
     }
@@ -78,7 +85,7 @@ export class UI {
     // "No, gracias" no es para siempre: queda un botón para anotarse igual
     $('no-guardar').addEventListener('click', () => { this.cerrarNombre(); $('anotar-luego').hidden = !this.ultimaPartida; });
     $('anotar-luego').addEventListener('click', () => this.pedirNombre());
-    for (const el of [this.creditos, this.records, this.cajaNombre]) {
+    for (const el of [this.creditos, this.records, this.galeria, this.cajaNombre]) {
       el.addEventListener('pointerdown', e => e.stopPropagation());
       el.addEventListener('pointerup', e => e.stopPropagation());
     }
@@ -87,7 +94,7 @@ export class UI {
 
     // "click" llega al levantar el dedo: en iOS el audio sólo se destraba ahí.
     $('btn-jugar').addEventListener('click', () => this.empezar());
-    $('fin-cta').addEventListener('click', () => this.empezar());
+    $('fin-cta').addEventListener('click', () => this.otraVez());
     this.pausa.addEventListener('pointerup', () => this.seguirConCuenta());
     // Lo que no se pudo subir a la tabla la vez pasada, se intenta al abrir
     setTimeout(() => subirPendientes().catch(() => {}), 1500);
@@ -98,14 +105,16 @@ export class UI {
       if (e.code === 'Escape') {
         if (!this.creditos.hidden) this.abrirCreditos(false);
         else if (!this.records.hidden) this.abrirRecords(false);
+        else if (!this.galeria.hidden) this.abrirGaleria(false);
         else if (EN_JUEGO.includes(est)) this.director.pausar();
         else if (est === 'pausa') this.seguirConCuenta();
         return;
       }
       if (e.code === 'KeyM') { this.alternarSonido(); return; }
       if (e.code !== 'Space' && e.code !== 'Enter') return;
-      if (!this.creditos.hidden || !this.records.hidden || !this.director) return;
-      if (est === 'titulo' || est === 'fin') { e.preventDefault(); this.empezar(); }
+      if (!this.creditos.hidden || !this.records.hidden || !this.galeria.hidden || !this.director) return;
+      if (est === 'titulo') { e.preventDefault(); this.empezar(); }
+      else if (est === 'fin') { e.preventDefault(); this.otraVez(); }
       else if (est === 'pausa') { e.preventDefault(); this.seguirConCuenta(); }
     });
   }
@@ -179,7 +188,22 @@ export class UI {
   }
 
   // practica: true = "Cómo jugar"; null = la decide el Director (sólo la primera vez)
-  async empezar(practica = null) {
+  empezar(practica = null) { return this.arrancar(d => d.empezar(practica)); }
+
+  // Práctica libre de un microjuego (desde la galería)
+  empezarGaleria(Clase) {
+    this.claseGaleria = Clase;
+    return this.arrancar(d => d.empezarGaleria(Clase));
+  }
+
+  // "Jugar otra vez" del final: otra partida, o el mismo microjuego si se
+  // venía practicando uno de la galería
+  otraVez() {
+    if (this.fin.classList.contains('galeria') && this.claseGaleria) this.empezarGaleria(this.claseGaleria);
+    else this.empezar();
+  }
+
+  async arrancar(fn) {
     const d = this.director;
     if (this.arrancando || this.pidiendoNombre || !d || (d.estado !== 'titulo' && d.estado !== 'fin')) return;
     // Medio segundo de guarda: el toque desesperado del final no reinicia solo.
@@ -190,8 +214,50 @@ export class UI {
     if (!this.audio.audioVivo) await this.audio.desbloquear();
     this.titulo.hidden = true;
     this.fin.hidden = true;
-    d.empezar(practica);
+    fn(d);
     this.arrancando = false;
+  }
+
+  // La galería: todos los microjuegos y jefes. Los que todavía no te salieron
+  // en este aparato, con signo de pregunta (hay que descubrirlos jugando).
+  abrirGaleria(v) {
+    this.galeria.hidden = !v;
+    if (!v) return;
+    const d = this.director, vistos = d ? d.vistos : new Set();
+    let mejores = {};
+    try { mejores = JSON.parse(localStorage.getItem(CLAVE_GALERIA)) || {}; } catch (e) { /* nada */ }
+    const grilla = $('galeria-grilla');
+    grilla.textContent = '';
+    const todos = [...MICROS, ...JEFES];
+    let descubiertos = 0;
+    for (const C of todos) {
+      const visto = vistos.has(C.name);
+      if (visto) descubiertos++;
+      const ficha = document.createElement(visto ? 'button' : 'div');
+      ficha.className = 'ficha' + (C.JEFE ? ' jefe' : '') + (visto ? '' : ' bloqueada');
+      if (visto) {
+        ficha.type = 'button';
+        ficha.addEventListener('click', () => { this.abrirGaleria(false); this.empezarGaleria(C); });
+      }
+      const c = document.createElement('canvas');
+      c.width = c.height = 96;
+      const icono = EMOJI[C.ICONO] ? C.ICONO : 'estrella';
+      const [x, y] = EMOJI[icono];
+      c.getContext('2d').drawImage(this.imagenEmoji, x, y, CELDA_EMOJI, CELDA_EMOJI, 0, 0, 96, 96);
+      const nom = document.createElement('span');
+      nom.className = 'nom-ficha';
+      nom.textContent = visto ? C.ORDEN.replace(/[¡!¿?]/g, '') : '???';
+      const mejor = document.createElement('span');
+      mejor.className = 'mejor-ficha';
+      mejor.textContent = visto && mejores[C.name] ? `Mejor: ${mejores[C.name]}` : (C.JEFE ? 'JEFE' : '');
+      ficha.append(c, nom, mejor);
+      grilla.append(ficha);
+    }
+    $('galeria-nota').textContent = descubiertos
+      ? `Descubriste ${descubiertos} de ${todos.length}. Toca uno para practicarlo: cada vez más rápido, hasta que pierdas 4 vidas.`
+      : `Hay ${todos.length} para descubrir: juega una partida y van apareciendo aquí.`;
+    $('cerrar-galeria').focus({ preventScroll: true });
+    this.galeria.querySelector('.panel-cuerpo').scrollTop = 0;
   }
 
   // En el celular, al empezar se pide pantalla completa. Si el navegador no
@@ -218,6 +284,9 @@ export class UI {
   }
 
   mostrarFin(d) {
+    if (d.galeria) { this.mostrarFinGaleria(d); return; }
+    this.fin.classList.remove('galeria');
+    $('fin-cta').textContent = 'Jugar otra vez';
     // En qué microjuego se perdió la última vida
     const micro = $('fin-micro');
     micro.textContent = '';
@@ -247,6 +316,26 @@ export class UI {
       this.ultimaPartida = partida;
       this.pedirNombre();
     });
+  }
+
+  // El final de una práctica de la galería: cuántos seguidos y tu mejor marca
+  // (no hay tabla ni medalla: es para practicar)
+  mostrarFinGaleria(d) {
+    this.fin.classList.add('galeria');
+    this.ultimaPartida = null;
+    this.cerrarNombre();
+    const micro = $('fin-micro');
+    micro.textContent = '';
+    const b = document.createElement('b');
+    b.textContent = d.ultimo;
+    micro.append('Práctica: ', b);
+    $('fin-puntos').textContent = String(d.puntos);
+    $('fin-detalle').textContent = `${d.puntos === 1 ? 'superado' : 'superados'} · tu mejor: ${d.mejor}`;
+    $('fin-veredicto').textContent = d.nuevoMejor && d.puntos > 0 ? '¡Tu mejor marca en este microjuego!' : 'Cada uno que pasas, va más rápido.';
+    $('fin-cta').textContent = 'Otra vez';
+    this.dibujarMedalla(null);
+    this.fin.hidden = false;
+    this.finDesde = performance.now();
   }
 
   pedirNombre() {

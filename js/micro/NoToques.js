@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class NoToques extends Micro {
   static ORDEN = '¡NO TOQUES NADA!';
+  static ICONO = 'sirena';          // en la galería
   static CONTROL = 'nada';
   static GANA_AL_FINAL = true;
 

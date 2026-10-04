@@ -12,6 +12,7 @@ const BOTONES = [
 
 export class Simon extends Micro {
   static ORDEN = '¡REPITE!';
+  static ICONO = 'robot';          // en la galería
   static CONTROL = 'tocar';
   static PULSOS = 30;
   static JEFE = true;

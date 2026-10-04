@@ -4,6 +4,7 @@ import { COLOR } from '../config.js';
 
 export class Foto extends Micro {
   static ORDEN = '¡TOMA LA FOTO!';
+  static ICONO = 'camara';          // en la galería
   static CONTROL = 'tocar';
 
   armar() {

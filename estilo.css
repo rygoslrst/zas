@@ -350,6 +350,52 @@ body.tactil .solo-mouse { display: none; }
 .panel-cuerpo .tabla li.yo { background: rgba(255, 210, 63, 0.2); outline: 2px solid var(--oro); }
 .tabla li:nth-child(2) .pos { font-size: 24px; }   /* el primer puesto */
 
+/* --- Galería: todos los microjuegos (los que no viste, con signo de pregunta) --- */
+.cuerpo-galeria { width: min(640px, 100%); padding: 18px 14px 20px; }
+.grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 6px;
+}
+.ficha {
+  appearance: none;
+  border: 2px solid rgba(255, 250, 240, 0.14);
+  background: rgba(255, 250, 240, 0.06);
+  border-radius: 14px;
+  padding: 8px 4px 6px;
+  color: var(--crema);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  touch-action: manipulation;
+  font: inherit;
+}
+.ficha:hover { background: rgba(255, 250, 240, 0.12); }
+.ficha:focus-visible { outline: 3px solid var(--oro); outline-offset: 2px; }
+.ficha canvas { width: 50px; height: 50px; }
+.ficha .nom-ficha {
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  text-align: center;
+  min-height: 2.3em;
+  display: flex;
+  align-items: center;
+}
+.ficha .mejor-ficha { font-size: 12px; color: var(--oro); font-weight: 700; min-height: 1.2em; }
+.ficha.jefe { border-color: rgba(255, 77, 90, 0.6); }
+.ficha.bloqueada { cursor: default; opacity: 0.55; }
+.ficha.bloqueada canvas { filter: brightness(0) invert(0.18); }
+
+/* El final de una práctica de la galería (sin tabla ni medalla) */
+#fin:not(.galeria) .solo-galeria { display: none; }
+#fin.galeria .solo-partida, #fin.galeria .medalla, #fin.galeria #fin-record, #fin.galeria #anotar-luego,
+#fin.galeria #fin-nombre { display: none; }
+
 /* --- Créditos ------------------------------------------------------------------ */
 .panel {
   position: fixed;

@@ -8,6 +8,7 @@ const FRUTAS = [['sandia', 0xff4d6d], ['anana', 0xffd23f], ['coco', 0xf5f5f5], [
 
 export class Corta extends Micro {
   static ORDEN = '¡CORTA!';
+  static ICONO = 'manzana';          // en la galería
   static CONTROL = 'deslizar';
 
   armar() {
