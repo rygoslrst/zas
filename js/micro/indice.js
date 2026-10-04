@@ -27,7 +27,6 @@ import { Suma } from './Suma.js';
 import { Grande } from './Grande.js';
 import { Orden } from './Orden.js';
 import { Limpia } from './Limpia.js';
-import { Avanza } from './Avanza.js';
 import { Ritmo } from './Ritmo.js';
 import { Memoria } from './Memoria.js';
 import { Despega } from './Despega.js';
@@ -56,6 +55,7 @@ import { Puertas } from './Puertas.js';
 import { Separa } from './Separa.js';
 import { Traza } from './Traza.js';
 import { Puntillas } from './Puntillas.js';
+import { Grua } from './Grua.js';
 
 export const MICROS = [
   // tocar
@@ -66,7 +66,7 @@ export const MICROS = [
   // deslizar
   Corta, Patea, Cable, Flechas, Encesta, Puertas,
   // machacar y mantener
-  Infla, Llena, Avanza, Despega, Equilibra, Sopla,
+  Infla, Llena, Grua, Despega, Equilibra, Sopla,
   // girar en círculos y dibujar un lazo
   Manivela, Lazo,
 ];

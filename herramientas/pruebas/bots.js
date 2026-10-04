@@ -155,10 +155,6 @@ B.Limpia = m => {
   lado *= -1;
   ev('pointermove', s.x + lado * 20, s.y);         // ~40 px por cuadro: 2400 px/s de frote
 };
-B.Avanza = m => {
-  if (m.estadoG === 'duerme' && !m.apretado) ev('pointerdown', 270, 500);
-  if (m.estadoG !== 'duerme' && m.apretado) ev('pointerup', 270, 500);
-};
 
 // --- tercera tanda y jefes ---
 // Ritmo: toca cuando la nota llega al aro (con el retraso del toque descontado)
@@ -444,4 +440,10 @@ B.Puntillas = m => {
   if (!b.abajo) { b.abajo = true; ev('pointerdown', m.x, m.yPiso - 36); return; }
   b.x = Math.min(m.meta + 10, b.x + m.limite * 0.7 / 60);
   ev('pointermove', b.x, m.yPiso - 36);
+};
+// Grua: mantiene apretado y suelta cuando la garra está sobre el peluche
+B.Grua = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  if (m.estadoG === 'espera') ev('pointerdown', 270, 600);
+  else if (m.estadoG === 'avanza' && m.x >= m.xPeluche - 4) ev('pointerup', 270, 600);
 };

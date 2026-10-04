@@ -114,6 +114,8 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    el arnés, que va más rápido, congelaba el microjuego siguiente: ahora se
    mide con el reloj del juego. Se descartó mantener despierta la base con
    GitHub Actions (el usuario no lo quiso).
+17. 2026-10-04: el usuario pidió sacar ¡QUE NO TE VEA! (Avanza) y poner otro
+   → Grua ¡SACA EL PELUCHE! (también de mantener apretado).
 
 ## Cómo es el juego hoy
 
@@ -312,10 +314,10 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   - Jingles propios: ¡MÁS RÁPIDO!, ¡MÁS DIFÍCIL!, ¡JEFE!, ¡DUELO!, ¡VIDA
     EXTRA!, ¡RACHA!, ¡ÚLTIMA VIDA! (latidos), corazón que se parte, la orden,
     la lección que congela y descongela, la cuenta 3-2-1 de la pausa, el turno
-    del duelo, los botones. Y de microjuegos: ruleta (clic por gajo), ¡QUE NO
-    TE VEA! (bostezo de aviso y alerta), ¡DISPARA! (señal, señal falsa y
-    disparo), vasos (tapan y se levantan), ¡NO LO SUELTES! (agarrar y aviso
-    al alejarse).
+    del duelo, los botones. Y de microjuegos: ruleta (clic por gajo),
+    ¡DISPARA! (señal, señal falsa y disparo), vasos (tapan y se levantan),
+    ¡NO LO SUELTES! (agarrar y aviso al alejarse), ¡SACA EL PELUCHE! (motor
+    de la garra) y ¡SIN HACER RUIDO! (pasitos y la alarma del gato).
   - **Reloj y pausa:** en la pausa el reloj del juego se congela
     (`_congeladoEn`) y se lleva la cuenta de lo que el audio sonó con el juego
     quieto (`_desfase`), así la cuenta 3-2-1 suena (`despertar()`) sin que la
@@ -351,7 +353,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   LAS PUERTAS! (pasillo embrujado: barrer de lado a lado cada puerta antes de
   que llegue su fantasma; 2, 3 o 4 puertas)
 - *tocar rápido / mantener:* Infla ¡INFLA!, Despega ¡DESPEGA!, Llena ¡LLENA EL
-  VASO!, Avanza ¡QUE NO TE VEA!, Equilibra ¡EQUILIBRA! (mantener un lado de
+  VASO!, Grua ¡SACA EL PELUCHE! (máquina de peluches: mientras se mantiene
+  apretado la garra avanza, al soltar baja; un intento; desde el nivel 2 hay
+  bombas al lado del peluche), Equilibra ¡EQUILIBRA! (mantener un lado de
   la pantalla inclina el tablón; sin apretar, se va hacia la pelota), Sopla
   ¡APAGA LAS VELAS!
 - *girar en círculos* (2026-10-03, gesto nuevo): Manivela ¡GIRA LA MANIVELA!

@@ -790,12 +790,7 @@ export class Audio {
     this._ruido(this._t, 0.025, 0.7, this.sfx, 'bandpass', 3200, null, 4);
     this._osc('sine', 1900, this._t, 0.018, 0.08, this.sfx);
   }
-  // ¡QUE NO TE VEA!: el guardia bosteza ("¡oh, oh!": suelta ya) y despierta
-  bostezo() {
-    if (!this._ok) return;
-    this._osc('triangle', 560, this._t, 0.16, 0.2, this.sfx, 430);
-    this._osc('triangle', 470, this._t + 0.17, 0.24, 0.2, this.sfx, 320);
-  }
+  // Una alarma corta (¡SIN HACER RUIDO!: el gato se despierta)
   alerta() {
     if (!this._ok) return;
     this._osc('square', 1400, this._t, 0.06, 0.1, this.sfx);

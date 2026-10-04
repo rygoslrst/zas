@@ -8,7 +8,7 @@ instalar nada. Hecho para el torneo del colegio.
 ## Cómo se juega
 
 Aparece una orden de una o dos palabras (**¡ATRAPA!**, **¡CORTA!**,
-**¡QUE NO TE VEA!**) y tienes unos segundos para cumplirla. Abajo se quema la
+**¡SACA EL PELUCHE!**) y tienes unos segundos para cumplirla. Abajo se quema la
 mecha: cuando llega a la bomba, se acabó el tiempo. Tienes 4 vidas.
 
 La primera vez hay una **práctica guiada** de tres microjuegos: el juego se
