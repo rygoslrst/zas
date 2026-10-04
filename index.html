@@ -19,10 +19,18 @@
 
 <div id="juego"></div>
 
-<div id="cargando" class="capa">Cargando</div>
+<div id="cargando" class="capa">
+  <img class="zas-carga" src="assets/zas-feliz.svg" alt="" width="200" height="224">
+  <p class="carga-titulo">ZAS</p>
+  <div class="barra-carga" role="progressbar" aria-label="Cargando"><div id="barra-carga"></div></div>
+  <p id="carga-texto" class="carga-texto">Cargando</p>
+</div>
 
 <section id="titulo" class="capa" hidden>
-  <h1>ZAS</h1>
+  <div class="logo">
+    <h1>ZAS</h1>
+    <img class="zas-titulo" src="assets/zas-guino.svg" alt="" width="200" height="224">
+  </div>
   <p class="bajada">Microjuegos de 4 segundos.<br>¿Cuántos aguantas?</p>
   <button id="btn-jugar" class="cta" type="button">Jugar</button>
   <p id="titulo-record" class="record"></p>
@@ -43,6 +51,7 @@
 
 <section id="fin" class="capa" hidden>
   <canvas id="fin-medalla" class="medalla" width="304" height="304" hidden></canvas>
+  <img id="fin-zas" class="medalla zas-fin" src="assets/zas-feliz.svg" alt="" width="200" height="224" hidden>
   <p class="causa">¡Se acabó!</p>
   <p id="fin-micro" class="fin-micro"></p>
   <p id="fin-puntos" class="puntos"></p>

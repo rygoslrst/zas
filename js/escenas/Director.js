@@ -26,12 +26,17 @@ const AYUDA = {
   tocar: 'TOCA', arrastrar: 'ARRASTRA', deslizar: 'DESLIZA EL DEDO', mantener: 'MANTÉN PRESIONADO',
   machacar: 'TOCA RÁPIDO', nada: 'NO TOQUES NADA', girar: 'GIRA EN CÍRCULOS', enlazar: 'DIBUJA UNA VUELTA',
 };
-const CARAS_BIEN = ['contento', 'facha', 'guinio', 'lengua', 'rico'];
-const CARAS_MAL = ['mareado', 'asustado', 'enojado', 'calavera'];
+// Las reacciones del telón: las caras de Zas, la mascota (si no se pudo
+// dibujar, los emoji de siempre)
+const CARAS_BIEN = ['feliz', 'euforico', 'guino', 'cool'];
+const CARAS_MAL = ['triste', 'mareado', 'asustado'];
+const EMOJI_BIEN = ['contento', 'facha', 'guinio', 'lengua', 'rico'];
+const EMOJI_MAL = ['mareado', 'asustado', 'enojado', 'calavera'];
 const DESFILE = ['globo', 'pizza', 'gato', 'cohete', 'sandia', 'pelota', 'pollito', 'diamante', 'dona', 'sapo'];
 // Colores del estallido de la consigna (el texto va en blanco encima)
 const ESTALLIDOS = [0xff4d5a, 0x7b61ff, 0xff7a1a, 0x2f7dff, 0xe0339b, 0x16a37a];
 const COLOR_MECHA = 0xffc14d;
+const ANCHO_BOMBA = 92;          // Zas, al final de la mecha
 const MEDALLAS = [[40, 'diamante'], [30, 'trofeo'], [20, 'medalla_oro'], [10, 'medalla_plata'], [5, 'medalla_bronce']];
 
 const limitar = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -60,6 +65,7 @@ export class Director extends Phaser.Scene {
     this.audio = d.audio;
     this.ui = d.ui;
     this.imagenEmoji = d.imagenEmoji;
+    this.mascota = d.mascota;
   }
 
   create() {
@@ -76,6 +82,7 @@ export class Director extends Phaser.Scene {
     this.clave = null;
     this.practica = null;
     this.congelado = false;
+    this.golpeHasta = 0;
     this.proximo = null;
     this.avisoHasta = 0;
     this.leccion = null;
@@ -114,6 +121,14 @@ export class Director extends Phaser.Scene {
     // mide lo que mide el dibujo (el borde y la sombra se dibujan por fuera,
     // como un recorte de atlas al revés): así los tamaños son los del dibujo.
     // "nombre#" es la celda entera, para recortar con setCrop.
+    // Zas, la mascota: un marco por cara
+    this.hayMascota = !!(this.mascota && Object.keys(this.mascota.marcos).length);
+    if (this.hayMascota) {
+      const tm = this.textures.addCanvas('mascota', this.mascota.lienzo);
+      for (const [cara, [x, y, w, h]] of Object.entries(this.mascota.marcos)) tm.add(cara, 0, x, y, w, h);
+      const [, , w, h] = Object.values(this.mascota.marcos)[0];
+      this.altoMascota = h / w;                     // alto/ancho del marco
+    }
     const te = this.textures.addImage('emoji', this.imagenEmoji);
     const m = (CELDA_EMOJI - TAM_EMOJI) / 2;
     for (const [nombre, [x, y]] of Object.entries(EMOJI)) {
@@ -166,6 +181,14 @@ export class Director extends Phaser.Scene {
   }
 
   mostrarDesfile(v) { for (const d of this.desfile) d.img.setVisible(v); }
+
+  // Pone una cara de Zas en una imagen, de "ancho" de ancho (el marco trae
+  // el borde blanco). Sin mascota, el emoji que más se le parece.
+  ponerCara(img, cara, ancho) {
+    if (this.hayMascota) return img.setTexture('mascota', cara).setDisplaySize(ancho, ancho * this.altoMascota);
+    const emoji = { feliz: 'contento', euforico: 'lengua', guino: 'guinio', cool: 'facha', triste: 'enojado', mareado: 'mareado', asustado: 'asustado' };
+    return img.setTexture('emoji', emoji[cara] || 'contento').setDisplaySize(ancho * 0.82, ancho * 0.82);
+  }
   mostrarDetalles(v) { for (const o of this.detalles) o.setVisible(v).setAlpha(1); }
 
   // Colores del telón: un color vivo, más claro arriba y más oscuro abajo
@@ -318,7 +341,8 @@ export class Director extends Phaser.Scene {
     this.quemado = this.add.image(0, 0, 'atlas', 'blanco').setOrigin(0, 0.5).setTint(COLOR.OSCURO);
     this.chispaMecha = this.add.image(0, 0, 'atlas', 'chispa').setTint(0xfff1a8).setScale(1.3);
     this.brillo = this.add.image(0, 0, 'atlas', 'brillo').setTint(0xffb347).setAlpha(0.8).setDisplaySize(70, 70);
-    this.bomba = this.add.image(0, 0, 'emoji', 'bomba').setDisplaySize(74, 74);
+    this.bomba = this.add.image(0, 0, 'emoji', 'bomba');
+    this.ponerCara(this.bomba, 'feliz', ANCHO_BOMBA);
     this.brasas = [];
     for (let i = 0; i < 10; i++) this.brasas.push({ img: this.add.image(0, 0, 'atlas', 'punto').setVisible(false), vivo: false });
     this.hudMecha = [this.mechaFondo, this.cuerda, this.quemado, this.brillo, this.chispaMecha, this.bomba];
@@ -615,9 +639,10 @@ export class Director extends Phaser.Scene {
     }
 
     // La carita
-    const cara = gano === null ? 'facha' : Phaser.Utils.Array.GetRandom(gano ? CARAS_BIEN : CARAS_MAL);
-    this.reaccion.setFrame(cara).setDisplaySize(170, 170).setAngle(0);
-    this.tweens.add({ targets: this.reaccion, displayWidth: 205, displayHeight: 205, duration: 150, yoyo: true, ease: 'Quad.easeOut' });
+    this.ponerCara(this.reaccion, gano === null ? 'cool' : Phaser.Utils.Array.GetRandom(gano ? CARAS_BIEN : CARAS_MAL), 210);
+    this.reaccion.setAngle(0);
+    const ancho = this.reaccion.displayWidth, alto = this.reaccion.displayHeight;
+    this.tweens.add({ targets: this.reaccion, displayWidth: ancho * 1.2, displayHeight: alto * 1.2, duration: 150, yoyo: true, ease: 'Quad.easeOut' });
     this.nombreJefe.setText('');
 
     // La racha (no en las prácticas: no hay puntaje)
@@ -639,8 +664,8 @@ export class Director extends Phaser.Scene {
     if (jefeGanado) carteles.push(['¡VIDA EXTRA!', () => this.audio.record(), 0x16a37a]);
     if (subeRacha) carteles.push([`¡RACHA ×${conComa(mult)}!`, () => this.audio.record(), 0xff7a1a]);
     if (gano === false && this.vidas === 1) carteles.push(['¡ÚLTIMA VIDA!', null, 0xff4d5a]);
-    if (sube) carteles.push(['¡MÁS DIFÍCIL!', () => this.audio.acelera(), 0xe0339b]);
-    if (acelera) carteles.push(['¡MÁS RÁPIDO!', () => this.audio.acelera(), 0xff7a1a]);
+    if (sube) carteles.push(['¡MÁS DIFÍCIL!', () => { this.audio.masDificil(); this.destelloTelon(0xe0339b); }, 0xe0339b]);
+    if (acelera) carteles.push(['¡MÁS RÁPIDO!', () => { this.audio.acelera(); this.efectoVelocidad(); }, 0xff7a1a]);
     // El jefe se elige ya, para presentarlo: su cara en grande y su nombre
     // (en el duelo, el jugador 2 enfrenta al mismo jefe que el 1)
     const jefe = !this.tocaJefe() ? null : du && du.turno === 1 ? du.clase : (this.jefePreparado = this.elegirJefe());
@@ -683,11 +708,35 @@ export class Director extends Phaser.Scene {
     this.tweens.killTweensOf(this.reaccion);
     this.rachaTxt.setVisible(false);
     this.rachaFuego.setVisible(false);
-    this.reaccion.setFrame(J.RETRATO || 'calavera').setDisplaySize(60, 60).setAngle(-20);
+    this.reaccion.setTexture('emoji', J.RETRATO || 'calavera').setDisplaySize(60, 60).setAngle(-20);
     this.tweens.add({ targets: this.reaccion, displayWidth: 210, displayHeight: 210, angle: 0, duration: 380, ease: 'Back.easeOut' });
     this.nombreJefe.setText(J.NOMBRE_JEFE || '').setScale(0.3).setAlpha(1);
     this.tweens.add({ targets: this.nombreJefe, scale: 1, duration: 300, delay: 120, ease: 'Back.easeOut' });
     this.cameras.main.shake(260, 0.012);
+    // El telón se pone rojo oscuro, con un relámpago
+    this.pintarTelon(0x8a1c2c);
+    this.destelloTelon(0xffffff);
+  }
+
+  // Un relámpago de color sobre el telón
+  destelloTelon(color) {
+    const f = this.add.image(0, 0, 'atlas', 'blanco').setOrigin(0).setDisplaySize(ANCHO, VISTA.alto)
+      .setTint(color).setAlpha(0.7).setDepth(10.5);
+    this.tweens.add({ targets: f, alpha: 0, duration: 260, ease: 'Quad.easeOut', onComplete: () => f.destroy() });
+  }
+
+  // ¡MÁS RÁPIDO!: los rayos giran a toda velocidad y cruzan líneas de viento
+  efectoVelocidad() {
+    this.rayosRapidosHasta = this.time.now + 1100;
+    for (let i = 0; i < 14; i++) {
+      const y = 40 + Math.random() * (VISTA.alto - 80), largo = 120 + Math.random() * 220;
+      const l = this.add.image(-largo, y, 'atlas', 'blanco').setOrigin(0, 0.5).setDisplaySize(largo, 3 + Math.random() * 5)
+        .setAlpha(0.55).setDepth(10.2);
+      this.tweens.add({
+        targets: l, x: ANCHO + 40, duration: 260 + Math.random() * 260, delay: i * 45, ease: 'Quad.easeIn',
+        onComplete: () => l.destroy(),
+      });
+    }
   }
 
   // Con el telón todavía abajo: elige el próximo microjuego y muestra su orden
@@ -794,7 +843,8 @@ export class Director extends Phaser.Scene {
     this.consignaAlJuego();
     this.mostrarMecha(true);
     this.cuerda.setTint(COLOR_MECHA);
-    this.bomba.setFrame('bomba').setDisplaySize(74, 74);
+    this.ponerCara(this.bomba, 'feliz', ANCHO_BOMBA).setAngle(0);
+    this.bombaAsustada = false;
   }
 
   // Lo llama el microjuego (con ganar() / perder()).
@@ -804,15 +854,17 @@ export class Director extends Phaser.Scene {
     this.decididoEn = this.audio.ahora();
     this.restante = limitar(1 - (this.decididoEn - this.t0) / this.dur, 0, 1);
     if (gano) {
+      this.golpeHasta = performance.now() + 75;      // el microjuego se congela un instante: "¡pum!"
       this.audio.bien();
       this.cuerda.setTint(COLOR.BIEN);
-      this.bomba.setFrame('estrella').setDisplaySize(74, 74);
+      this.ponerCara(this.bomba, 'euforico', ANCHO_BOMBA);
       this.tweens.add({ targets: this.bomba, angle: 360, duration: 400 });
       this.chispaMecha.setVisible(false);
       this.brillo.setVisible(false);
     } else {
       this.audio.error();
       this.cuerda.setTint(COLOR.MAL);
+      this.ponerCara(this.bomba, 'mareado', ANCHO_BOMBA);
     }
     this.ocultarConsigna();
   }
@@ -965,7 +1017,7 @@ export class Director extends Phaser.Scene {
   // --------------------------------------------------------------------------
   update(time, deltaMs) {
     const dt = Math.min(0.05, deltaMs / 1000);
-    this.rayos.angle += dt * 14;
+    this.rayos.angle += dt * (time < (this.rayosRapidosHasta || 0) ? 160 : 14);
     this.dientes.tilePositionX += dt * 40;
     if (this.fps) this.fps.setText(`${Math.round(this.game.loop.actualFps)} FPS  x${ESCALA.k}`);
     this.medirRendimiento(deltaMs);
@@ -1006,15 +1058,20 @@ export class Director extends Phaser.Scene {
     this.chispaMecha.setVisible(true).setPosition(punta, this.mechaY).setAngle(t * 900).setScale(1.1 + Math.random() * 0.6);
     this.brillo.setVisible(true).setPosition(punta, this.mechaY).setAlpha(0.5 + Math.random() * 0.4);
     if (Math.random() < 0.5) this.soltarBrasa(punta, this.mechaY);
-    // La bomba tiembla cada vez más
-    const nervio = t > this.dur - 3 * this.pulso ? 7 : 2;
-    this.bomba.setAngle(Math.sin(t * 40) * nervio);
+    // Zas tiembla cada vez más, y en los últimos pulsos se asusta
+    const apurado = t > this.dur - 3 * this.pulso;
+    this.bomba.setAngle(Math.sin(t * 40) * (apurado ? 7 : 2));
+    if (apurado && !this.bombaAsustada && !this.Clase.GANA_AL_FINAL) {
+      this.bombaAsustada = true;
+      this.ponerCara(this.bomba, 'asustado', ANCHO_BOMBA);
+    }
     // Tic en cada uno de los últimos tres pulsos
     if (this.tics < 3 && this.dur - t <= (3 - this.tics) * this.pulso) {
       this.audio.tic(this.tics === 2);
       this.tics++;
-      this.bomba.setDisplaySize(98, 98);
-      this.tweens.add({ targets: this.bomba, displayWidth: 74, displayHeight: 74, duration: 160 });
+      const w = this.bomba.displayWidth, h = this.bomba.displayHeight;
+      this.bomba.setDisplaySize(w * 1.3, h * 1.3);
+      this.tweens.add({ targets: this.bomba, displayWidth: w, displayHeight: h, duration: 160 });
     }
     if (t >= this.dur) {
       const micro = this.scene.get(this.clave);
@@ -1022,7 +1079,8 @@ export class Director extends Phaser.Scene {
       else {
         micro.perder();
         this.audio.explosion();
-        this.bomba.setFrame('explosion').setDisplaySize(150, 150);
+        this.tweens.killTweensOf(this.bomba);
+        this.bomba.setTexture('emoji', 'explosion').setDisplaySize(150, 150);
         this.cameras.main.shake(220, 0.015);
       }
     }

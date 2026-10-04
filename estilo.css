@@ -70,13 +70,53 @@ body.tactil .solo-mouse { display: none; }
   text-align: center;
 }
 
-#cargando {
+/* Carga: Zas con su mecha, el nombre y una barra de avance */
+#cargando { gap: 14px; }
+.zas-carga {
+  width: clamp(110px, 30vw, 150px);
+  height: auto;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
+  animation: saltito 0.9s ease-in-out infinite;
+}
+@keyframes saltito {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-14px) rotate(4deg); }
+}
+.carga-titulo {
   font-family: var(--display);
-  font-size: 20px;
-  letter-spacing: 0.2em;
+  font-size: clamp(56px, 18vw, 84px);
+  line-height: 1;
+  color: var(--oro);
+  transform: rotate(-6deg);
+  text-shadow: 0 5px 0 #c9971a, 0 10px 0 var(--noche);
+}
+.barra-carga {
+  width: min(240px, 64vw);
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 250, 240, 0.12);
+  border: 2px solid rgba(255, 250, 240, 0.25);
+  overflow: hidden;
+}
+#barra-carga {
+  width: 4%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff9f1c, var(--oro));
+  transition: width 0.25s ease-out;
+}
+.carga-texto {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--lila);
-  animation: latir 1s ease-in-out infinite;
+}
+
+/* Zas en el HTML: con el mismo borde blanco de "sticker" que en el juego */
+.zas-titulo, .zas-fin {
+  filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff)
+    drop-shadow(0 8px 8px rgba(0, 0, 0, 0.35));
 }
 
 .grande {
@@ -132,6 +172,20 @@ body.tactil .solo-mouse { display: none; }
   gap: clamp(10px, 2.4vh, 18px);
 }
 
+.logo { position: relative; }
+/* Zas, asomado al lado del logo */
+.zas-titulo {
+  position: absolute;
+  right: -14%;
+  bottom: -6%;
+  width: 34%;
+  height: auto;
+  animation: saludo 2.6s ease-in-out infinite;
+}
+@keyframes saludo {
+  0%, 100% { transform: rotate(10deg) translateY(0); }
+  50% { transform: rotate(18deg) translateY(-8px); }
+}
 #titulo h1 {
   font-family: var(--display);
   font-weight: 400;
@@ -493,5 +547,5 @@ body.tactil .solo-mouse { display: none; }
 #error { z-index: 50; background: var(--noche); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cta, #fin .record.nuevo, .telefono, #titulo h1, #cargando, .medalla, .caja-nombre, .cuenta.pum { animation: none; }
+  .cta, #fin .record.nuevo, .telefono, #titulo h1, .medalla, .caja-nombre, .cuenta.pum, .zas-carga, .zas-titulo { animation: none; }
 }

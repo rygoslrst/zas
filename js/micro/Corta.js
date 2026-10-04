@@ -13,6 +13,20 @@ export class Corta extends Micro {
 
   armar() {
     this.tema('madera');
+    // Un dojo de tablas, con una viga arriba y dos faroles
+    this.tablas(0xb87945);
+    const yViga = Math.max(this.arriba + 40, 40);
+    this.rect(this.cx, yViga, this.W, 30, 0x5c3a1e);
+    this.rect(this.cx, yViga - 12, this.W, 6, 0x8a5a33);
+    for (const x of [70, this.W - 70]) {
+      this.rect(x, yViga + 34, 3, 40, COLOR.OSCURO);
+      this.add.image(x, yViga + 96, 'atlas', 'brillo').setDisplaySize(170, 170).setTint(0xffb347).setAlpha(0.45);
+      this.add.image(x, yViga + 96, 'atlas', 'circulo').setDisplaySize(64, 84).setTint(0xe63946);
+      this.rect(x, yViga + 60, 40, 8, COLOR.OSCURO);
+      this.rect(x, yViga + 132, 40, 8, COLOR.OSCURO);
+      this.add.image(x - 10, yViga + 88, 'atlas', 'circulo').setDisplaySize(14, 30).setTint(0xffffff).setAlpha(0.35);
+    }
+    this.vineta(0.45);
     this.g = 950 * this.vel * this.vel;
     const cosas = [[1], [1, 1], [1, 0, 1, 1]][this.nivel - 1];
     this.frutas = cosas.map((esFruta, i) => {

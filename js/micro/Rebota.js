@@ -15,6 +15,7 @@ export class Rebota extends Micro {
     this.tema('cielo');
     // Abajo, arena y una fila de cactus
     this.yPinchos = this.bajo - 34;
+    this.horizonte(this.yPinchos + 18, 'dunas', 0xf3d79e);
     this.piso(this.yPinchos + 18, 0xe8c77e);
     for (let x = 28; x < this.W; x += 60) this.emoji('cactus', x + this.azar(-5, 5), this.yPinchos - 6, 62);
     // Un globo no cae como una piedra: acelera poco y tiene una velocidad tope

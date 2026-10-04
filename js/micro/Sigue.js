@@ -16,6 +16,16 @@ export class Sigue extends Micro {
 
   armar() {
     this.tema('pasto');
+    // Un jardín: flores y matas de pasto por los bordes (lejos del recorrido)
+    const flores = ['flor', 'tulipan', 'girasol', 'flor', 'tulipan'];
+    const lugares = [[40, this.cy - 300], [500, this.cy - 260], [30, this.cy + 330], [505, this.cy + 350],
+      [200, this.cy - 330], [360, this.cy + 380], [470, this.cy - 330], [90, this.cy + 390]];
+    const g = this.add.graphics();
+    lugares.forEach(([x, y], i) => {
+      g.fillStyle(0x2f8a3a, 0.8);
+      for (let k = -2; k <= 2; k++) g.fillTriangle(x + k * 9 - 5, y + 30, x + k * 9 + 5, y + 30, x + k * 11, y + 4 - Math.abs(k) * 4);
+      if (i % 4 !== 3) this.emoji(flores[i % flores.length], x, y, 58).setAngle((i % 3 - 1) * 8);
+    });
     this.nombre = this.elegir(['mariquita', 'abeja', 'mariposa']);
     // El bicho espera justo donde empieza su recorrido: al agarrarlo no salta
     this.u = 0;

@@ -285,6 +285,10 @@ export class Audio {
     this._ruido(this._t, 0.5, 0.18, this.sfx, 'bandpass', 300, 4000, 1.2);
     this._arpegio([60, 64, 67, 72, 76, 79, 84], 0.05, 0.12, 'square', 0.09, this._t + 0.2);
   }
+  masDificil() {
+    if (!this._ok) return;
+    this._arpegio([48, 55, 60, 63, 67, 72], 0.06, 0.2, 'sawtooth', 0.07);
+  }
   finPartida() {
     if (!this._ok) return;
     this._arpegio([72, 71, 70, 69], 0.2, 0.3, 'triangle', 0.14);

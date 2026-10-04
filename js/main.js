@@ -2,12 +2,13 @@
 //  main.js — arranque
 // ============================================================================
 
-import { ANCHO, VISTA, ESCALA, DEBUG, CLAVE_SONIDO, altoParaPantalla, escalaParaPantalla } from './config.js';
+import { ANCHO, VISTA, ESCALA, DEBUG, CLAVE_SONIDO, MENOS_MOVIMIENTO, altoParaPantalla, escalaParaPantalla } from './config.js';
 import { Audio } from './motor/Audio.js';
 import { UI } from './ui.js';
 import { Director } from './escenas/Director.js';
 import { MICROS, JEFES } from './micro/indice.js';
 import { ARCHIVO_EMOJI, LADO_ATLAS, usarAtlas } from './datos/emoji.js';
+import { lienzoMascota } from './datos/mascota.js';
 
 // ----------------------------------------------------------------------------
 //  Que el navegador no se coma los toques: sin esto, arrastrar el dedo hace
@@ -115,6 +116,8 @@ function vigilarVisibilidad(director, audio) {
 
 async function arrancar() {
   blindarGestos();
+  // "Reducir movimiento": ninguna cámara se sacude (vale para todas las escenas)
+  if (MENOS_MOVIMIENTO) Phaser.Cameras.Scene2D.Camera.prototype.shake = function () { return this; };
   const maxTextura = texturaMaxima();
   if (!maxTextura) {
     document.getElementById('error').hidden = false;
@@ -131,7 +134,9 @@ async function arrancar() {
   usarAtlas(LADO_ATLAS[atlas] ? atlas : elegirAtlas(maxTextura, ESCALA.k));
   const imagenEmoji = new Image();
   imagenEmoji.src = ARCHIVO_EMOJI + ((await soportaWebp()) ? '.webp' : '.png');
-  await Promise.all([fuente, imagenEmoji.decode()]);
+  // La mascota (dibujada en SVG) se pasa a imagen, más nítida en pantallas densas
+  const [, , mascota] = await Promise.all([fuente, imagenEmoji.decode(),
+    lienzoMascota(ESCALA.k >= 1.75 ? 2 : 1.25).catch(() => null)]);
 
   const audio = new Audio(CLAVE_SONIDO);
   const ui = new UI(audio, imagenEmoji);
@@ -153,7 +158,7 @@ async function arrancar() {
   });
   // Los microjuegos primero y el Director al final: así queda dibujado encima.
   for (const M of [...MICROS, ...JEFES]) juego.scene.add(M.name, M, false);
-  juego.scene.add('Director', Director, true, { audio, ui, imagenEmoji });
+  juego.scene.add('Director', Director, true, { audio, ui, imagenEmoji, mascota });
 
   const director = () => juego.scene.getScene('Director');
   vigilarOrientacion(director);

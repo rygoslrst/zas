@@ -12,6 +12,7 @@ export class Atrapa extends Micro {
   armar() {
     this.tema('cielo');
     this.cy0 = this.bajo - 55;
+    this.horizonte(this.cy0 + 46, 'cerros', 0x9fd88a);
     this.piso(this.cy0 + 46, 0x6fc24a);
     this.sombraCanasta = this.sombra(this.cx, this.cy0 + 58, 120, 0.3);
     this.canasta = this.emoji('canasta', this.cx, this.cy0, 132);

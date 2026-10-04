@@ -8,6 +8,7 @@ export class Reventa extends Micro {
 
   armar() {
     this.tema('cielo');
+    this.horizonte(this.H - 60, 'ciudad', 0xa9d2ee);
     const n = [3, 4, 6][this.nivel - 1];
     const sube = [55, 65, 80][this.nivel - 1] * this.vel;
     this.globos = [];

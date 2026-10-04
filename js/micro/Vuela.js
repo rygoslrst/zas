@@ -13,6 +13,7 @@ export class Vuela extends Micro {
   armar() {
     this.tema('cielo');
     this.suelo = this.bajo - 10;
+    this.horizonte(this.suelo, 'ciudad', 0xb4dcef);
     this.piso(this.suelo, 0xded895);
     this.rect(this.cx, this.suelo + 4, this.W, 10, VERDE);
     this.x = 140;

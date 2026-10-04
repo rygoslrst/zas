@@ -12,6 +12,7 @@ export class Frena extends Micro {
   armar() {
     this.tema('cielo');
     this.suelo = this.cy + 140;
+    this.horizonte(this.suelo - 10, 'cerros', 0x9fd88a);
     this.borde = 462;
     const zona = [130, 96, 70][this.nivel - 1];
     this.zona0 = this.borde - zona;

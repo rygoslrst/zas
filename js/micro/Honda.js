@@ -26,14 +26,30 @@ export class Honda extends Micro {
     this.tema('cielo');
     this.ySuelo = this.bajo - 24;
     this.piso(this.ySuelo, 0x7cc95a);
-    // La honda: un palo en Y; el pájaro descansa entre las puntas
+    // La honda: una horqueta de madera en Y; el pájaro descansa entre las
+    // puntas, sobre la goma. La punta de atrás y su goma van detrás del pájaro;
+    // la de adelante, delante (como una honda de verdad).
     this.reposo = { x: 118, y: this.ySuelo - 175 };
-    const g = this.add.graphics();
-    g.fillStyle(0x7a4a24, 1).fillRoundedRect(this.reposo.x - 9, this.reposo.y + 20, 18, this.ySuelo - this.reposo.y - 16, 6);
-    g.lineStyle(16, 0x7a4a24, 1).lineBetween(this.reposo.x, this.reposo.y + 28, this.reposo.x - 26, this.reposo.y - 14)
-      .lineBetween(this.reposo.x, this.reposo.y + 28, this.reposo.x + 26, this.reposo.y - 14);
-    this.puntas = [{ x: this.reposo.x - 26, y: this.reposo.y - 14 }, { x: this.reposo.x + 26, y: this.reposo.y - 14 }];
-    this.gomas = this.add.graphics().setDepth(4);
+    const { x: hx, y: hy } = this.reposo;
+    const cruce = hy + 46;                              // donde se abre la Y
+    this.puntas = [{ x: hx - 44, y: hy - 30 }, { x: hx + 40, y: hy - 22 }];     // [adelante, atrás]
+    const brazo = (g, p, ancho) => {
+      g.lineStyle(ancho + 8, COLOR.OSCURO, 1).lineBetween(hx, cruce, p.x, p.y);
+      g.lineStyle(ancho, 0x8b5a2b, 1).lineBetween(hx, cruce, p.x, p.y);
+      g.lineStyle(ancho * 0.35, 0xb07a45, 1).lineBetween(hx - 3, cruce - 4, p.x - 3, p.y + 2);
+      g.fillStyle(0x8b5a2b, 1).fillCircle(p.x, p.y, ancho / 2);
+    };
+    const atras = this.add.graphics().setDepth(2);
+    atras.fillStyle(COLOR.OSCURO, 0.25).fillEllipse(hx + 6, this.ySuelo + 4, 70, 16);
+    atras.fillStyle(COLOR.OSCURO, 1).fillRoundedRect(hx - 15, cruce - 6, 30, this.ySuelo - cruce + 10, 10);
+    atras.fillStyle(0x8b5a2b, 1).fillRoundedRect(hx - 11, cruce - 4, 22, this.ySuelo - cruce + 6, 8);
+    atras.fillStyle(0xb07a45, 1).fillRoundedRect(hx - 7, cruce, 5, this.ySuelo - cruce - 6, 3);
+    brazo(atras, this.puntas[1], 18);
+    const frente = this.add.graphics().setDepth(7);
+    brazo(frente, this.puntas[0], 20);
+    frente.fillStyle(0x5a2d0c, 1).fillRect(this.puntas[0].x - 9, this.puntas[0].y + 8, 18, 7);     // atadura
+    this.gomaAtras = this.add.graphics().setDepth(4);
+    this.gomas = this.add.graphics().setDepth(6);
     // La torre: cajas apiladas y el cerdo arriba
     this.xTorre = [395, 420, 430][this.nivel - 1];
     const pisos = [2, 3, 3][this.nivel - 1];
@@ -91,12 +107,20 @@ export class Honda extends Micro {
       this.cerdo.y = this.yCerdo0 - sube;
       this.cerdo.setAngle(Math.sin(t * 4) * 6);
     }
-    // Las gomas de la honda, de cada punta al pájaro
+    // Las gomas de la honda, de cada punta al pájaro (sin pájaro, tensas entre
+    // las dos puntas)
     this.gomas.clear();
-    if (this.estado === 'listo' || this.estado === 'apuntando') {
-      this.gomas.lineStyle(7, 0x5a2d0c, 1);
-      for (const p of this.puntas) this.gomas.lineBetween(p.x, p.y, this.pajaro.x, this.pajaro.y);
+    this.gomaAtras.clear();
+    const [pf, pa] = this.puntas;
+    const cargada = this.estado === 'listo' || this.estado === 'apuntando';
+    const bx = cargada ? this.pajaro.x - 14 : null, by = cargada ? this.pajaro.y + 6 : null;
+    for (const [g, p] of [[this.gomaAtras, pa], [this.gomas, pf]]) {
+      g.lineStyle(9, COLOR.OSCURO, 1);
+      if (cargada) g.lineBetween(p.x, p.y + 4, bx, by); else g.lineBetween(pf.x, pf.y + 4, pa.x, pa.y + 4);
+      g.lineStyle(5, 0x7a2e12, 1);
+      if (cargada) g.lineBetween(p.x, p.y + 4, bx, by); else g.lineBetween(pf.x, pf.y + 4, pa.x, pa.y + 4);
     }
+    if (cargada) this.gomas.fillStyle(0x5a2d0c, 1).fillRoundedRect(bx - 12, by - 9, 24, 18, 6);   // el cuero
     if (this.estado !== 'volando') return;
     this.vy += G * dt;
     this.pajaro.x += this.vx * dt;

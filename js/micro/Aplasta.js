@@ -8,6 +8,16 @@ export class Aplasta extends Micro {
 
   armar() {
     this.tema('cocina');
+    // Una cocina: azulejos, ventana, la mesada y una torta que el bicho quiere
+    const yMesa = this.bajo - 150;
+    this.azulejos(0, yMesa, 0xe6f2f7);
+    this.ventana(150, Math.max(this.arriba + 170, 170), 170, 150);
+    this.mesada(yMesa);
+    this.sombra(395, yMesa + 12, 150, 0.25);
+    this.add.image(395, yMesa + 4, 'atlas', 'circulo').setDisplaySize(170, 34).setTint(0xffffff);
+    this.emoji('torta', 395, yMesa - 40, 110);
+    this.emoji('planta', 470, Math.max(this.arriba + 170, 170) + 30, 70);
+    this.vineta(0.3);
     const bicho = this.elegir(['mosquito', 'cucaracha', 'mariquita', 'mosca']);
     const n = this.nivel >= 3 ? 2 : 1;
     const rapidez = [210, 270, 290][this.nivel - 1] * this.vel;

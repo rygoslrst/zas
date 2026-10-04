@@ -24,6 +24,14 @@ export class Llena extends Micro {
     this.alto = 300;
     this.yFondo = this.bajo - 40;
     this.yBorde = this.yFondo - this.alto;
+    // La cocina: azulejos, una ventana, una repisa con frascos y la mesada
+    this.azulejos(0, this.yFondo + 4, 0xfbe3d1);
+    this.ventana(92, this.yBorde - 150, 116, 130, 0x4d96ff);
+    this.rect(this.W - 70, this.yBorde - 20, 120, 12, 0xc98a52);
+    this.emoji('limon', this.W - 100, this.yBorde - 54, 54);
+    this.emoji('frutilla', this.W - 45, this.yBorde - 50, 48);
+    this.mesada(this.yFondo + 4);
+    this.vineta(0.3);
     // La franja donde hay que parar (fracción del vaso)
     const franja = [0.2, 0.15, 0.11][this.nivel - 1];
     const centro = this.azar(0.5, 0.78);

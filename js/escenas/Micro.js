@@ -24,7 +24,7 @@
 //  tiene zoom para dibujar a la resolución real de la pantalla.
 // ============================================================================
 
-import { ANCHO, VISTA, ESCALA, COLOR, PARTIDA } from '../config.js';
+import { ANCHO, VISTA, ESCALA, COLOR, PARTIDA, MENOS_MOVIMIENTO } from '../config.js';
 import { CELDA_EMOJI, TAM_EMOJI } from '../datos/emoji.js';
 
 // Emoji de Noto que miran hacia la izquierda
@@ -85,6 +85,7 @@ export class Micro extends Phaser.Scene {
 
   update(time, deltaMs) {
     if (this.director.congelado) return;       // lección de la práctica: todo quieto
+    if (performance.now() < this.director.golpeHasta) return;   // "golpe" al ganar: un instante quieto
     const dt = Math.min(0.05, deltaMs / 1000), t = this.t;
     if (this.deco.length) this.animarDeco(dt, t);
     this.paso(dt, t);
@@ -126,7 +127,7 @@ export class Micro extends Phaser.Scene {
   // Un brillo de color en los bordes de la pantalla, que se apaga enseguida
   destello(color, alfa) {
     const v = this.add.image(0, 0, 'atlas', 'vineta').setOrigin(0).setDisplaySize(this.W, this.H)
-      .setTint(color).setAlpha(alfa).setDepth(60);
+      .setTint(color).setAlpha(MENOS_MOVIMIENTO ? alfa * 0.4 : alfa).setDepth(60);
     this.tweens.add({ targets: v, alpha: 0, duration: 420, ease: 'Quad.easeOut', onComplete: () => v.destroy() });
   }
 
@@ -193,6 +194,101 @@ export class Micro extends Phaser.Scene {
     this.add.image(0, y, 'atlas', 'blanco').setOrigin(0).setDisplaySize(this.W, this.H - y).setTint(color);
     this.add.image(0, y, 'atlas', 'degradeV').setOrigin(0).setDisplaySize(this.W, 60).setTint(mezcla(color, 0xffffff, 0.25)).setAlpha(0.8);
     this.add.image(0, y, 'atlas', 'blanco').setOrigin(0, 0.5).setDisplaySize(this.W, 8).setTint(mezcla(color, 0x000000, 0.35));
+  }
+
+  // --------------------------------------------------------------------------
+  //  Escenografía quieta (cocinas, paredes, ventanas, horizontes). Se dibuja
+  //  después del fondo y antes de las piezas del juego.
+  // --------------------------------------------------------------------------
+  // La viñeta oscura de los bordes (si la escenografía tapó la del fondo)
+  vineta(alfa = 0.42) {
+    return this.add.image(0, 0, 'atlas', 'vineta').setOrigin(0).setDisplaySize(this.W, this.H).setTint(COLOR.OSCURO).setAlpha(alfa);
+  }
+
+  // Pared de azulejos rectangulares, cada fila corrida media pieza
+  azulejos(y0, y1, color, ancho = 76, alto = 38) {
+    const g = this.add.graphics();
+    g.fillStyle(color, 1).fillRect(0, y0, this.W, y1 - y0);
+    const junta = mezcla(color, 0x000000, 0.16), brillo = mezcla(color, 0xffffff, 0.45);
+    for (let y = y0, f = 0; y < y1; y += alto, f++) {
+      for (let x = -((f % 2) * ancho) / 2; x < this.W; x += ancho) {
+        g.fillStyle(brillo, 0.5).fillRect(x + 6, y + 5, ancho * 0.4, 4);
+        g.fillStyle(junta, 1).fillRect(x, y, 3, Math.min(alto, y1 - y));
+      }
+      g.fillStyle(junta, 1).fillRect(0, y, this.W, 3);
+    }
+    return g;
+  }
+
+  // Una ventana: marco, cielo con una nube, cortinas y la repisa
+  ventana(x, y, w, h, cortina = 0xff6b6b) {
+    const g = this.add.graphics();
+    g.fillStyle(COLOR.OSCURO, 0.22).fillRoundedRect(x - w / 2 - 2, y - h / 2 + 4, w + 20, h + 20, 12);
+    g.fillStyle(0xffffff, 1).fillRoundedRect(x - w / 2 - 10, y - h / 2 - 10, w + 20, h + 20, 12);
+    g.fillStyle(0x7cc8ff, 1).fillRect(x - w / 2, y - h / 2, w, h);
+    g.fillStyle(0xc2e8ff, 1).fillRect(x - w / 2, y + h * 0.1, w, h * 0.4);
+    g.fillStyle(0xffffff, 0.95).fillEllipse(x - w * 0.18, y - h * 0.18, w * 0.34, h * 0.16).fillEllipse(x + w * 0.02, y - h * 0.24, w * 0.3, h * 0.2);
+    g.fillStyle(0xffffff, 1).fillRect(x - 4, y - h / 2, 8, h).fillRect(x - w / 2, y - 4, w, 8);
+    g.fillStyle(cortina, 1)
+      .fillTriangle(x - w / 2 - 16, y - h / 2 - 16, x - w / 2 + w * 0.3, y - h / 2 - 16, x - w / 2 - 16, y + h / 2 + 8)
+      .fillTriangle(x + w / 2 + 16, y - h / 2 - 16, x + w / 2 - w * 0.3, y - h / 2 - 16, x + w / 2 + 16, y + h / 2 + 8);
+    g.fillStyle(COLOR.OSCURO, 1).fillRoundedRect(x - w / 2 - 28, y - h / 2 - 22, w + 56, 9, 4);
+    g.fillStyle(0xc98a52, 1).fillRect(x - w / 2 - 16, y + h / 2 + 8, w + 32, 12);
+    g.fillStyle(COLOR.OSCURO, 0.25).fillRect(x - w / 2 - 16, y + h / 2 + 20, w + 32, 4);
+    return g;
+  }
+
+  // La mesada de la cocina: tablero claro arriba y muebles con puertas abajo
+  mesada(y, color = 0xd9a066) {
+    const g = this.add.graphics();
+    g.fillStyle(mezcla(color, 0x000000, 0.22), 1).fillRect(0, y + 22, this.W, this.H - y);
+    g.lineStyle(4, mezcla(color, 0x000000, 0.42), 1);
+    for (let x = 12; x < this.W; x += 132) {
+      g.strokeRoundedRect(x, y + 40, 118, this.H - y, 8);
+      g.fillStyle(mezcla(color, 0xffffff, 0.5), 1).fillCircle(x + (x % 264 < 132 ? 100 : 18), y + 66, 6);
+    }
+    g.fillStyle(mezcla(color, 0xffffff, 0.2), 1).fillRect(0, y, this.W, 22);
+    g.fillStyle(mezcla(color, 0xffffff, 0.45), 1).fillRect(0, y, this.W, 5);
+    g.fillStyle(COLOR.OSCURO, 0.3).fillRect(0, y + 22, this.W, 6);
+    return g;
+  }
+
+  // Pared de tablas verticales, con juntas y nudos
+  tablas(color = 0xb87945, ancho = 90) {
+    const g = this.add.graphics();
+    for (let x = 0, i = 0; x < this.W; x += ancho, i++) {
+      g.fillStyle(mezcla(color, i % 2 ? 0x000000 : 0xffffff, 0.08), 1).fillRect(x, 0, ancho, this.H);
+      g.fillStyle(mezcla(color, 0x000000, 0.35), 1).fillRect(x, 0, 4, this.H);
+      g.fillStyle(mezcla(color, 0xffffff, 0.25), 0.6).fillRect(x + 4, 0, 3, this.H);
+      for (let k = 0; k < 3; k++) {
+        const ny = ((i * 397 + k * 541) % 1000) / 1000 * this.H;
+        g.fillStyle(mezcla(color, 0x000000, 0.3), 0.7).fillEllipse(x + ancho * (0.3 + 0.4 * ((i + k) % 2)), ny, 16, 26);
+      }
+    }
+    return g;
+  }
+
+  // Un horizonte lejano para los cielos muy grandes de las pantallas altas:
+  // 'cerros', 'ciudad' o 'dunas', en un color apagado
+  horizonte(y, tipo, color) {
+    const g = this.add.graphics();
+    if (tipo === 'ciudad') {
+      for (let x = -10, i = 0; x < this.W; i++) {
+        const w = 40 + ((i * 37) % 50), h = 60 + ((i * 53) % 140);
+        g.fillStyle(color, 1).fillRect(x, y - h, w, h + 400);
+        g.fillStyle(mezcla(color, 0xffffff, 0.35), 0.8);
+        for (let wy = y - h + 12; wy < y - 10; wy += 20) for (let wx = x + 8; wx < x + w - 10; wx += 14) if ((wx * 7 + wy * 3) % 5 > 1) g.fillRect(wx, wy, 6, 8);
+        x += w + 4;
+      }
+    } else {
+      const alto = tipo === 'dunas' ? 70 : 120, ancho = tipo === 'dunas' ? 300 : 230;
+      for (let x = -ancho / 2, i = 0; x < this.W + ancho; x += ancho * 0.7, i++) {
+        const h = alto * (0.6 + 0.4 * ((i * 7) % 5) / 4);
+        g.fillStyle(i % 2 ? color : mezcla(color, 0xffffff, 0.12), 1).fillEllipse(x, y, ancho, h * 2);
+      }
+      g.fillStyle(color, 1).fillRect(0, y, this.W, 400);
+    }
+    return g;
   }
 
   // --------------------------------------------------------------------------

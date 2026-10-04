@@ -11,6 +11,7 @@ export class Salta extends Micro {
     this.tema('atardecer');
     this.emoji('sol', 440, this.arriba + 110, 130);
     this.suelo = this.cy + 150;
+    this.horizonte(this.suelo, 'dunas', 0xf1b67c);
     this.piso(this.suelo, 0xe0a458);
     this.rapidez = 340 * this.vel;
     this.duracionSalto = 0.62 / this.vel;

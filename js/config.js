@@ -82,6 +82,9 @@ export const COLOR = {
 };
 
 export const DEBUG = new URLSearchParams(location.search).has('debug');
+// Si el aparato pide "reducir movimiento" (accesibilidad), sin sacudidas de
+// pantalla y con destellos más suaves
+export const MENOS_MOVIMIENTO = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 export const CLAVE_RECORD = 'zas_record_v1';
 export const CLAVE_SONIDO = 'zas_sonido_v1';
 export const CLAVE_PRACTICA = 'zas_practica_v1';      // '1' cuando ya se hizo la práctica
