@@ -145,6 +145,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    Además: 16 sonidos propios en lugar del `golpe` de siempre, variación de
    afinación, la música da un paso atrás al decidirse, demo a media voz y
    `herramientas/pruebas/sonidos.html` para oírlos y medirlos todos.
+22. 2026-10-04: el nombre de los créditos (se le venía preguntando): el
+   usuario pidió **"Rafael Rodriguez, 4to H"** → arriba de Créditos, en la
+   lista ("Juego") y en `<meta name="author">`.
 
 ## Cómo es el juego hoy
 
