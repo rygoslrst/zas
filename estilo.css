@@ -259,6 +259,8 @@ body.tactil .solo-mouse { display: none; }
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
+  /* que no se salgan de la columna del juego (en la computadora y la tablet) */
+  max-width: calc(100vw - var(--col-izq, 0px) - var(--col-der, 0px) - 24px);
   margin-top: clamp(6px, 1.6vh, 14px);
 }
 .boton:focus-visible { outline: 3px solid var(--oro); outline-offset: 2px; }
@@ -638,13 +640,20 @@ body.tactil .solo-mouse { display: none; }
 .lado-lista li.nuevo { animation: destacar 1.6s ease-out; }
 @keyframes destacar { from { background: rgba(255, 210, 63, 0.35); } to { background: transparent; } }
 .lado-nota { font-size: 14px; color: var(--lila); }
+/* Costados angostos (una tablet acostada) */
+.lado.estrecho { gap: 8px; }
+.lado.estrecho .lado-titulo { font-size: 22px; }
+.lado.estrecho .lado-url { font-size: 14px; }
+.lado.estrecho .lado-zas { width: 76px; }
+.lado.estrecho .lado-lista { padding: 6px 8px; }
+.lado.estrecho .lado-lista li { font-size: 13px; gap: 6px; padding: 4px 0; }
 
 /* --- Modo stand: la demo se juega sola hasta que alguien toca ---------------- */
 #demo {
   z-index: 25;
   justify-content: space-between;
   background: transparent;
-  cursor: pointer;
+  cursor: none;                 /* el mouse quieto no tapa la demo */
   padding-top: max(18px, env(safe-area-inset-top));
   padding-bottom: max(70px, env(safe-area-inset-bottom));
 }

@@ -375,8 +375,16 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
   bot, se cambia también la demo.
 - **Modo stand** (`?stand`), además: la pausa abandonada (60 s) vuelve al
   título (en un teléfono una partida en pausa no se pierde nunca), las
-  lecciones de primera vez no se recuerdan (cada jugador nuevo las recibe) y
-  no se ofrece instalar.
+  lecciones de primera vez no se recuerdan (cada jugador nuevo las recibe),
+  no se ofrece instalar, la pantalla no se apaga (Wake Lock; se vuelve a
+  pedir al volver a la pestaña y con cada toque) y el primer clic pone
+  pantalla completa (una sola vez: si el que atiende la saca con Esc, no se
+  insiste). El panel del navegador de Claude no deja ninguna de las dos
+  cosas (lo rechaza sin error): se prueban en el aparato del stand.
+- Los costados aparecen desde 210 px por lado (entra una tablet acostada,
+  1024 x 768, con letra más chica: clase `estrecho`); los récords que
+  entran entre una lectura y otra se iluminan un momento. Las filas de
+  botones no se salen de la columna del juego.
 - **Registro de errores:** `js/errores.js` (script común, se carga primero, en
   sintaxis vieja: avisa aunque el navegador no entienda los módulos) manda a
   Supabase (`anotar_error`, tabla `errores`, ver

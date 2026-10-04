@@ -36,7 +36,8 @@ function veredicto(p) {
 }
 
 // El ancho mínimo a cada costado del juego para mostrar el QR y los récords
-const LADO_MIN = 250;
+// (210: entra también en una tablet acostada, 1024 x 768)
+const LADO_MIN = 210;
 
 export class UI {
   constructor(audio, imagenEmoji, instalar) {
@@ -183,6 +184,7 @@ export class UI {
     // jugar en el celular y la tabla de récords en vivo
     const lado = Math.min(izq, der);
     raiz.setProperty('--ancho-lado', `${Math.min(340, lado - 36)}px`);
+    for (const id of ['lado-qr', 'lado-tabla']) $(id).classList.toggle('estrecho', lado < 280);
     this.mostrarLados(lado >= LADO_MIN && window.innerHeight >= 560);
   }
 
@@ -206,9 +208,15 @@ export class UI {
     const tabla = await leerTabla();
     const ol = $('lado-lista');
     ol.textContent = '';
+    // Lo que entró desde la última lectura (alguien jugando en su celular, o
+    // el que acaba de anotarse acá) se ilumina un momento
+    const antes = this.ladoAntes, ahora = new Set(tabla.map(e => `${e.nombre}|${e.puntaje}`));
+    this.ladoAntes = ahora;
     tabla.forEach((e, i) => {
       const li = document.createElement('li');
-      if (nuevo && e.nombre === nuevo.nombre && e.puntaje === nuevo.puntaje) li.className = 'nuevo';
+      const recien = nuevo ? e.nombre === nuevo.nombre && e.puntaje === nuevo.puntaje
+        : antes && !antes.has(`${e.nombre}|${e.puntaje}`);
+      if (recien) li.className = 'nuevo';
       for (const [clase, texto] of [['pos', i + 1], ['nom', e.nombre], ['pts', conPuntos(e.puntaje)]]) {
         const span = document.createElement('span');
         span.className = clase;
@@ -230,7 +238,7 @@ export class UI {
   //  con ?stand, además, la pausa abandonada)
   // --------------------------------------------------------------------------
   iniciarEspera() {
-    if (MODO_STAND) document.body.classList.add('stand');
+    if (MODO_STAND) this.iniciarStand();
     this.ultimoToque = performance.now();
     // Al volver a la pestaña o prender la pantalla, el reloj de espera empieza
     // de nuevo (si no, al volver saltaría la demo o se iría del final)
@@ -260,6 +268,36 @@ export class UI {
     window.addEventListener('pointerdown', tocado, true);
     window.addEventListener('keydown', tocado, true);
     setInterval(() => this.revisarEspera(), 1000);
+  }
+
+  // MODO STAND: el aparato queda todo el día a la vista de la gente
+  iniciarStand() {
+    document.body.classList.add('stand');
+    // Que la pantalla no se apague ni se oscurezca (si el navegador deja; se
+    // vuelve a pedir al volver a la pestaña, porque el permiso se pierde)
+    const pedirLuz = async () => {
+      if (!navigator.wakeLock || document.hidden || this.luz) return;
+      try {
+        this.luz = await navigator.wakeLock.request('screen');
+        this.luz.addEventListener('release', () => { this.luz = null; });
+      } catch (e) { /* sin permiso: se intenta con el próximo toque */ }
+    };
+    pedirLuz();
+    document.addEventListener('visibilitychange', pedirLuz);
+    // El primer toque (o clic) pone pantalla completa. Una sola vez: si el que
+    // atiende el stand la saca con Esc, no se insiste.
+    let pedida = false;
+    window.addEventListener('pointerup', e => {
+      if (!e.isTrusted) return;
+      pedirLuz();
+      if (pedida || document.fullscreenElement || document.webkitFullscreenElement) return;
+      pedida = true;
+      const el = document.documentElement, pedir = el.requestFullscreen || el.webkitRequestFullscreen;
+      try {
+        const p = pedir && pedir.call(el, { navigationUI: 'hide' });
+        if (p && p.catch) p.catch(() => {});
+      } catch (err) { /* nada */ }
+    }, true);
   }
 
   revisarEspera() {
