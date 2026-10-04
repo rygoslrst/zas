@@ -100,6 +100,7 @@ window.__probar = (nombre, nivel, vel, n = 5) => {
   }
   return `${nombre} n${nivel} v${vel}: ${ganadas}/${n}` + (detalle.length ? ` (perdió en ${detalle.join(', ')})` : '');
 };
+window.__B = B;            // para partidas completas jugadas por los bots
 'bots listos';
 
 // --- segunda tanda ---
@@ -188,7 +189,7 @@ B.Sigue = m => {
   ev('pointermove', dedo.x, dedo.y);
 };
 B.Simon = m => {
-  if (m.fase !== 'turno' || ++cuadro % 8) return;
+  if (m.decidido || m.fase !== 'turno' || ++cuadro % 8) return;
   const b = m.botones[m.secuencia[m.puesto]];
   ev('pointerdown', b.x, b.y); ev('pointerup', b.x, b.y);
 };

@@ -22,6 +22,14 @@ __ver('Frena', 1.5, 1, 1); await __foto('frena')   // captura a los 1,5 s → ca
 Para un microjuego nuevo, agrega su bot en `bots.js`. El bot no tiene tiempo
 de reacción: si él pierde, casi seguro el microjuego tiene un caso imposible.
 
+**Partida completa jugada por los bots** (prueba todo junto: jefes, racha,
+lecciones, final): los bots quedan en `window.__B`. Empezar una partida normal
+(`await director.ui.empezar()`), cargar el arnés y, en cada cuadro, si
+`director.estado === 'leccion'` llamar `director.descongelar()`, y si hay un
+microjuego sin decidir, `__B[director.clave](microjuego)`; después `__paso(1)`.
+Conviene de a ~20 s por llamada. Ojo: al final pide el nombre; no guardarlo
+(iría a la tabla de verdad).
+
 ## Filtro de nombres
 
 `http://localhost:8124/herramientas/pruebas/filtro.html` (con el servidor
