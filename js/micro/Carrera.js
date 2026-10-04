@@ -14,6 +14,15 @@ export class Carrera extends Micro {
   static CONTROL = 'tocar';
   static PULSOS = 26;
   static JEFE = true;
+  static RETRATO = 'ogro';
+  static NOMBRE_JEFE = 'EL OGRO';
+  // La primera vez: se congela justo cuando hay que saltar la primera piedra
+  static LECCION = {
+    titulo: '¡TOCA PARA SALTAR!', sub: 'SI CHOCAS TRES VECES, EL OGRO TE ATRAPA',
+    gesto: 'tocar', lugar: 'arriba',
+    listo: m => m.obstaculos[0].x - m.x <= m.rapidez * m.duracionSalto * 0.5 + 10,
+    objetivo: m => ({ x: m.x, y: m.suelo - 48 }),
+  };
 
   armar() {
     this.tema('atardecer');

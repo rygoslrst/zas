@@ -10,6 +10,17 @@ export class Cruza extends Micro {
   static ORDEN = '¡CRUZA LA CALLE!';
   static CONTROL = 'tocar';
   static PULSOS = 11;
+  // La primera vez: se congela cuando la primera pista está libre
+  static LECCION = {
+    titulo: '¡CADA TOQUE, UN SALTO!', sub: 'EL POLLITO AVANZA UNA PISTA. ESPERA A QUE PASEN LOS AUTOS',
+    gesto: 'tocar', lugar: 'arriba',
+    listo: m => {
+      const p = m.pistas[0];
+      for (let k = 0; k <= 8; k++) if (p.autos.some(a => Math.abs(m.xAuto(p, a, m.t + k * 0.05) - m.cx) < CHOCA + 30)) return false;
+      return true;
+    },
+    objetivo: m => ({ x: m.pollo.x, y: m.pollo.y }),
+  };
 
   armar() {
     this.fondo([0x9be07a, 0x4e9a3a], null);

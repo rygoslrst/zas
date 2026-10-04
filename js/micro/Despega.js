@@ -5,6 +5,12 @@ import { COLOR } from '../config.js';
 export class Despega extends Micro {
   static ORDEN = '¡DESPEGA!';
   static CONTROL = 'machacar';
+  // La primera vez que sale uno de "toca rápido" (este, ¡INFLA! o ¡APAGA LAS VELAS!)
+  static LECCION = {
+    grupo: 'machacar', titulo: '¡TOCA MUY RÁPIDO!', sub: 'MUCHAS VECES, SIN PARAR, HASTA LOGRARLO',
+    gesto: 'machacar', lugar: 'arriba', listo: () => true,
+    objetivo: m => ({ x: m.cohete.x, y: m.cohete.y }),
+  };
 
   armar() {
     this.tema('noche');

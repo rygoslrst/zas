@@ -9,6 +9,15 @@ export class Torta extends Micro {
   static PULSOS = 24;
   static GANA_AL_FINAL = true;
   static JEFE = true;
+  static RETRATO = 'hormiga';
+  static NOMBRE_JEFE = 'LAS HORMIGAS';
+  // La primera vez: se congela cuando entra la primera hormiga
+  static LECCION = {
+    titulo: '¡APLASTA LAS HORMIGAS!', sub: 'TÓCALAS ANTES DE QUE LLEGUEN AL PASTEL',
+    gesto: 'tocar', lugar: 'arriba',
+    listo: m => { const h = m.hormigas[0]; return !!h.img && h.x > 60 && h.x < m.W - 60 && h.y > 80 && h.y < m.H - 140; },
+    objetivo: m => ({ x: m.hormigas[0].x, y: m.hormigas[0].y }),
+  };
 
   armar() {
     this.tema('cocina');

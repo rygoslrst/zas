@@ -52,7 +52,16 @@ export const PARTIDA = {
   ACELERA: 0.12,            // cuánto más rápido cada vez (x1,12, x1,24...)
   VEL_MAX: 1.85,
   CADA_NIVEL: 12,           // cada 12 microjuegos, más difíciles (nivel 1 → 2 → 3)
-  CADA_JEFE: 12,            // y justo antes, un JEFE: más largo; si lo ganás, vida extra
+  // JEFES: el 8.º microjuego (así lo ve casi todo el que juega una vez) y
+  // después cada 12 (20.º, 32.º...). Son más largos; si lo ganas, vida extra.
+  PRIMER_JEFE: 8,
+  CADA_JEFE: 12,
+  // RACHA: microjuegos seguidos sin fallar → el puntaje se multiplica.
+  // (Si se cambia, cambiar el tope de puntaje en herramientas/tabla_en_linea.sql)
+  RACHA: [[10, 2], [5, 1.5]],
+  // La primera vez que se ve un microjuego en el aparato, la orden queda un
+  // poco más en pantalla (con un sello de NUEVO)
+  EXTRA_NUEVO_S: 0.5,
   // Después de decidir (ganaste o perdiste) el microjuego sigue un ratito,
   // para que se vea qué pasó, y enseguida viene el siguiente.
   DESPUES_DE_DECIDIR_S: 0.55,
@@ -80,3 +89,5 @@ export const CLAVE_PUNTAJE = 'zas_puntaje_v1';        // el mejor puntaje de est
 export const CLAVE_TABLA = 'zas_tabla_v1';            // la tabla de récords (ver tabla.js)
 export const CLAVE_NOMBRE = 'zas_nombre_v1';          // el último nombre anotado
 export const CLAVE_PENDIENTES = 'zas_pendientes_v1';  // puntajes que no se pudieron subir todavía
+export const CLAVE_VISTOS = 'zas_vistos_v1';          // microjuegos que ya se jugaron en este aparato
+export const CLAVE_LECCIONES = 'zas_lecciones_v1';    // lecciones de "primera vez" ya mostradas

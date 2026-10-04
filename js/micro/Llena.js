@@ -8,6 +8,12 @@ const AGUA = 0x4d96ff, AGUA_CLARA = 0x9fd0ff, VIDRIO = 0xdff3ff;
 export class Llena extends Micro {
   static ORDEN = '¡LLENA EL VASO!';
   static CONTROL = 'mantener';
+  // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
+  static LECCION = {
+    titulo: '¡MANTÉN PRESIONADO!', sub: 'EL AGUA CAE MIENTRAS APRIETAS. SUELTA EN LA FRANJA VERDE',
+    gesto: 'mantener', lugar: 'arriba', listo: () => true,
+    objetivo: m => ({ x: m.cx, y: m.yFondo - 90 }),
+  };
 
   armar() {
     this.tema('cocina');

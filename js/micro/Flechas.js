@@ -7,6 +7,12 @@ const DIRS = [[1, 0, 0], [0, 1, 90], [-1, 0, 180], [0, -1, 270]];   // [dx, dy, 
 export class Flechas extends Micro {
   static ORDEN = '¡SIGUE LAS FLECHAS!';
   static CONTROL = 'deslizar';
+  // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
+  static LECCION = {
+    titulo: '¡DESLIZA COMO LA FLECHA!', sub: 'UNA POR UNA, HACIA DONDE APUNTA CADA UNA',
+    gesto: 'deslizar', lugar: 'arriba', listo: () => true,
+    objetivo: m => ({ x: m.flechas[0].x, y: m.flechas[0].y }),
+  };
 
   armar() {
     this.tema('noche');

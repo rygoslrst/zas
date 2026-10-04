@@ -5,6 +5,12 @@ import { COLOR } from '../config.js';
 export class Ataja extends Micro {
   static ORDEN = '¡ATAJA EL PENAL!';
   static CONTROL = 'tocar';
+  // La primera vez: se congela con la pelota ya pateada (tirarse antes no sirve)
+  static LECCION = {
+    titulo: '¡TÍRATE HACIA LA PELOTA!', sub: 'ESPERA LA PATADA Y TOCA EL LADO HACIA DONDE VA',
+    gesto: 'tocar', lugar: 'arriba', listo: m => !m.salto && m.t >= m.tPatada + 0.1,
+    objetivo: m => ({ x: m.cx + m.lado * 150, y: m.yArco - 20 }),
+  };
 
   armar() {
     this.tema('pasto');

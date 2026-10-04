@@ -9,6 +9,12 @@ const COLORES_VELA = [0xff70a6, 0x4d96ff, 0xffd23f, 0x3ddc84];
 export class Sopla extends Micro {
   static ORDEN = '¡APAGA LAS VELAS!';
   static CONTROL = 'machacar';
+  // La primera vez que sale uno de "toca rápido" (este, ¡INFLA! o ¡DESPEGA!)
+  static LECCION = {
+    grupo: 'machacar', titulo: '¡TOCA MUY RÁPIDO!', sub: 'MUCHAS VECES, SIN PARAR, HASTA LOGRARLO',
+    gesto: 'machacar', lugar: 'arriba', listo: () => true,
+    objetivo: m => { const v = m.velas[m.actual] || m.velas[0]; return { x: v.x, y: v.y + 40 }; },
+  };
 
   armar() {
     this.tema('fiesta');

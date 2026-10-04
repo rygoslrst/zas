@@ -129,7 +129,7 @@ function piezas() {
 //  relleno y el borde queda oscuro, así se lee sobre cualquier fondo.
 const FUENTE = {
   TAM: 128, BORDE: 11,
-  CARACTERES: ' ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÑÜ0123456789!¡?¿.,:;-+×%\'"/()#',
+  CARACTERES: ' ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÑÜ0123456789!¡?¿.,:;-+×·%\'"/()#',
 };
 
 function bloqueFuente() {

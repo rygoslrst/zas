@@ -13,6 +13,14 @@ export class Marciano extends Micro {
   static CONTROL = 'arrastrar';
   static PULSOS = 24;
   static JEFE = true;
+  static RETRATO = 'marciano';
+  static NOMBRE_JEFE = 'EL MARCIANO';
+  // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
+  static LECCION = {
+    titulo: '¡MUEVE TU NAVE!', sub: 'DISPARA SOLA. ESQUIVA LOS METEOROS Y GÁNALE AL MARCIANO',
+    gesto: 'arrastrar', lugar: 'medio', listo: () => true,
+    objetivo: m => ({ x: m.nave.x, y: m.yNave }),
+  };
 
   armar() {
     this.tema('noche');

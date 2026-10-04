@@ -1,4 +1,4 @@
-// JEFE — ¡REPETÍ! El marciano muestra una secuencia de colores: repetila.
+// JEFE — ¡REPITE! El robot muestra una secuencia de colores: hay que repetirla.
 // Dos rondas (la segunda, un paso más larga). Si ganás, vida extra.
 import { Micro } from '../escenas/Micro.js';
 import { COLOR } from '../config.js';
@@ -15,10 +15,18 @@ export class Simon extends Micro {
   static CONTROL = 'tocar';
   static PULSOS = 30;
   static JEFE = true;
+  static RETRATO = 'robot';
+  static NOMBRE_JEFE = 'EL ROBOT';
+  // La primera vez: se congela cuando te toca repetir
+  static LECCION = {
+    titulo: '¡TU TURNO!', sub: 'TOCA LOS COLORES EN EL MISMO ORDEN QUE EL ROBOT',
+    gesto: 'tocar', lugar: 'arriba', listo: m => m.fase === 'turno',
+    objetivo: m => { const b = m.botones[m.secuencia[m.puesto]]; return { x: b.x, y: b.y }; },
+  };
 
   armar() {
     this.tema('noche');
-    this.jefe = this.emoji('marciano', this.cx, this.arriba + 120, 150);
+    this.jefe = this.emoji('robot', this.cx, this.arriba + 120, 150);
     this.corona = this.emoji('corona', this.cx, this.arriba + 40, 80);
     this.dicho = this.texto(this.cx, this.arriba + 235, '', 44, COLOR.ORO);
     const r = 92, sep = 205, y0 = this.cy + 90;

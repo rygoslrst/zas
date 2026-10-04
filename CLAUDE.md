@@ -113,8 +113,24 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   espera a que se vaya (`esperarAviso`, 3,8 s supuestos: duración de un
   aviso largo de Android; si en el teléfono real sigue tapando, subirlo en
   `AVISO_PANTALLA_S` de `js/ui.js`).
-- Cada 5 microjuegos, **más rápido** (+12%, hasta ×1,85). Cada 12, un **JEFE**
-  (si lo ganás, vida extra) y después **más difícil** (nivel 1 → 2 → 3).
+- Cada 5 microjuegos, **más rápido** (+12%, hasta ×1,85). Cada 12, **más
+  difícil** (nivel 1 → 2 → 3). **JEFES:** el 8.º microjuego y después cada 12
+  (20.º, 32.º...; antes era el 12.º y casi nadie llegaba). Si lo ganas, vida
+  extra. En el telón se **presenta**: su cara en grande (`static RETRATO`), su
+  nombre (`NOMBRE_JEFE`) y un sacudón (`Director.presentarJefe`).
+- **Racha** (2026-10-03): microjuegos seguidos sin fallar multiplican el
+  puntaje: ×1,5 desde 5, ×2 desde 10 (`PARTIDA.RACHA`). En el telón, debajo de
+  los corazones: "🔥 RACHA 6 · ×1,5" y "¡A 1 DEL ×2!"; al cortarse (si era de
+  3 o más), "¡SE CORTÓ LA RACHA!". El tope de la base cuenta con el ×2.
+- **Primera vez** de cada microjuego en el aparato (`zas_vistos_v1`): sello
+  "¡NUEVO!" en la orden y 0,5 s más de orden (`EXTRA_NUEVO_S`). Si el
+  microjuego tiene `static LECCION` (17: los de mantener, los de "toca rápido"
+  —una sola lección para los tres, `grupo: 'machacar'`—, Honda, Ritmo, Cruza,
+  Sigue, Flechas, Encesta, Ataja y los 4 jefes), la primera vez se CONGELA como
+  en la práctica, con su cartel y la mano sobre el objeto
+  (`zas_lecciones_v1`). `listo(m)` dice cuándo (p. ej. Ataja: con la pelota ya
+  pateada, porque tirarse antes pierde) y `objetivo(m)` dónde va la mano. No
+  se pone en los que el toque de descongelar haría perder (Duelo, NoToques).
 - **Práctica guiada** (`js/escenas/Practica.js`): la primera vez en cada
   aparato, y siempre desde el botón "Cómo jugar" del título. Tres
   microjuegos lentos (velocidad 0,85), uno por gesto: Reventa (tocar),
@@ -223,7 +239,8 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   la pantalla inclina el tablón; sin apretar, se va hacia la pelota), Sopla
   ¡APAGA LAS VELAS!
 
-**Jefes (4):** Simon ¡REPITE! (secuencia de colores), Torta ¡DEFIENDE EL
+**Jefes (4):** Simon ¡REPITE! (secuencia de colores; el que la muestra es un
+ROBOT —antes un marciano, igual que el jefe Marciano—), Torta ¡DEFIENDE EL
 PASTEL! (hormigas), Carrera ¡ESCAPA! (tocar para saltar obstáculos; un ogro
 te persigue, 3 choques y pierdes) y Marciano ¡DERROTA AL MARCIANO! (arrastrar
 la nave, que dispara sola; el marciano tira meteoros; su vida es una parte de

@@ -12,6 +12,12 @@ export class Equilibra extends Micro {
   static ORDEN = '¡EQUILIBRA!';
   static CONTROL = 'mantener';
   static GANA_AL_FINAL = true;
+  // La primera vez: el juego se congela y enseña (la mano, del lado contrario a la pelota)
+  static LECCION = {
+    titulo: '¡MANTÉN UN LADO!', sub: 'LA PELOTA RUEDA HACIA EL LADO QUE APRIETAS. QUE NO SE CAIGA',
+    gesto: 'mantener', lugar: 'arriba', listo: () => true,
+    objetivo: m => ({ x: m.s > 0 ? 80 : m.W - 80, y: m.py + 60 }),
+  };
 
   armar() {
     this.tema('escenario');

@@ -6,6 +6,12 @@ export class Sigue extends Micro {
   static ORDEN = '¡NO LO SUELTES!';
   static CONTROL = 'arrastrar';
   static GANA_AL_FINAL = true;
+  // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
+  static LECCION = {
+    titulo: '¡PON EL DEDO ENCIMA!', sub: 'Y SÍGUELO SIN SOLTARLO HASTA EL FINAL',
+    gesto: 'tocar', lugar: 'arriba', listo: () => true,
+    objetivo: m => ({ x: m.bicho.x, y: m.bicho.y }),
+  };
 
   armar() {
     this.tema('pasto');

@@ -6,6 +6,12 @@ import { COLOR } from '../config.js';
 export class Avanza extends Micro {
   static ORDEN = '¡QUE NO TE VEA!';
   static CONTROL = 'mantener';
+  // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
+  static LECCION = {
+    titulo: '¡MANTÉN PRESIONADO!', sub: 'PARA AVANZAR. SUELTA ANTES DE QUE SE DESPIERTE',
+    gesto: 'mantener', lugar: 'arriba', listo: () => true,
+    objetivo: m => ({ x: m.x, y: m.yPista }),
+  };
 
   armar() {
     this.tema('atardecer');

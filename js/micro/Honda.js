@@ -14,6 +14,12 @@ export class Honda extends Micro {
   static ORDEN = '¡TUMBA AL CERDO!';
   static CONTROL = 'arrastrar';
   static PULSOS = 10;
+  // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
+  static LECCION = {
+    titulo: '¡TIRA HACIA ATRÁS Y SUELTA!', sub: 'LOS PUNTOS MUESTRAN POR DÓNDE VA A VOLAR',
+    gesto: 'tirar', lugar: 'arriba', listo: () => true,
+    objetivo: m => ({ x: m.pajaro.x, y: m.pajaro.y }),
+  };
 
   armar() {
     this.tema('cielo');

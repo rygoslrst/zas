@@ -15,9 +15,13 @@ export class Esquiva extends Micro {
     const n = [5, 6, 7][this.nivel - 1];
     // Las piedras salen repartidas; una de cada tres apunta adonde estás
     // (la última llega abajo un poco antes de que se acabe el tiempo)
-    // Caen más rápido con la velocidad, pero no tanto: tiene que dar para reaccionar
-    this.cae = 560 * Math.pow(this.vel, 0.7);
-    const caida = (this.yJugador + 70) / this.cae;
+    // Caen más rápido con la velocidad, pero no tanto: tiene que dar para reaccionar.
+    // En una pantalla alta caen de más arriba: más rápido, para que tarden lo
+    // mismo que en una baja (si no, salían más juntas y a veces no había por
+    // dónde escapar en el nivel 3).
+    const distancia = this.yJugador + 70;
+    this.cae = 560 * Math.pow(this.vel, 0.7) * Math.max(1, distancia / 680);
+    const caida = distancia / this.cae;
     const desde = 0.35 / this.vel, hasta = this.dur - caida - 0.1;
     this.piedras = [];
     for (let i = 0; i < n; i++) {

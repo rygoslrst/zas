@@ -7,6 +7,12 @@ const AZUL = 0x3a86ff, AZUL_OSCURO = 0x1d4ed8, GRIS = 0x4a4f63;
 export class Infla extends Micro {
   static ORDEN = '¡INFLA!';
   static CONTROL = 'machacar';
+  // La primera vez que sale uno de "toca rápido" (este, ¡DESPEGA! o ¡APAGA LAS VELAS!)
+  static LECCION = {
+    grupo: 'machacar', titulo: '¡TOCA MUY RÁPIDO!', sub: 'MUCHAS VECES, SIN PARAR, HASTA LOGRARLO',
+    gesto: 'machacar', lugar: 'arriba', listo: () => true,
+    objetivo: m => ({ x: m.manija.x, y: m.manija.y }),
+  };
 
   armar() {
     this.tema('fiesta');

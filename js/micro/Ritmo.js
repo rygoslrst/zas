@@ -19,6 +19,12 @@ const CERCA = 0.5;           // un toque a menos de esto de una nota, cuenta
 export class Ritmo extends Micro {
   static ORDEN = '¡TOCA AL RITMO!';
   static CONTROL = 'tocar';
+  // La primera vez: se congela con la primera figura justo en el círculo
+  static LECCION = {
+    titulo: '¡TOCA JUSTO A TIEMPO!', sub: 'CUANDO CADA FIGURA PASE POR EL CÍRCULO',
+    gesto: 'tocar', lugar: 'arriba', listo: m => m.t >= m.notas[0].t - 0.02,
+    objetivo: m => ({ x: m.cx, y: m.yAro }),
+  };
 
   armar() {
     this.tema('noche');

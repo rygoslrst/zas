@@ -11,6 +11,12 @@ export class Encesta extends Micro {
   static ORDEN = '¡ENCESTA!';
   static CONTROL = 'deslizar';
   static PULSOS = 10;
+  // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
+  static LECCION = {
+    titulo: '¡DESLIZA HACIA EL ARO!', sub: 'LA PELOTA VA HACIA DONDE MUEVES EL DEDO',
+    gesto: 'deslizar', lugar: 'medio', listo: () => true,
+    objetivo: m => ({ x: m.xBase, y: m.yBase }),
+  };
 
   armar() {
     this.tema('madera');
