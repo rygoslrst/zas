@@ -108,6 +108,12 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    el resultado, vista previa del link, instalable y sin internet, modo stand
    con demo, QR y récords a los costados, y registro de errores. Se arregló el
    juego corrido a la derecha en la computadora (lo centraban Phaser y el CSS).
+16. 2026-10-04: "ver si falta algo o crear más microjuegos" → 4 nuevos
+   (Puertas, Separa, Traza, Puntillas) → 46 + 5 jefes = 51. En la regresión
+   salió que el "golpe" al ganar (75 ms quieto) se medía con el reloj real y
+   el arnés, que va más rápido, congelaba el microjuego siguiente: ahora se
+   mide con el reloj del juego. Se descartó mantener despierta la base con
+   GitHub Actions (el usuario no lo quiso).
 
 ## Cómo es el juego hoy
 
@@ -236,7 +242,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     las partidas normales (no práctica, galería, duelo ni demo). Sin internet
     quedan pendientes y se suben con lo demás. SQL en
     `herramientas/tabla_en_linea.sql` (al final).
-- **Galería** (2026-10-03): botón en el título. Los 47 con su ícono (`static
+- **Galería** (2026-10-03): botón en el título. Los 51 con su ícono (`static
   ICONO`, un emoji); los que no salieron en el aparato (`zas_vistos_v1`), en
   silueta con "???". Tocar uno = **práctica libre** de ese microjuego
   (`Director.empezarGaleria`, usa `soloEste`): 4 vidas, más rápido cada 2 y
@@ -317,7 +323,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     + `_desfase`; la del menú, con el reloj del audio. `pausar()` se puede
     llamar de más (al ocultar la página, siempre).
 
-**Microjuegos (42)**, por control:
+**Microjuegos (46)**, por control:
 - *tocar:* Reventa ¡REVIENTA!, Aplasta ¡APLASTA!, Distinto ¡EL DISTINTO!,
   NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENA!, Salta
   ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Vasos ¡ENCUENTRA EL DIAMANTE!
@@ -333,10 +339,17 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 - *arrastrar:* Atrapa ¡ATRAPA!, Esquiva ¡ESQUIVA!, Comer ¡DALE DE COMER!,
   Limpia ¡LIMPIA!, Sigue ¡NO LO SUELTES!, Honda ¡TUMBA AL CERDO! (honda: tirar
   hacia atrás y soltar; puntos muestran el camino), Encaja ¡PONLO EN SU
-  LUGAR! (a su sombra)
+  LUGAR! (a su sombra), Separa ¡SEPARA! (de a una, la comida a la canasta y
+  las cosas a la caja; también se pueden lanzar hacia su lado), Traza ¡DIBUJA
+  LA ESTRELLA! (y el rayo, el corazón, el triángulo: pasar el dedo por la
+  figura punteada desde el punto verde; avanza mientras el dedo esté cerca de
+  la línea), Puntillas ¡SIN HACER RUIDO! (llevar al hámster a la galleta sin
+  despertar al gato: arrastrar rápido llena la barra de ruido)
 - *deslizar:* Corta ¡CORTA!, Patea ¡PATEA!, Cable ¡CORTA EL ROJO! (y otros
   colores), Flechas ¡SIGUE LAS FLECHAS!, Encesta ¡ENCESTA! (la pelota va
-  adonde apunta el gesto; el aro se mueve desde el nivel 2)
+  adonde apunta el gesto; el aro se mueve desde el nivel 2), Puertas ¡CIERRA
+  LAS PUERTAS! (pasillo embrujado: barrer de lado a lado cada puerta antes de
+  que llegue su fantasma; 2, 3 o 4 puertas)
 - *tocar rápido / mantener:* Infla ¡INFLA!, Despega ¡DESPEGA!, Llena ¡LLENA EL
   VASO!, Avanza ¡QUE NO TE VEA!, Equilibra ¡EQUILIBRA! (mantener un lado de
   la pantalla inclina el tablón; sin apretar, se va hacia la pelota), Sopla

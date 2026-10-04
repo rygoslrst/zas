@@ -85,7 +85,7 @@ export class Micro extends Phaser.Scene {
 
   update(time, deltaMs) {
     if (this.director.congelado) return;       // lección de la práctica: todo quieto
-    if (performance.now() < this.director.golpeHasta) return;   // "golpe" al ganar: un instante quieto
+    if (this.audio.ahora() < this.director.golpeHasta) return;  // "golpe" al ganar: un instante quieto (en el reloj del juego)
     const dt = Math.min(0.05, deltaMs / 1000), t = this.t;
     if (this.deco.length) this.animarDeco(dt, t);
     this.paso(dt, t);

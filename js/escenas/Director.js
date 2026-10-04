@@ -820,6 +820,7 @@ export class Director extends Phaser.Scene {
     this.dur = Clase.PULSOS * this.pulso * (Clase.JEFE ? Math.sqrt(this.vel) : 1);
     this.t0 = this.audio.ahora();
     this.decididoEn = null;
+    this.golpeHasta = 0;
     this.gano = null;
     this.tics = 0;
     // La lección de este microjuego: la de la práctica o, la primera vez que se
@@ -864,7 +865,7 @@ export class Director extends Phaser.Scene {
     this.restante = limitar(1 - (this.decididoEn - this.t0) / this.dur, 0, 1);
     this.audio.calmar();
     if (gano) {
-      this.golpeHasta = performance.now() + 75;      // el microjuego se congela un instante: "¡pum!"
+      this.golpeHasta = this.decididoEn + 0.075;     // el microjuego se congela un instante: "¡pum!"
       this.audio.bien();
       this.cuerda.setTint(COLOR.BIEN);
       this.ponerCara(this.bomba, 'euforico', ANCHO_BOMBA);
@@ -881,6 +882,9 @@ export class Director extends Phaser.Scene {
 
   cerrar() {
     this.estado = 'cerrando';
+    // En la demo, el bot levanta el dedo (si quedara apretado, el primer toque
+    // del microjuego siguiente se perdería)
+    if (this.demo && window.__ev) window.__ev('pointerup', ANCHO / 2, VISTA.alto / 2);
     this.audio.detenerPista();
     this.audio.chorro(false);
     this.colorSiguiente();

@@ -97,6 +97,10 @@ window.__probar = (nombre, nivel, vel, n = 5) => {
     }
     if (d.gano) ganadas++;
     else detalle.push(`t=${(window.__T() - d.t0).toFixed(2)}`);
+    // Algunos bots no levantan el dedo: si quedara apretado, el primer toque
+    // del microjuego siguiente se perdería
+    window.__ev('pointerup', 270, 400);
+    window.__paso(1);
   }
   return `${nombre} n${nivel} v${vel}: ${ganadas}/${n}` + (detalle.length ? ` (perdió en ${detalle.join(', ')})` : '');
 };
@@ -400,4 +404,44 @@ B.Pulpo = m => {
     ev('pointerup', p.x - nx * 60, p.y - ny * 60);
     return;
   }
+};
+
+// --- séptima tanda (2026-10-04) ---
+// Puertas: barre de lado a lado la puerta cuyo fantasma llega primero
+B.Puertas = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  const p = m.puertas.filter(o => !o.cerrada).sort((a, b) => a.llegada - b.llegada)[0];
+  if (!p) return;
+  const y = m.yPuerta, x0 = p.x - p.ancho * 0.45, x1 = p.x + p.ancho * 0.45;
+  ev('pointerdown', x0, y); window.__paso(1);
+  for (let k = 1; k <= 4; k++) { ev('pointermove', x0 + (x1 - x0) * k / 4, y); window.__paso(1); }
+  ev('pointerup', x1, y);
+};
+// Separa: lleva cada cosa a su lugar (comida a la canasta, cosas a la caja)
+B.Separa = m => {
+  const p = m.pieza;
+  if (!p || p.yendo || m.decidido || m.t < 0.25 || m.agarre) return;
+  const lugar = m.lugares.find(l => l.comida === p.esComida);
+  const x0 = p.img.x, y0 = p.img.y;
+  ev('pointerdown', x0, y0); window.__paso(1);
+  for (let k = 1; k <= 3; k++) { ev('pointermove', x0 + (lugar.x - x0) * k / 3, y0 + (m.yLugar - y0) * k / 3); window.__paso(1); }
+  ev('pointerup', lugar.x, m.yLugar);
+};
+// Traza: recorre la figura del punto verde al final, en algo más de la mitad del tiempo
+B.Traza = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  if (!m.__bot || m.__bot.t0 !== m.t0) m.__bot = { t0: m.t0, i: 0, abajo: false };
+  const b = m.__bot, r = m.ruta;
+  if (!b.abajo) { b.abajo = true; ev('pointerdown', r[0].x, r[0].y); return; }
+  b.i = Math.min(r.length - 1, b.i + Math.ceil(r.length / (m.dur * 60 * 0.55)));
+  ev('pointermove', r[b.i].x, r[b.i].y);
+};
+// Puntillas: arrastra al 70 % de la velocidad que despierta al gato
+B.Puntillas = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  if (!m.__bot || m.__bot.t0 !== m.t0) m.__bot = { t0: m.t0, x: m.x, abajo: false };
+  const b = m.__bot;
+  if (!b.abajo) { b.abajo = true; ev('pointerdown', m.x, m.yPiso - 36); return; }
+  b.x = Math.min(m.meta + 10, b.x + m.limite * 0.7 / 60);
+  ev('pointermove', b.x, m.yPiso - 36);
 };

@@ -52,15 +52,19 @@ import { Marciano } from './Marciano.js';
 import { Manivela } from './Manivela.js';
 import { Lazo } from './Lazo.js';
 import { Pulpo } from './Pulpo.js';
+import { Puertas } from './Puertas.js';
+import { Separa } from './Separa.js';
+import { Traza } from './Traza.js';
+import { Puntillas } from './Puntillas.js';
 
 export const MICROS = [
   // tocar
   Reventa, Aplasta, Distinto, NoToques, Cuantos, Frena, Salta, Pesca, Foto, Vasos, Vuela, Suma, Grande, Orden,
   Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta, Rebota, Cruza,
   // arrastrar
-  Atrapa, Esquiva, Comer, Limpia, Sigue, Honda, Encaja,
+  Atrapa, Esquiva, Comer, Limpia, Sigue, Honda, Encaja, Separa, Traza, Puntillas,
   // deslizar
-  Corta, Patea, Cable, Flechas, Encesta,
+  Corta, Patea, Cable, Flechas, Encesta, Puertas,
   // machacar y mantener
   Infla, Llena, Avanza, Despega, Equilibra, Sopla,
   // girar en círculos y dibujar un lazo
