@@ -124,7 +124,7 @@ export class UI {
     instalar.alCambiar = () => { $('btn-instalar').hidden = !instalar.pedido || MODO_STAND; };
     instalar.alCambiar();
     $('btn-instalar').addEventListener('click', () => this.pedirInstalar());
-    if (MODO_STAND) this.iniciarStand();
+    this.iniciarEspera();
 
     // "click" llega al levantar el dedo: en iOS el audio sólo se destraba ahí.
     $('btn-jugar').addEventListener('click', () => this.empezar());
@@ -225,11 +225,15 @@ export class UI {
   mostrarEnJuego(v) { this.btnPausa.hidden = !v; }
 
   // --------------------------------------------------------------------------
-  //  MODO STAND (?stand): la demo, y volver solo al título
+  //  SIN TOCAR NADA: la demo, y volver solo al título (en cualquier aparato;
+  //  con ?stand, además, la pausa abandonada)
   // --------------------------------------------------------------------------
-  iniciarStand() {
-    document.body.classList.add('stand');
+  iniciarEspera() {
+    if (MODO_STAND) document.body.classList.add('stand');
     this.ultimoToque = performance.now();
+    // Al volver a la pestaña o prender la pantalla, el reloj de espera empieza
+    // de nuevo (si no, al volver saltaría la demo o se iría del final)
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) this.ultimoToque = performance.now(); });
     // Los bots de las pruebas juegan la demo; tocan la pantalla con eventos
     // de mouse sobre el canvas (como el arnés de pruebas)
     window.__paso = window.__paso || (() => {});
@@ -254,10 +258,10 @@ export class UI {
     };
     window.addEventListener('pointerdown', tocado, true);
     window.addEventListener('keydown', tocado, true);
-    setInterval(() => this.revisarStand(), 1000);
+    setInterval(() => this.revisarEspera(), 1000);
   }
 
-  revisarStand() {
+  revisarEspera() {
     const d = this.director;
     if (!d || document.hidden) return;
     const quieto = (performance.now() - this.ultimoToque) / 1000;
@@ -270,7 +274,8 @@ export class UI {
     }
     if (d.estado === 'titulo' && !d.demo && !this.arrancando && quieto > STAND.DEMO_TRAS_S) d.empezarDemo();
     else if (d.estado === 'fin' && quieto > (this.pidiendoNombre ? STAND.VOLVER_NOMBRE_S : STAND.VOLVER_FIN_S)) d.irAlMenu();
-    else if (d.estado === 'pausa' && !this.contando && quieto > STAND.VOLVER_PAUSA_S) d.irAlMenu();
+    // En un teléfono, una partida en pausa no se pierde nunca; en el stand, sí
+    else if (MODO_STAND && d.estado === 'pausa' && !this.contando && quieto > STAND.VOLVER_PAUSA_S) d.irAlMenu();
   }
 
   mostrarDemo(v) {

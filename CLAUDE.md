@@ -354,13 +354,18 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
 - **A los costados** (si sobran 250 px por lado, p. ej. un notebook): el QR
   "¡Juega en tu celular!" y la tabla de récords en vivo (se relee cada 45 s,
   nunca a mitad de un microjuego, y al anotar un puntaje).
-- **Modo stand** (abrir con `?stand`, números en `STAND` de `config.js`): a
-  los 20 s sin tocar el título, una **demo** que juegan los bots de
-  `herramientas/pruebas/bots.js` (12 rondas, sin récords ni lecciones; gana
-  ~34 de 36); un toque de verdad la corta y vuelve al título. El final, la
-  pausa y los paneles vuelven solos al título. Las lecciones de primera vez
-  no se recuerdan: cada jugador nuevo las recibe. Si se cambia un bot, se
-  cambia también la demo.
+- **Sin tocar nada** (en cualquier aparato, desde el 2026-10-04 a pedido del
+  usuario; números en `STAND` de `config.js`): a los 20 s sin tocar el
+  título, una **demo** que juegan los bots de `herramientas/pruebas/bots.js`
+  (12 rondas, sin récords ni lecciones; gana ~34 de 36); un toque de verdad
+  la corta y vuelve al título (no empieza partida). El final vuelve solo al
+  título (25 s; 60 s si está escribiendo su nombre) y los paneles se cierran
+  (40 s). Al volver a la pestaña, la espera empieza de nuevo. Si se cambia un
+  bot, se cambia también la demo.
+- **Modo stand** (`?stand`), además: la pausa abandonada (60 s) vuelve al
+  título (en un teléfono una partida en pausa no se pierde nunca), las
+  lecciones de primera vez no se recuerdan (cada jugador nuevo las recibe) y
+  no se ofrece instalar.
 - **Registro de errores:** `js/errores.js` (script común, se carga primero, en
   sintaxis vieja: avisa aunque el navegador no entienda los módulos) manda a
   Supabase (`anotar_error`, tabla `errores`, ver
