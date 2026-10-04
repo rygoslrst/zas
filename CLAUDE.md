@@ -211,8 +211,16 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   más difícil cada 4, sin tabla ni racha; se guarda la mejor marca de cada uno
   (`zas_galeria_v1`). Su final (`#fin.galeria`) dice "Práctica: ¡CORTA!",
   cuántos seguidos y "tu mejor", con "Otra vez" (el mismo), Menú y Galería.
-- **Menú principal** = la pantalla de título (Jugar, Récords, Galería, Cómo
-  jugar, Créditos). Se empieza **sólo con el botón Jugar** (antes, tocar cualquier
+- **Duelo, 2 jugadores** (2026-10-03): botón "2 jugadores" en el título. Se
+  turnan el mismo teléfono; en cada ronda los dos juegan EL MISMO microjuego
+  (misma variante, misma velocidad; si al 1 le tocó lección o sello NUEVO, al
+  2 también). Antes de cada turno, `#turno` ("Turno de JUGADOR 2 · Pásale el
+  teléfono") espera el "¡Listo!" (`Director.seguirDuelo`). 4 vidas cada uno;
+  al cerrar una ronda, si alguien quedó sin vidas, se acaba (si los dos, gana
+  el que superó más; si no, empate). Sin puntaje ni tabla. Final:
+  `#fin.duelo` ("¡Gana el jugador 1!", "7 – 5", Revancha).
+- **Menú principal** = la pantalla de título (Jugar, Récords, Galería, 2
+  jugadores, Cómo jugar, Créditos). Se empieza **sólo con el botón Jugar** (antes, tocar cualquier
   parte del fondo arrancaba; el usuario no lo quería). Igual al final:
   "Jugar otra vez" es un botón. Durante la partida hay un botón de pausa (arriba a la
   izquierda; también Escape) con "Menú principal" (`Director.irAlMenu`, la

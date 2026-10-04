@@ -29,6 +29,7 @@
   <div class="fila-botones">
     <button class="boton texto ancho" data-accion="records" type="button">Récords</button>
     <button class="boton texto ancho" data-accion="galeria" type="button">Galería</button>
+    <button class="boton texto ancho" data-accion="duelo" type="button">2 jugadores</button>
     <button class="boton texto ancho" data-accion="practica" type="button">Cómo jugar</button>
   </div>
   <div class="esquina">
@@ -67,6 +68,15 @@
   <div class="esquina">
     <button class="boton icono" data-accion="sonido" type="button"></button>
   </div>
+</section>
+
+<!-- Duelo: entre turno y turno se pasa el teléfono -->
+<section id="turno" class="capa" hidden>
+  <p class="turno-de">Turno de</p>
+  <p id="turno-quien" class="grande turno-quien"></p>
+  <p id="turno-marcador" class="record turno-marcador"></p>
+  <p id="turno-aviso" class="bajada">Pásale el teléfono y toca cuando esté listo.</p>
+  <button id="turno-listo" class="cta" type="button">¡Listo!</button>
 </section>
 
 <section id="pausa" class="capa" hidden>
@@ -111,6 +121,8 @@
       <li><b>Racha:</b> con 5 seguidos sin fallar, los puntos valen ×1,5; con 10, ×2.</li>
       <li>En el microjuego 8 aparece el primer <b>JEFE</b>, y después cada 12: si lo ganas, vida extra.</li>
       <li>La primera vez que te sale un microjuego, la orden dura un poco más; si es de los difíciles de entender, el juego se detiene y te enseña.</li>
+      <li><b>Galería:</b> los microjuegos que ya descubriste, para practicar el que quieras.</li>
+      <li><b>2 jugadores:</b> se turnan el mismo teléfono; en cada ronda los dos juegan el mismo microjuego. Gana el que aguanta más.</li>
       <li>Abajo se quema la mecha: cuando llega a la bomba, se acabó el tiempo.</li>
     </ul>
 

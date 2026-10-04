@@ -410,6 +410,69 @@ export class Director extends Phaser.Scene {
     this.intermedio(null);
   }
 
+  // --------------------------------------------------------------------------
+  //  DUELO: dos jugadores se turnan el mismo teléfono. En cada ronda los dos
+  //  juegan EL MISMO microjuego (con la misma variante) a la misma velocidad.
+  //  Entre turno y turno, un cartel pide pasar el teléfono y espera el
+  //  "¡Listo!". Cada uno tiene sus vidas; al terminar una ronda, si alguien se
+  //  quedó sin vidas, se acaba. No hay puntaje ni tabla: gana el que aguanta.
+  // --------------------------------------------------------------------------
+  empezarDuelo() {
+    if (this.estado !== 'titulo' && this.estado !== 'fin') return;
+    this.audio.iniciarPartida();
+    this.practica = null;
+    if (this.galeria) { this.galeria = null; this.soloEste = this.soloEsteUrl; }
+    this.ui.mostrarSaltar(false);
+    this.ui.mostrarEnJuego(true);
+    this.reiniciarPartida();
+    this.duelo = { turno: 0, vidas: [PARTIDA.VIDAS, PARTIDA.VIDAS], puntos: [0, 0], clase: null, variante: null, inicio: true };
+    this.intermedio(null);
+  }
+
+  // Después del turno de un jugador: se anota, y si la ronda terminó (jugaron
+  // los dos), se ve si alguien se quedó sin vidas
+  terminarTurno() {
+    const du = this.duelo, j = du.turno;
+    if (this.gano) {
+      du.puntos[j]++;
+      if (this.Clase.JEFE) du.vidas[j] = Math.min(PARTIDA.VIDAS, du.vidas[j] + 1);
+    } else du.vidas[j]--;
+    // El telón muestra cómo le fue al que acaba de jugar
+    this.vidas = du.vidas[j];
+    this.puntos = du.puntos[j];
+    this.mostrarMecha(false);
+    if (j === 1) {
+      this.rondas++;
+      if (du.vidas[0] <= 0 || du.vidas[1] <= 0) { this.finDuelo(); return; }
+    }
+    du.turno = 1 - j;
+    this.intermedio(this.gano);
+  }
+
+  // "¡Listo!": el que sigue ya tiene el teléfono
+  seguirDuelo() {
+    if (!this.duelo || !this.esperandoTurno) return;
+    this.esperandoTurno = false;
+    this.duelo.inicio = false;
+    this.tConsigna = this.audio.ahora();
+  }
+
+  finDuelo() {
+    const du = this.duelo;
+    this.estado = 'fin';
+    this.ui.mostrarEnJuego(false);
+    const vivos = du.vidas.map(v => v > 0);
+    let ganador = vivos[0] && !vivos[1] ? 1 : vivos[1] && !vivos[0] ? 2 : 0;
+    if (!ganador && du.puntos[0] !== du.puntos[1]) ganador = du.puntos[0] > du.puntos[1] ? 1 : 2;
+    this.telonAbajo(false);
+    this.pintarTelon(0x3a2a6b);
+    this.mostrarDetalles(false);
+    this.mostrarDesfile(true);
+    this.audio.finPartida();
+    if (ganador) this.time.delayedCall(900, () => this.audio.record());
+    this.ui.mostrarFin({ duelo: true, ganador, puntos: [...du.puntos], ultimo: this.orden || '' });
+  }
+
   reiniciarPartida() {
     this.puntaje = 0;
     this.sumado = 0;
@@ -425,6 +488,8 @@ export class Director extends Phaser.Scene {
     this.jefePreparado = null;
     this.ultimo = null;
     this.Clase = null;
+    this.duelo = null;
+    this.esperandoTurno = false;
     this.mostrarDesfile(false);
   }
 
@@ -470,6 +535,7 @@ export class Director extends Phaser.Scene {
   siguiente() {
     if (this.practica) return MICROS.find(M => M.name === LECCIONES[this.practica.paso].micro);
     if (this.soloEste) return this.soloEste;
+    if (this.duelo && this.duelo.turno === 1 && this.duelo.clase) return this.duelo.clase;     // el mismo que jugó el 1
     if (this.jefePreparado) { const J = this.jefePreparado; this.jefePreparado = null; return J; }
     if (this.tocaJefe()) return this.elegirJefe();
     if (!this.bolsa.length) {
@@ -486,7 +552,8 @@ export class Director extends Phaser.Scene {
     this.estado = 'intermedio';
     this.aplicarResolucion();
     const a = this.audio.ahora();
-    const p = this.practica, gal = this.galeria;
+    const p = this.practica, gal = this.galeria, du = this.duelo;
+    this.turnoPendiente = !!du;               // en el duelo, antes de la orden se pasa el teléfono
     // (en la galería todo sube más seguido: es un solo microjuego)
     const velNueva = p ? VEL_PRACTICA
       : gal ? Math.min(PARTIDA.VEL_MAX, 1 + PARTIDA.ACELERA * Math.floor(this.rondas / 2))
@@ -506,21 +573,24 @@ export class Director extends Phaser.Scene {
     this.mostrarMecha(false);
     this.proximo = null;
     const velocidad = this.vel > 1.001 ? `VELOCIDAD ×${this.vel.toFixed(2).replace('.', ',')}` : '';
-    this.velTxt.setText(p ? 'PRÁCTICA' : gal ? 'PRÁCTICA LIBRE' + (velocidad ? ` · ${velocidad}` : '') : velocidad);
+    const jugo = du && gano !== null ? `JUGADOR ${2 - du.turno}` : 'DUELO';          // el que acaba de jugar
+    this.velTxt.setText(p ? 'PRÁCTICA' : gal ? 'PRÁCTICA LIBRE' + (velocidad ? ` · ${velocidad}` : '')
+      : du ? jugo + (velocidad ? ` · ${velocidad}` : '') : velocidad);
 
     // Puntos y vidas (en la práctica: qué lección va, y sin corazones; en la
     // galería, tu mejor marca en vez del puntaje)
     const arriba = p ? `${p.paso + 1}/${LECCIONES.length}` : String(this.puntos);
     this.puntosTxt.setText(arriba).setScale(1);
     this.sombraPuntos.setText(arriba);
-    this.puntajeTxt.setText(p ? '' : gal ? `TU MEJOR: ${this.mejorGaleria(gal.Clase)}` : `${conPuntos(this.puntaje)} PUNTOS`).setScale(1);
+    this.puntajeTxt.setText(p ? '' : gal ? `TU MEJOR: ${this.mejorGaleria(gal.Clase)}`
+      : du ? `J1: ${du.puntos[0]}  ·  J2: ${du.puntos[1]}` : `${conPuntos(this.puntaje)} PUNTOS`).setScale(1);
     this.sumaTxt.setText('').setAlpha(0);
     this.corazones.forEach((c, i) => c.setFrame(i < this.vidas ? 'corazon' : 'corazon_negro').setDisplaySize(82, 82)
       .setAngle(0).setAlpha(1).setVisible(!p));
     if (gano === true) {
       this.puntosTxt.setScale(1.5);
       this.tweens.add({ targets: this.puntosTxt, scale: 1, duration: 280, ease: 'Back.easeOut' });
-      if (!p && !gal && this.sumado) {
+      if (!p && !gal && !du && this.sumado) {
         // "+160" al lado del puntaje, que salta y se va
         this.sumaTxt.setText(`+${conPuntos(this.sumado)}`).setX(ANCHO / 2 + this.puntajeTxt.width / 2 + 14)
           .setAlpha(1).setScale(0.4);
@@ -551,15 +621,16 @@ export class Director extends Phaser.Scene {
     this.nombreJefe.setText('');
 
     // La racha (no en las prácticas: no hay puntaje)
-    this.mostrarRacha(!p && !gal && gano === false);
-    if (p || gal) { this.rachaTxt.setText(''); this.rachaFuego.setVisible(false); }
+    this.mostrarRacha(!p && !gal && !du && gano === false);
+    if (p || gal || du) { this.rachaTxt.setText(''); this.rachaFuego.setVisible(false); }
     const mult = multiplicador(this.racha);
-    const subeRacha = !p && !gal && gano === true && mult > multiplicador(this.racha - 1);
+    const subeRacha = !p && !gal && !du && gano === true && mult > multiplicador(this.racha - 1);
 
     // Los carteles: se muestran uno después del otro
     const carteles = [];
     if (gano === null && p) carteles.push(['¡A PRACTICAR!', null, 0x2f7dff]);
     else if (gano === null && gal) carteles.push(['¡PRÁCTICA LIBRE!', null, 0x2f7dff]);
+    else if (gano === null && du) carteles.push(['¡DUELO!', () => this.audio.jefe(), 0xe0339b]);
     else if (gano === null && this.trasPractica) {
       carteles.push(['¡AHORA EN SERIO!', null, 0xe0339b], [`¡TIENES ${PARTIDA.VIDAS} VIDAS!`, () => this.audio.record(), 0x16a37a]);
     } else if (gano === null) carteles.push(['¡PREPÁRATE!', null, 0x2f7dff]);
@@ -571,7 +642,8 @@ export class Director extends Phaser.Scene {
     if (sube) carteles.push(['¡MÁS DIFÍCIL!', () => this.audio.acelera(), 0xe0339b]);
     if (acelera) carteles.push(['¡MÁS RÁPIDO!', () => this.audio.acelera(), 0xff7a1a]);
     // El jefe se elige ya, para presentarlo: su cara en grande y su nombre
-    const jefe = this.tocaJefe() ? (this.jefePreparado = this.elegirJefe()) : null;
+    // (en el duelo, el jugador 2 enfrenta al mismo jefe que el 1)
+    const jefe = !this.tocaJefe() ? null : du && du.turno === 1 ? du.clase : (this.jefePreparado = this.elegirJefe());
     if (jefe) carteles.push(['¡JEFE!', () => { this.audio.jefe(); this.presentarJefe(jefe); }, 0x1b1030]);
 
     // Cuánto se ve el resultado; después viene la consigna (prepararMicro)
@@ -623,9 +695,19 @@ export class Director extends Phaser.Scene {
   prepararMicro() {
     const Clase = this.siguiente();
     // Algunos microjuegos traen variantes con su propia consigna ("¡CORTA EL ROJO!")
-    const variante = Clase.VARIANTES ? Phaser.Utils.Array.GetRandom(Clase.VARIANTES) : null;
+    let variante = Clase.VARIANTES ? Phaser.Utils.Array.GetRandom(Clase.VARIANTES) : null;
+    // En el duelo, el jugador 2 juega lo mismo que el 1 (con la misma variante)
+    if (this.duelo) {
+      if (this.duelo.turno === 0) { this.duelo.clase = Clase; this.duelo.variante = variante; }
+      else variante = this.duelo.variante;
+    }
     // ¿Primera vez que se ve en este aparato? Sello de NUEVO y la orden dura más
-    const nuevo = !this.practica && !this.soloEste && !this.vistos.has(Clase.name);
+    // (en el duelo, el jugador 2 recibe lo mismo que el 1, aunque ya "se vio")
+    let nuevo = !this.practica && !this.soloEste && !this.vistos.has(Clase.name);
+    if (this.duelo) {
+      if (this.duelo.turno === 0) this.duelo.nuevo = nuevo;
+      else nuevo = !!this.duelo.nuevo;
+    }
     this.proximo = { Clase, variante, orden: variante ? variante.orden : Clase.ORDEN };
     this.tweens.killTweensOf(this.detalles);
     this.tweens.add({ targets: this.detalles, alpha: 0, duration: 120 });
@@ -691,6 +773,11 @@ export class Director extends Phaser.Scene {
       const id = Clase.LECCION.grupo || Clase.name;
       if (!this.lecciones.has(id)) this.leccion = { ...Clase.LECCION, id };
     }
+    // En el duelo, si el jugador 1 tuvo lección, el 2 también
+    if (this.duelo) {
+      if (this.duelo.turno === 0) this.duelo.leccion = this.leccion;
+      else if (this.duelo.leccion) this.leccion = this.duelo.leccion;
+    }
     this.leccionMostrada = false;
     this.tFinConsigna = 0.3;          // la lección congela recién con el juego a la vista
     this.orden = orden;
@@ -751,6 +838,7 @@ export class Director extends Phaser.Scene {
       else this.intermedio(this.gano);
       return;
     }
+    if (this.duelo) { this.terminarTurno(); return; }
     this.rondas++;
     if (this.gano) this.racha++;
     else { this.rachaPerdida = this.racha; this.racha = 0; }
@@ -830,6 +918,8 @@ export class Director extends Phaser.Scene {
   irAlMenu() {
     if (this.estado !== 'pausa' && this.estado !== 'fin') return;
     this.galeria = null;
+    this.duelo = null;
+    this.esperandoTurno = false;
     this.soloEste = this.soloEsteUrl;
     if (this.clave) { this.scene.stop(this.clave); this.clave = null; }
     this.tweens.resumeAll();
@@ -888,7 +978,11 @@ export class Director extends Phaser.Scene {
         while (this.fases.length && this.fases[0].t <= a) this.fases.shift().fn();
         this.reaccion.y = VISTA.alto / 2 + 232 + Math.sin(time / 120) * 7;
         this.reaccion.angle = Math.sin(time / 200) * 6;
-        if (!this.proximo && a >= this.tConsigna && performance.now() >= this.avisoHasta) this.prepararMicro();
+        if (!this.proximo && a >= this.tConsigna && performance.now() >= this.avisoHasta) {
+          // En el duelo, antes de la orden: "pásale el teléfono" (espera el "¡Listo!")
+          if (this.turnoPendiente) { this.turnoPendiente = false; this.esperandoTurno = true; this.ui.mostrarTurno(this.duelo); }
+          else if (!this.esperandoTurno) this.prepararMicro();
+        }
         break;
       case 'micro': this.cuadroMicro(a); break;
       case 'leccion': this.cartelLeccion.animar(time); break;

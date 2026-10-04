@@ -76,6 +76,10 @@ export class UI {
       b.addEventListener('click', () => this.abrirGaleria(true));
     }
     $('cerrar-galeria').addEventListener('click', () => this.abrirGaleria(false));
+    // Duelo: empezar, y el "¡Listo!" de cada turno
+    this.turno = $('turno');
+    for (const b of document.querySelectorAll('[data-accion="duelo"]')) b.addEventListener('click', () => this.empezarDuelo());
+    $('turno-listo').addEventListener('click', () => this.listoTurno());
     for (const b of document.querySelectorAll('[data-accion="menu"]')) {
       b.addEventListener('click', () => this.director && this.director.irAlMenu());
     }
@@ -113,6 +117,7 @@ export class UI {
       if (e.code === 'KeyM') { this.alternarSonido(); return; }
       if (e.code !== 'Space' && e.code !== 'Enter') return;
       if (!this.creditos.hidden || !this.records.hidden || !this.galeria.hidden || !this.director) return;
+      if (!this.turno.hidden && est === 'intermedio') { e.preventDefault(); this.listoTurno(); return; }
       if (est === 'titulo') { e.preventDefault(); this.empezar(); }
       else if (est === 'fin') { e.preventDefault(); this.otraVez(); }
       else if (est === 'pausa') { e.preventDefault(); this.seguirConCuenta(); }
@@ -180,6 +185,7 @@ export class UI {
   // De vuelta al menú principal
   mostrarMenu() {
     this.cancelarCuenta();
+    this.turno.hidden = true;
     this.pausa.hidden = true;
     this.fin.hidden = true;
     this.cerrarNombre();
@@ -196,10 +202,43 @@ export class UI {
     return this.arrancar(d => d.empezarGaleria(Clase));
   }
 
-  // "Jugar otra vez" del final: otra partida, o el mismo microjuego si se
-  // venía practicando uno de la galería
+  // Duelo de dos jugadores turnándose el teléfono
+  empezarDuelo() { return this.arrancar(d => d.empezarDuelo()); }
+
+  // Antes de cada turno del duelo: de quién es y cómo van
+  mostrarTurno(du) {
+    const quien = $('turno-quien');
+    quien.textContent = `Jugador ${du.turno + 1}`;
+    quien.className = `grande turno-quien j${du.turno + 1}`;
+    const marcador = $('turno-marcador');
+    marcador.textContent = '';
+    for (const j of [0, 1]) {
+      const fila = document.createElement('span');
+      fila.append(`Jugador ${j + 1}: ${du.puntos[j]} ${du.puntos[j] === 1 ? 'superado' : 'superados'} · `);
+      const vidas = document.createElement('span');
+      vidas.className = du.vidas[j] > 0 ? 'corazones' : 'sin-vidas';
+      vidas.textContent = du.vidas[j] > 0 ? '♥'.repeat(du.vidas[j]) : 'sin vidas';
+      fila.append(vidas);
+      marcador.append(fila);
+    }
+    $('turno-aviso').textContent = du.inicio ? 'Toca cuando estés listo.' : 'Pásale el teléfono y toca cuando esté listo.';
+    this.turno.hidden = false;
+    this.btnPausa.hidden = true;
+    $('turno-listo').focus({ preventScroll: true });
+  }
+
+  listoTurno() {
+    if (this.turno.hidden) return;
+    this.turno.hidden = true;
+    this.btnPausa.hidden = false;
+    if (this.director) this.director.seguirDuelo();
+  }
+
+  // "Jugar otra vez" del final: otra partida, el mismo microjuego si se venía
+  // practicando uno de la galería, o la revancha del duelo
   otraVez() {
     if (this.fin.classList.contains('galeria') && this.claseGaleria) this.empezarGaleria(this.claseGaleria);
+    else if (this.fin.classList.contains('duelo')) this.empezarDuelo();
     else this.empezar();
   }
 
@@ -284,8 +323,11 @@ export class UI {
   }
 
   mostrarFin(d) {
+    this.turno.hidden = true;
+    this.fin.classList.remove('galeria', 'duelo');
+    this.fin.querySelector('.causa').textContent = '¡Se acabó!';
     if (d.galeria) { this.mostrarFinGaleria(d); return; }
-    this.fin.classList.remove('galeria');
+    if (d.duelo) { this.mostrarFinDuelo(d); return; }
     $('fin-cta').textContent = 'Jugar otra vez';
     // En qué microjuego se perdió la última vida
     const micro = $('fin-micro');
@@ -333,6 +375,28 @@ export class UI {
     $('fin-detalle').textContent = `${d.puntos === 1 ? 'superado' : 'superados'} · tu mejor: ${d.mejor}`;
     $('fin-veredicto').textContent = d.nuevoMejor && d.puntos > 0 ? '¡Tu mejor marca en este microjuego!' : 'Cada uno que pasas, va más rápido.';
     $('fin-cta').textContent = 'Otra vez';
+    this.dibujarMedalla(null);
+    this.fin.hidden = false;
+    this.finDesde = performance.now();
+  }
+
+  // El final del duelo: quién ganó y cuántos superó cada uno
+  mostrarFinDuelo(d) {
+    this.fin.classList.add('duelo');
+    this.ultimaPartida = null;
+    this.cerrarNombre();
+    this.fin.querySelector('.causa').textContent = d.ganador ? `¡Gana el jugador ${d.ganador}!` : '¡Empate!';
+    const micro = $('fin-micro');
+    micro.textContent = '';
+    if (d.ultimo) {
+      const b = document.createElement('b');
+      b.textContent = d.ultimo;
+      micro.append('Se definió en ', b);
+    }
+    $('fin-puntos').textContent = `${d.puntos[0]} – ${d.puntos[1]}`;
+    $('fin-detalle').textContent = 'jugador 1 · jugador 2';
+    $('fin-veredicto').textContent = d.ganador ? '¿Revancha?' : 'Superaron los mismos. ¿Desempate?';
+    $('fin-cta').textContent = 'Revancha';
     this.dibujarMedalla(null);
     this.fin.hidden = false;
     this.finDesde = performance.now();

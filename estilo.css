@@ -391,10 +391,31 @@ body.tactil .solo-mouse { display: none; }
 .ficha.bloqueada { cursor: default; opacity: 0.55; }
 .ficha.bloqueada canvas { filter: brightness(0) invert(0.18); }
 
-/* El final de una práctica de la galería (sin tabla ni medalla) */
+/* El final de una práctica de la galería o de un duelo (sin tabla ni medalla) */
 #fin:not(.galeria) .solo-galeria { display: none; }
 #fin.galeria .solo-partida, #fin.galeria .medalla, #fin.galeria #fin-record, #fin.galeria #anotar-luego,
-#fin.galeria #fin-nombre { display: none; }
+#fin.galeria #fin-nombre,
+#fin.duelo .solo-partida, #fin.duelo .medalla, #fin.duelo #fin-record, #fin.duelo #anotar-luego,
+#fin.duelo #fin-nombre { display: none; }
+#fin.duelo .puntos { font-size: clamp(56px, min(26vw, 14vh), 150px); }
+
+/* --- Duelo: pasar el teléfono -------------------------------------------------- */
+#turno { background: rgba(27, 16, 48, 0.82); gap: 12px; }
+.turno-de {
+  font-family: var(--display);
+  font-size: clamp(20px, 6vw, 28px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--crema);
+  opacity: 0.85;
+}
+.turno-quien { font-size: clamp(54px, 17vw, 96px); text-shadow: 0 6px 0 rgba(0, 0, 0, 0.35); }
+.turno-quien.j1 { color: #6fb1ff; }
+.turno-quien.j2 { color: var(--coral); }
+.turno-marcador { display: flex; flex-direction: column; line-height: 1.5; }
+.turno-marcador .corazones { color: var(--coral); letter-spacing: 0.1em; font-size: 1.15em; }
+.turno-marcador .sin-vidas { color: var(--coral); }
+#turno .cta { margin-top: 10px; }
 
 /* --- Créditos ------------------------------------------------------------------ */
 .panel {
