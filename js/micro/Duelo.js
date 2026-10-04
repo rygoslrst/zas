@@ -26,13 +26,15 @@ export class Duelo extends Micro {
     this.tSenal = this.azar(1.1, 2.0) / this.vel + 0.2;
     this.ventana = [0.7, 0.58, 0.5][this.nivel - 1] / Math.sqrt(this.vel);   // hay que poder reaccionar (~0,3 s)
     this.tFalsa = this.nivel >= 2 && Math.random() < 0.7 ? this.tSenal - this.azar(0.35, 0.6) / this.vel : -1;
+    this.salio = false;
+    this.falsaSonada = false;
     this.alTocar(() => this.tiro());
   }
 
   tiro() {
     const t = this.t;
     this.pistolaYo.setVisible(true);
-    this.audio.golpe();
+    this.audio.disparo();
     if (t < this.tSenal) {
       this.perder();
       this.cartel(this.cx, this.cy - 90, '¡MUY PRONTO!', COLOR.MAL, 60);
@@ -49,19 +51,22 @@ export class Duelo extends Micro {
   paso(dt, t) {
     if (this.decidido) return;
     // La señal falsa (en gris, y dice otra cosa)
-    if (this.tFalsa > 0 && t >= this.tFalsa && t < this.tFalsa + 0.3) this.senal.setText('¿YA?').setTint(0x9aa0a6).setVisible(true);
+    if (this.tFalsa > 0 && t >= this.tFalsa && t < this.tFalsa + 0.3) {
+      this.senal.setText('¿YA?').setTint(0x9aa0a6).setVisible(true);
+      if (!this.falsaSonada) { this.falsaSonada = true; this.audio.senal(true); }
+    }
     else if (t < this.tSenal) this.senal.setVisible(false);
     if (t >= this.tSenal && !this.salio) {
       this.salio = true;
       this.espera.setVisible(false);
       this.senal.setText('¡YA!').setTint(COLOR.MAL).setVisible(true).setScale(0.4);
       this.tweens.add({ targets: this.senal, scale: 1, duration: 120, ease: 'Back.easeOut' });
-      this.audio.tic(true);
+      this.audio.senal(false);
     }
     // Si tardás demasiado, dispara el otro
     if (this.salio && t > this.tSenal + this.ventana) {
       this.pistolaOtro.setVisible(true);
-      this.audio.golpe();
+      this.audio.disparo();
       this.perder();
       this.yo.setTexture('emoji', 'estrellitas');
       this.tweens.add({ targets: this.yo, angle: -90, y: this.yo.y + 30, duration: 300 });

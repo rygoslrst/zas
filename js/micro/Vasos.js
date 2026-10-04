@@ -41,6 +41,7 @@ export class Vasos extends Micro {
     this.diamante = this.emoji('diamante', this.lugares[this.conDiamante], this.yMesa + 18, 66);
     this.vasos = this.lugares.map((x, i) => ({ lugar: i, x, cont: this.dibujarVaso(x), alzado: 1 }));
     this.swapActual = -1;
+    this.tapado = false;
     this.estadoV = 'mostrar';
     this.aviso = this.texto(this.cx, this.yMesa - 230, '', 46, COLOR.ORO);
     this.alTocar((x, y) => this.elegirVaso(x, y));
@@ -78,6 +79,7 @@ export class Vasos extends Micro {
   }
 
   levantar(v) {
+    this.audio.revelar(v.lugar === this.conDiamante);
     this.diamante.setPosition(this.lugares[this.conDiamante], this.yMesa + 18).setVisible(true);
     this.tweens.add({ targets: v.cont, y: this.yMesa - 70 - ALZADO, duration: 180, ease: 'Quad.easeOut' });
   }
@@ -94,6 +96,7 @@ export class Vasos extends Micro {
       for (const v of this.vasos) v.cont.y = yBase - ALZADO * (1 - p);
       return;
     }
+    if (!this.tapado) { this.tapado = true; this.audio.tapa(); }
     this.diamante.setVisible(false);
     // Las mezclas: dos vasos cambian de lugar, uno por arriba y otro por abajo
     let i = this.swaps.findIndex(s => t < s.t0 + this.dSwap);

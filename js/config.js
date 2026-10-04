@@ -86,7 +86,8 @@ export const DEBUG = new URLSearchParams(location.search).has('debug');
 // pantalla y con destellos más suaves
 export const MENOS_MOVIMIENTO = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 export const CLAVE_RECORD = 'zas_record_v1';
-export const CLAVE_SONIDO = 'zas_sonido_v1';
+export const CLAVE_SONIDO = 'zas_sonido_v1';          // los efectos ('0': apagados)
+export const CLAVE_MUSICA = 'zas_musica_v1';          // la música ('0': apagada)
 export const CLAVE_PRACTICA = 'zas_practica_v1';      // '1' cuando ya se hizo la práctica
 export const CLAVE_PUNTAJE = 'zas_puntaje_v1';        // el mejor puntaje de este aparato
 export const CLAVE_TABLA = 'zas_tabla_v1';            // la tabla de récords (ver tabla.js)

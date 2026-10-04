@@ -9,6 +9,7 @@ export class Pesca extends Micro {
 
   armar() {
     this.tema('mar');
+    this.pez = null;
     this.yAgua = this.arriba + 60;
     this.rect(this.cx, this.yAgua / 2, this.W, this.yAgua, 0x8fd3ff).setOrigin(0.5);
     this.rect(this.cx, this.yAgua, this.W, 8, 0xc7f0ff);

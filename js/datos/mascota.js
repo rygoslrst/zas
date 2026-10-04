@@ -38,19 +38,37 @@ const CARA = {
 };
 
 // La chispa de la mecha (las caras tristes, en vez de chispa, un humito)
+const PUNTAS = Array.from({ length: 16 }, (_, i) => {
+  const a = (i / 16) * Math.PI * 2, r = i % 2 ? 7 : 18;
+  return `${(130 + Math.cos(a) * r).toFixed(1)},${(16 + Math.sin(a) * r).toFixed(1)}`;
+}).join(' ');
 function chispa(triste) {
   if (triste) return '<circle cx="132" cy="16" r="9" fill="#cfc8e8" opacity=".9"/><circle cx="142" cy="8" r="6" fill="#cfc8e8" opacity=".7"/>';
-  const puntas = [];
-  for (let i = 0; i < 16; i++) {
-    const a = (i / 16) * Math.PI * 2, r = i % 2 ? 7 : 18;
-    puntas.push(`${(130 + Math.cos(a) * r).toFixed(1)},${(16 + Math.sin(a) * r).toFixed(1)}`);
-  }
-  return `<polygon points="${puntas.join(' ')}" fill="#ffd23f" stroke="#ff7a1a" stroke-width="3" stroke-linejoin="round"/>` +
+  return `<polygon points="${PUNTAS}" fill="#ffd23f" stroke="#ff7a1a" stroke-width="3" stroke-linejoin="round"/>` +
     '<circle cx="130" cy="16" r="5" fill="#fff"/>';
 }
 
-export function svgMascota(cara = 'feliz') {
+// La silueta (mecha, chispa, cuello y cuerpo) engordada 'extra': para el
+// borde blanco y la sombra de la versión "sticker"
+function silueta(color, extra, triste) {
+  return `<g fill="${color}" stroke="${color}" stroke-linejoin="round" stroke-linecap="round">` +
+    `<path d="M100 54 C 98 36, 120 36, 126 20" fill="none" stroke-width="${14 + extra}"/>` +
+    (triste ? `<circle cx="132" cy="16" r="9" stroke-width="${extra}"/><circle cx="142" cy="8" r="6" stroke-width="${extra}"/>`
+      : `<polygon points="${PUNTAS}" stroke-width="${3 + extra}"/>`) +
+    `<rect x="76" y="46" width="48" height="30" rx="9" stroke-width="${7 + extra}"/>` +
+    `<circle cx="100" cy="138" r="80" stroke-width="${8 + extra}"/></g>`;
+}
+
+// sticker: con borde blanco y sombra dibujados (sin filtros: se imprime nítido;
+// es la que usa el cartel del stand)
+export function svgMascota(cara = 'feliz', sticker = false) {
   const triste = cara === 'triste' || cara === 'mareado';
+  if (sticker) {
+    const interior = svgMascota(cara).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -12 200 250" width="200" height="250">' +
+      `<g transform="translate(3 6)" opacity=".3">${silueta(OSCURO, 10, triste)}</g>` +
+      silueta('#ffffff', 10, triste) + interior + '</svg>';
+  }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ANCHO_MASCOTA} ${ALTO_MASCOTA}" width="${ANCHO_MASCOTA}" height="${ALTO_MASCOTA}">` +
     // la mecha (con borde) y su chispa
     `<path d="M100 54 C 98 36, 120 36, 126 20" fill="none" stroke="${OSCURO}" stroke-width="14" stroke-linecap="round"/>` +

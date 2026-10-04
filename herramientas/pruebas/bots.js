@@ -358,7 +358,9 @@ B.Marciano = m => {
 // Gira el dedo en círculos (2,6 vueltas por segundo), para el lado pedido
 B.Manivela = m => {
   if (m.t < 0.25 || m.decidido) return;
-  const b = m.__bot || (m.__bot = { ang: 0, abajo: false });
+  // (la escena se reusa: la memoria del bot es de esta vuelta, la de este t0)
+  if (!m.__bot || m.__bot.t0 !== m.t0) m.__bot = { t0: m.t0, ang: 0, abajo: false };
+  const b = m.__bot;
   const cx = m.ejeX - 160, cy = m.ejeY - 120, R = 70, dir = m.sentido || 1;
   if (!b.abajo) { b.abajo = true; ev('pointerdown', cx + R, cy); return; }
   b.ang += dir * 2.6 * 2 * Math.PI / 60;
@@ -367,7 +369,8 @@ B.Manivela = m => {
 // Dibuja una vuelta alrededor de donde va a estar la oveja (con el zorro lejos)
 B.Lazo = m => {
   if (m.t < 0.3 || m.decidido) return;
-  const b = m.__bot || (m.__bot = { puntos: null, i: 0 });
+  if (!m.__bot || m.__bot.t0 !== m.t0) m.__bot = { t0: m.t0, puntos: null, i: 0 };
+  const b = m.__bot;
   if (b.puntos) {
     if (b.i < b.puntos.length) { const p = b.puntos[b.i++]; ev('pointermove', p.x, p.y); }
     else { const p = b.puntos[b.puntos.length - 1]; ev('pointerup', p.x, p.y); b.puntos = null; }

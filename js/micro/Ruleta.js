@@ -50,6 +50,7 @@ export class Ruleta extends Micro {
     this.giro = Math.random() * Math.PI * 2;
     this.w = [3.0, 3.7, 4.3][this.nivel - 1] * Math.sqrt(this.vel);        // radianes por segundo
     this.frenando = -1;
+    this.gajoSonado = undefined;
     this.alTocar(() => {
       if (this.frenando >= 0) return;
       this.frenando = this.t;
@@ -85,6 +86,10 @@ export class Ruleta extends Micro {
     }
     this.giro += w * dt;
     this.rueda.setRotation(this.giro);
+    // Un clic por cada gajo que pasa por la flecha (se oye cómo frena)
+    const gajo = Math.floor(this.giro / ((Math.PI * 2) / this.n) + 0.5);
+    if (this.gajoSonado !== undefined && gajo !== this.gajoSonado) this.audio.tictac();
+    this.gajoSonado = gajo;
     this.flecha.y = this.ry - this.radio - 26 + (w > 0.5 ? Math.sin(t * 40) * 2 : 0);
   }
 }

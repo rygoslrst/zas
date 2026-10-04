@@ -7,6 +7,8 @@
 #      tarjetas.html   8 tarjetitas por hoja A4 para recortar y repartir
 #      pegatinas.webp  los emoji del cartel, en alta resolución (para imprimir)
 #      qr.svg          el código QR solo
+#  (Zas, la mascota, va aparte: stand/zas-*.svg, sacados de js/datos/mascota.js
+#  con svgMascota(cara, true); ver CLAUDE.md)
 #
 #  Si cambia la dirección del juego, cambiá URL y volvé a correrlo:
 #      python herramientas/armar_cartel.py
@@ -33,7 +35,7 @@ URL = 'https://rygoslrst.github.io/zas/'
 URL_VISIBLE = 'rygoslrst.github.io/zas'
 
 # Emoji que usa el cartel (los del juego y alguno más)
-PEGATINAS = ['bomba', 'globo', 'pizza', 'gato', 'sandia', 'pelota', 'cohete', 'sapo', 'diamante',
+PEGATINAS = ['globo', 'pizza', 'gato', 'sandia', 'pelota', 'cohete', 'sapo', 'diamante',
              'trofeo', 'medalla_bronce', 'medalla_plata', 'medalla_oro', 'dedo', 'estrella',
              'marciano', 'corona', 'rayo', 'telefono', 'explosion']
 EXTRA = {'telefono': '1f4f1'}

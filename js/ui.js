@@ -7,6 +7,7 @@
 // ============================================================================
 
 import { EMOJI, CELDA_EMOJI } from './datos/emoji.js';
+import { svgMascota } from './datos/mascota.js';
 import { MICROS, JEFES } from './micro/indice.js';
 import { CLAVE_GALERIA } from './config.js';
 import { leerTabla, entraEnTabla, anotar, revisarNombre, ultimoNombre, recordarNombre, precargar, enLinea,
@@ -19,6 +20,9 @@ const EN_JUEGO = ['micro', 'intermedio', 'cerrando', 'leccion'];
 
 const ICONO_SONIDO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const ICONO_MUDO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const NOTA = '<path d="M9 18V6.5l10-2.5v11.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.8" fill="currentColor"/><circle cx="16.5" cy="15.5" r="2.8" fill="currentColor"/>';
+const ICONO_MUSICA = `<svg viewBox="0 0 24 24" aria-hidden="true">${NOTA}</svg>`;
+const ICONO_SIN_MUSICA = `<svg viewBox="0 0 24 24" aria-hidden="true">${NOTA}<path d="M3.5 3.5l17 17" stroke="#1b1030" stroke-width="5" stroke-linecap="round"/><path d="M3.5 3.5l17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 
 // Qué decir según cuántos aguantaste
 function veredicto(p) {
@@ -56,8 +60,20 @@ export class UI {
       b.addEventListener('pointerup', e => e.stopPropagation());
     }
     for (const b of document.querySelectorAll('[data-accion="sonido"]')) {
-      b.addEventListener('click', () => this.alternarSonido());
+      b.addEventListener('click', () => this.alternarEfectos());
     }
+    for (const b of document.querySelectorAll('[data-accion="musica"]')) {
+      b.addEventListener('click', () => this.alternarMusica());
+    }
+    // Cada botón suena (si el audio ya anda). El primer toque en cualquiera
+    // destraba el audio (iOS no deja antes) y, en el menú, arranca su música.
+    document.addEventListener('click', e => {
+      if (!e.target.closest || !e.target.closest('.boton, .cta')) return;
+      if (this.audio.audioVivo) { this.audio.clic(); return; }
+      this.audio.desbloquear().then(() => setTimeout(() => {
+        if (this.director && this.director.estado === 'titulo') this.audio.empezarMenu();
+      }, 0));
+    }, true);
     for (const b of document.querySelectorAll('[data-accion="practica"]')) {
       b.addEventListener('click', () => this.empezar(true));
     }
@@ -114,7 +130,7 @@ export class UI {
         else if (est === 'pausa') this.seguirConCuenta();
         return;
       }
-      if (e.code === 'KeyM') { this.alternarSonido(); return; }
+      if (e.code === 'KeyM') { this.alternarTodo(); return; }
       if (e.code !== 'Space' && e.code !== 'Enter') return;
       if (!this.creditos.hidden || !this.records.hidden || !this.galeria.hidden || !this.director) return;
       if (!this.turno.hidden && est === 'intermedio') { e.preventDefault(); this.listoTurno(); return; }
@@ -162,18 +178,21 @@ export class UI {
     this.contando = true;
     this.pausa.classList.add('contando');
     const cuenta = $('pausa-cuenta');
+    cuenta.textContent = '';
     let n = 3;
     const paso = () => {
       if (!this.contando) return;
-      if (document.hidden) { this.cancelarCuenta(); return; }
-      if (n === 0) { this.cancelarCuenta(); d.seguir(); return; }
+      if (document.hidden) { this.cancelarCuenta(); this.audio.pausar(); return; }
+      if (n === 0) { this.cancelarCuenta(); this.audio.cuenta(0); d.seguir(); return; }
+      this.audio.cuenta(n);
       cuenta.textContent = String(n--);
       cuenta.classList.remove('pum');
       void cuenta.offsetWidth;                         // para que la animación vuelva a arrancar
       cuenta.classList.add('pum');
       this.relojCuenta = setTimeout(paso, 600);
     };
-    paso();
+    // El audio vuelve ya (para que la cuenta suene); el juego, recién al final
+    this.audio.despertar().then(paso);
   }
 
   cancelarCuenta() {
@@ -223,6 +242,7 @@ export class UI {
     }
     $('turno-aviso').textContent = du.inicio ? 'Toca cuando estés listo.' : 'Pásale el teléfono y toca cuando esté listo.';
     this.turno.hidden = false;
+    this.audio.turno();
     this.btnPausa.hidden = true;
     $('turno-listo').focus({ preventScroll: true });
   }
@@ -340,7 +360,7 @@ export class UI {
     $('fin-puntos').textContent = conPuntos(d.puntaje);
     $('fin-detalle').textContent = `puntos · ${d.puntos} ${d.puntos === 1 ? 'microjuego' : 'microjuegos'}`;
     $('fin-veredicto').textContent = veredicto(d.puntos);
-    this.dibujarMedalla(d.medalla);
+    this.dibujarMedalla(d.medalla, d.nuevo && d.puntos > 0 ? 'euforico' : d.puntos === 0 ? 'triste' : 'feliz');
     // El mejor de ESTE aparato ("¡Entraste a la tabla!" es la de todos)
     const rec = $('fin-record');
     rec.textContent = d.nuevo ? '¡Tu mejor partida!' : `Tu mejor partida: ${conPuntos(d.recordPuntaje)} puntos · ${d.record} microjuegos`;
@@ -375,7 +395,7 @@ export class UI {
     $('fin-detalle').textContent = `${d.puntos === 1 ? 'superado' : 'superados'} · tu mejor: ${d.mejor}`;
     $('fin-veredicto').textContent = d.nuevoMejor && d.puntos > 0 ? '¡Tu mejor marca en este microjuego!' : 'Cada uno que pasas, va más rápido.';
     $('fin-cta').textContent = 'Otra vez';
-    this.dibujarMedalla(null);
+    this.dibujarMedalla(null, d.nuevoMejor && d.puntos > 0 ? 'euforico' : d.puntos === 0 ? 'triste' : 'feliz');
     this.fin.hidden = false;
     this.finDesde = performance.now();
   }
@@ -397,7 +417,7 @@ export class UI {
     $('fin-detalle').textContent = 'jugador 1 · jugador 2';
     $('fin-veredicto').textContent = d.ganador ? '¿Revancha?' : 'Superaron los mismos. ¿Desempate?';
     $('fin-cta').textContent = 'Revancha';
-    this.dibujarMedalla(null);
+    this.dibujarMedalla(null, d.ganador ? 'euforico' : 'guino');
     this.fin.hidden = false;
     this.finDesde = performance.now();
   }
@@ -493,11 +513,17 @@ export class UI {
     });
   }
 
-  // La medalla (un emoji del atlas, dibujado en un canvas del HTML)
-  dibujarMedalla(nombre) {
-    const c = $('fin-medalla');
-    c.hidden = !nombre;
-    if (!nombre || !EMOJI[nombre]) return;
+  // La medalla (un emoji del atlas, dibujado en un canvas del HTML). Sin
+  // medalla, en su lugar va Zas con la cara que corresponda.
+  dibujarMedalla(nombre, cara = 'feliz') {
+    const c = $('fin-medalla'), zas = $('fin-zas');
+    const hay = !!nombre && !!EMOJI[nombre];
+    c.hidden = !hay;
+    zas.hidden = hay;
+    if (!hay) {
+      zas.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgMascota(cara));
+      return;
+    }
     const g = c.getContext('2d');
     const [x, y] = EMOJI[nombre];
     g.clearRect(0, 0, c.width, c.height);
@@ -512,15 +538,31 @@ export class UI {
   }
   mostrarSaltar(v) { this.saltar.hidden = !v; }
 
-  alternarSonido() {
-    this.audio.setSonido(!this.audio.sonido);
+  // Dos botones: la música y los efectos. La tecla M apaga (o prende) todo.
+  alternarMusica() { this.audio.setMusica(!this.audio.musicaOn); this.pintarSonido(); }
+  alternarEfectos() { this.audio.setEfectos(!this.audio.efectos); this.pintarSonido(); }
+  alternarTodo() {
+    const prender = !this.audio.musicaOn && !this.audio.efectos;
+    this.audio.setMusica(prender);
+    this.audio.setEfectos(prender);
     this.pintarSonido();
   }
 
   pintarSonido() {
+    const a = this.audio;
     for (const b of document.querySelectorAll('[data-accion="sonido"]')) {
-      b.innerHTML = this.audio.sonido ? ICONO_SONIDO : ICONO_MUDO;
-      b.setAttribute('aria-label', this.audio.sonido ? 'Silenciar' : 'Activar sonido');
+      b.innerHTML = a.efectos ? ICONO_SONIDO : ICONO_MUDO;
+      b.classList.toggle('apagado', !a.efectos);
+      b.setAttribute('aria-label', 'Efectos de sonido');
+      b.setAttribute('aria-pressed', String(a.efectos));
+      b.title = a.efectos ? 'Efectos de sonido: sí' : 'Efectos de sonido: no';
+    }
+    for (const b of document.querySelectorAll('[data-accion="musica"]')) {
+      b.innerHTML = a.musicaOn ? ICONO_MUSICA : ICONO_SIN_MUSICA;
+      b.classList.toggle('apagado', !a.musicaOn);
+      b.setAttribute('aria-label', 'Música');
+      b.setAttribute('aria-pressed', String(a.musicaOn));
+      b.title = a.musicaOn ? 'Música: sí' : 'Música: no';
     }
   }
 

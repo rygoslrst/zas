@@ -19,26 +19,25 @@
     box-shadow: 0 8px 40px rgba(27, 16, 48, 0.3);
   }
   .e { background: url(pegatinas.webp) no-repeat; background-size: 500% 400%; }
-  .e-bomba { background-position: 0.000% 0.000%; }
-  .e-globo { background-position: 25.000% 0.000%; }
-  .e-pizza { background-position: 50.000% 0.000%; }
-  .e-gato { background-position: 75.000% 0.000%; }
-  .e-sandia { background-position: 100.000% 0.000%; }
-  .e-pelota { background-position: 0.000% 33.333%; }
-  .e-cohete { background-position: 25.000% 33.333%; }
-  .e-sapo { background-position: 50.000% 33.333%; }
-  .e-diamante { background-position: 75.000% 33.333%; }
-  .e-trofeo { background-position: 100.000% 33.333%; }
-  .e-medalla_bronce { background-position: 0.000% 66.667%; }
-  .e-medalla_plata { background-position: 25.000% 66.667%; }
-  .e-medalla_oro { background-position: 50.000% 66.667%; }
-  .e-dedo { background-position: 75.000% 66.667%; }
-  .e-estrella { background-position: 100.000% 66.667%; }
-  .e-marciano { background-position: 0.000% 100.000%; }
-  .e-corona { background-position: 25.000% 100.000%; }
-  .e-rayo { background-position: 50.000% 100.000%; }
-  .e-telefono { background-position: 75.000% 100.000%; }
-  .e-explosion { background-position: 100.000% 100.000%; }
+  .e-globo { background-position: 0.000% 0.000%; }
+  .e-pizza { background-position: 25.000% 0.000%; }
+  .e-gato { background-position: 50.000% 0.000%; }
+  .e-sandia { background-position: 75.000% 0.000%; }
+  .e-pelota { background-position: 100.000% 0.000%; }
+  .e-cohete { background-position: 0.000% 33.333%; }
+  .e-sapo { background-position: 25.000% 33.333%; }
+  .e-diamante { background-position: 50.000% 33.333%; }
+  .e-trofeo { background-position: 75.000% 33.333%; }
+  .e-medalla_bronce { background-position: 100.000% 33.333%; }
+  .e-medalla_plata { background-position: 0.000% 66.667%; }
+  .e-medalla_oro { background-position: 25.000% 66.667%; }
+  .e-dedo { background-position: 50.000% 66.667%; }
+  .e-estrella { background-position: 75.000% 66.667%; }
+  .e-marciano { background-position: 100.000% 66.667%; }
+  .e-corona { background-position: 0.000% 100.000%; }
+  .e-rayo { background-position: 25.000% 100.000%; }
+  .e-telefono { background-position: 50.000% 100.000%; }
+  .e-explosion { background-position: 75.000% 100.000%; }
   .e { display: inline-block; flex: none; }
 
   /* Cada tarjetita: 105 x 74 mm, con línea de corte punteada */
@@ -56,7 +55,7 @@
     -webkit-text-stroke: 1mm var(--tinta); paint-order: stroke fill; text-shadow: 0 1.2mm 0 var(--tinta);
     transform: rotate(-6deg); transform-origin: left center; margin-bottom: 1mm;
   }
-  .bajada { font-family: var(--display); font-size: 3.8mm; letter-spacing: 0.2mm; line-height: 1.1; }
+  .bajada { font-family: var(--display); font-size: 3.35mm; letter-spacing: 0.15mm; line-height: 1.1; white-space: nowrap; }
   .bajada b { font-weight: 400; display: block; font-size: 5.2mm; color: var(--oro);
     -webkit-text-stroke: 0.4mm var(--tinta); paint-order: stroke fill; }
   .voto { font-family: var(--display); font-size: 3.6mm; color: #fff; background: var(--coral); align-self: flex-start;
@@ -89,7 +88,7 @@
 </div>
 <main class="hoja" id="hoja"></main>
 
-<!-- Una tarjeta; se copia 8 veces (con otro emoji de adorno cada una) -->
+<!-- Una tarjeta; se copia 8 veces (con Zas, la mascota, con otra cara cada una) -->
 <template id="molde">
   <article class="tarjeta">
     <svg class="rayos" viewBox="-150 -150 300 300" aria-hidden="true"><path d="M0 0L150.0 0.0L147.7 26.0ZM0 0L141.0 51.3L129.9 75.0ZM0 0L114.9 96.4L96.4 114.9ZM0 0L75.0 129.9L51.3 141.0ZM0 0L26.0 147.7L0.0 150.0ZM0 0L-26.0 147.7L-51.3 141.0ZM0 0L-75.0 129.9L-96.4 114.9ZM0 0L-114.9 96.4L-129.9 75.0ZM0 0L-141.0 51.3L-147.7 26.0ZM0 0L-150.0 0.0L-147.7 -26.0ZM0 0L-141.0 -51.3L-129.9 -75.0ZM0 0L-114.9 -96.4L-96.4 -114.9ZM0 0L-75.0 -129.9L-51.3 -141.0ZM0 0L-26.0 -147.7L-0.0 -150.0ZM0 0L26.0 -147.7L51.3 -141.0ZM0 0L75.0 -129.9L96.4 -114.9ZM0 0L114.9 -96.4L129.9 -75.0ZM0 0L141.0 -51.3L147.7 -26.0Z"/></svg>
@@ -99,19 +98,19 @@
       <p class="voto">¡VOTA POR ZAS!</p>
     </div>
     <div class="qr-caja"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 41 41" shape-rendering="crispEdges"><rect x="-4" y="-4" width="41" height="41" fill="#fff"/><path fill="#1b1030" d="M0 0h7v1h-7zM9 0h2v1h-2zM14 0h5v1h-5zM23 0h2v1h-2zM26 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM12 1h7v1h-7zM20 1h2v1h-2zM24 1h1v1h-1zM26 1h1v1h-1zM32 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM10 2h2v1h-2zM13 2h1v1h-1zM18 2h1v1h-1zM21 2h2v1h-2zM26 2h1v1h-1zM28 2h3v1h-3zM32 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM9 3h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM15 3h6v1h-6zM26 3h1v1h-1zM28 3h3v1h-3zM32 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM9 4h5v1h-5zM16 4h4v1h-4zM22 4h1v1h-1zM24 4h1v1h-1zM26 4h1v1h-1zM28 4h3v1h-3zM32 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM8 5h4v1h-4zM13 5h3v1h-3zM18 5h2v1h-2zM21 5h1v1h-1zM26 5h1v1h-1zM32 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h1v1h-1zM24 6h1v1h-1zM26 6h7v1h-7zM8 7h2v1h-2zM11 7h1v1h-1zM15 7h1v1h-1zM17 7h6v1h-6zM24 7h1v1h-1zM4 8h4v1h-4zM11 8h1v1h-1zM13 8h2v1h-2zM17 8h2v1h-2zM21 8h1v1h-1zM23 8h2v1h-2zM26 8h2v1h-2zM31 8h1v1h-1zM0 9h5v1h-5zM11 9h2v1h-2zM14 9h1v1h-1zM16 9h1v1h-1zM18 9h4v1h-4zM23 9h1v1h-1zM27 9h1v1h-1zM29 9h1v1h-1zM3 10h2v1h-2zM6 10h4v1h-4zM15 10h1v1h-1zM19 10h1v1h-1zM23 10h9v1h-9zM2 11h2v1h-2zM10 11h3v1h-3zM14 11h3v1h-3zM19 11h1v1h-1zM22 11h5v1h-5zM28 11h1v1h-1zM32 11h1v1h-1zM0 12h3v1h-3zM6 12h2v1h-2zM9 12h1v1h-1zM11 12h1v1h-1zM15 12h1v1h-1zM17 12h1v1h-1zM19 12h2v1h-2zM22 12h1v1h-1zM26 12h1v1h-1zM28 12h1v1h-1zM31 12h2v1h-2zM0 13h1v1h-1zM2 13h2v1h-2zM5 13h1v1h-1zM7 13h3v1h-3zM11 13h5v1h-5zM17 13h2v1h-2zM20 13h2v1h-2zM23 13h1v1h-1zM27 13h1v1h-1zM29 13h1v1h-1zM31 13h1v1h-1zM0 14h1v1h-1zM3 14h1v1h-1zM5 14h3v1h-3zM10 14h1v1h-1zM14 14h2v1h-2zM17 14h2v1h-2zM20 14h1v1h-1zM23 14h1v1h-1zM25 14h1v1h-1zM27 14h1v1h-1zM30 14h2v1h-2zM1 15h5v1h-5zM8 15h1v1h-1zM13 15h5v1h-5zM21 15h1v1h-1zM23 15h2v1h-2zM27 15h1v1h-1zM29 15h1v1h-1zM0 16h1v1h-1zM2 16h1v1h-1zM4 16h3v1h-3zM9 16h1v1h-1zM11 16h1v1h-1zM13 16h1v1h-1zM15 16h1v1h-1zM19 16h1v1h-1zM21 16h1v1h-1zM23 16h1v1h-1zM26 16h3v1h-3zM31 16h2v1h-2zM0 17h2v1h-2zM4 17h2v1h-2zM10 17h2v1h-2zM14 17h1v1h-1zM17 17h1v1h-1zM19 17h2v1h-2zM23 17h3v1h-3zM27 17h1v1h-1zM31 17h1v1h-1zM1 18h1v1h-1zM3 18h1v1h-1zM5 18h2v1h-2zM8 18h4v1h-4zM18 18h1v1h-1zM22 18h3v1h-3zM28 18h2v1h-2zM31 18h1v1h-1zM3 19h1v1h-1zM9 19h1v1h-1zM11 19h1v1h-1zM13 19h1v1h-1zM16 19h4v1h-4zM21 19h1v1h-1zM25 19h1v1h-1zM27 19h1v1h-1zM31 19h1v1h-1zM2 20h1v1h-1zM5 20h5v1h-5zM13 20h3v1h-3zM17 20h1v1h-1zM19 20h4v1h-4zM24 20h1v1h-1zM26 20h1v1h-1zM28 20h2v1h-2zM31 20h1v1h-1zM0 21h2v1h-2zM4 21h1v1h-1zM7 21h1v1h-1zM9 21h1v1h-1zM11 21h1v1h-1zM14 21h1v1h-1zM16 21h3v1h-3zM21 21h4v1h-4zM27 21h1v1h-1zM31 21h1v1h-1zM3 22h1v1h-1zM6 22h4v1h-4zM11 22h3v1h-3zM15 22h1v1h-1zM18 22h3v1h-3zM23 22h2v1h-2zM2 23h3v1h-3zM7 23h1v1h-1zM9 23h1v1h-1zM12 23h4v1h-4zM19 23h4v1h-4zM28 23h1v1h-1zM0 24h2v1h-2zM5 24h5v1h-5zM14 24h4v1h-4zM19 24h4v1h-4zM24 24h5v1h-5zM32 24h1v1h-1zM8 25h3v1h-3zM12 25h1v1h-1zM14 25h1v1h-1zM20 25h1v1h-1zM23 25h2v1h-2zM28 25h3v1h-3zM0 26h7v1h-7zM8 26h1v1h-1zM10 26h3v1h-3zM19 26h1v1h-1zM21 26h2v1h-2zM24 26h1v1h-1zM26 26h1v1h-1zM28 26h1v1h-1zM30 26h2v1h-2zM0 27h1v1h-1zM6 27h1v1h-1zM8 27h2v1h-2zM11 27h1v1h-1zM15 27h1v1h-1zM17 27h2v1h-2zM20 27h2v1h-2zM24 27h1v1h-1zM28 27h1v1h-1zM31 27h2v1h-2zM0 28h1v1h-1zM2 28h3v1h-3zM6 28h1v1h-1zM8 28h1v1h-1zM10 28h2v1h-2zM14 28h2v1h-2zM18 28h1v1h-1zM20 28h1v1h-1zM24 28h5v1h-5zM0 29h1v1h-1zM2 29h3v1h-3zM6 29h1v1h-1zM9 29h1v1h-1zM12 29h3v1h-3zM17 29h3v1h-3zM22 29h1v1h-1zM24 29h1v1h-1zM26 29h4v1h-4zM31 29h1v1h-1zM0 30h1v1h-1zM2 30h3v1h-3zM6 30h1v1h-1zM9 30h1v1h-1zM13 30h6v1h-6zM20 30h2v1h-2zM23 30h4v1h-4zM28 30h1v1h-1zM30 30h1v1h-1zM0 31h1v1h-1zM6 31h1v1h-1zM10 31h1v1h-1zM12 31h1v1h-1zM16 31h1v1h-1zM18 31h1v1h-1zM20 31h2v1h-2zM23 31h2v1h-2zM27 31h2v1h-2zM0 32h7v1h-7zM10 32h2v1h-2zM14 32h1v1h-1zM16 32h2v1h-2zM19 32h2v1h-2zM23 32h2v1h-2zM27 32h1v1h-1zM29 32h1v1h-1zM32 32h1v1h-1z"/></svg><p>rygoslrst.github.io/zas</p></div>
-    <i class="e deco" style="width:15mm;height:15mm;left:31mm;top:3mm"></i>
+    <img class="deco" src="zas-guino.svg" alt="" style="width:15mm;left:38.5mm;top:1mm">
   </article>
 </template>
 <script>
-  const adornos = ['bomba', 'globo', 'pizza', 'gato', 'cohete', 'sandia', 'sapo', 'pelota'];
+  const caras = ['guino', 'feliz', 'euforico', 'cool'];
   const hoja = document.getElementById('hoja'), molde = document.getElementById('molde');
-  adornos.forEach((a, i) => {
+  for (let i = 0; i < 8; i++) {
     const t = molde.content.cloneNode(true);
     const d = t.querySelector('.deco');
-    d.classList.add('e-' + a);
+    d.src = `zas-${caras[i % caras.length]}.svg`;
     d.style.transform = `rotate(${(i % 2 ? 1 : -1) * (8 + i * 2)}deg)`;
     hoja.appendChild(t);
-  });
+  }
 </script>
 <script>
   if (location.hash === '#ahorro') {

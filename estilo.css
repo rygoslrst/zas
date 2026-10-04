@@ -229,6 +229,7 @@ body.tactil .solo-mouse { display: none; }
 }
 .boton.icono { width: 46px; height: 46px; }
 .boton.icono svg { width: 22px; height: 22px; }
+.boton.icono.apagado { opacity: 0.6; }
 .boton.texto {
   height: 46px;
   padding: 0 18px;
@@ -447,9 +448,9 @@ body.tactil .solo-mouse { display: none; }
 
 /* El final de una práctica de la galería o de un duelo (sin tabla ni medalla) */
 #fin:not(.galeria) .solo-galeria { display: none; }
-#fin.galeria .solo-partida, #fin.galeria .medalla, #fin.galeria #fin-record, #fin.galeria #anotar-luego,
+#fin.galeria .solo-partida, #fin.galeria #fin-medalla, #fin.galeria #fin-record, #fin.galeria #anotar-luego,
 #fin.galeria #fin-nombre,
-#fin.duelo .solo-partida, #fin.duelo .medalla, #fin.duelo #fin-record, #fin.duelo #anotar-luego,
+#fin.duelo .solo-partida, #fin.duelo #fin-medalla, #fin.duelo #fin-record, #fin.duelo #anotar-luego,
 #fin.duelo #fin-nombre { display: none; }
 #fin.duelo .puntos { font-size: clamp(56px, min(26vw, 14vh), 150px); }
 

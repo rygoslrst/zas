@@ -36,7 +36,7 @@
     -webkit-text-stroke: 1mm var(--tinta); paint-order: stroke fill; text-shadow: 0 1.2mm 0 var(--tinta);
     transform: rotate(-6deg); transform-origin: left center; margin-bottom: 1mm;
   }
-  .bajada { font-family: var(--display); font-size: 3.8mm; letter-spacing: 0.2mm; line-height: 1.1; }
+  .bajada { font-family: var(--display); font-size: 3.35mm; letter-spacing: 0.15mm; line-height: 1.1; white-space: nowrap; }
   .bajada b { font-weight: 400; display: block; font-size: 5.2mm; color: var(--oro);
     -webkit-text-stroke: 0.4mm var(--tinta); paint-order: stroke fill; }
   .voto { font-family: var(--display); font-size: 3.6mm; color: #fff; background: var(--coral); align-self: flex-start;
@@ -69,7 +69,7 @@
 </div>
 <main class="hoja" id="hoja"></main>
 
-<!-- Una tarjeta; se copia 8 veces (con otro emoji de adorno cada una) -->
+<!-- Una tarjeta; se copia 8 veces (con Zas, la mascota, con otra cara cada una) -->
 <template id="molde">
   <article class="tarjeta">
     <!--__RAYOS__-->
@@ -79,19 +79,19 @@
       <p class="voto">¡VOTA POR ZAS!</p>
     </div>
     <div class="qr-caja"><!--__QR__--><p>__URL__</p></div>
-    <i class="e deco" style="width:15mm;height:15mm;left:31mm;top:3mm"></i>
+    <img class="deco" src="zas-guino.svg" alt="" style="width:15mm;left:38.5mm;top:1mm">
   </article>
 </template>
 <script>
-  const adornos = ['bomba', 'globo', 'pizza', 'gato', 'cohete', 'sandia', 'sapo', 'pelota'];
+  const caras = ['guino', 'feliz', 'euforico', 'cool'];
   const hoja = document.getElementById('hoja'), molde = document.getElementById('molde');
-  adornos.forEach((a, i) => {
+  for (let i = 0; i < 8; i++) {
     const t = molde.content.cloneNode(true);
     const d = t.querySelector('.deco');
-    d.classList.add('e-' + a);
+    d.src = `zas-${caras[i % caras.length]}.svg`;
     d.style.transform = `rotate(${(i % 2 ? 1 : -1) * (8 + i * 2)}deg)`;
     hoja.appendChild(t);
-  });
+  }
 </script>
 <script>
   if (location.hash === '#ahorro') {

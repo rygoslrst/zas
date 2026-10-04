@@ -2,7 +2,7 @@
 //  main.js — arranque
 // ============================================================================
 
-import { ANCHO, VISTA, ESCALA, DEBUG, CLAVE_SONIDO, MENOS_MOVIMIENTO, altoParaPantalla, escalaParaPantalla } from './config.js';
+import { ANCHO, VISTA, ESCALA, DEBUG, CLAVE_SONIDO, CLAVE_MUSICA, MENOS_MOVIMIENTO, altoParaPantalla, escalaParaPantalla } from './config.js';
 import { Audio } from './motor/Audio.js';
 import { UI } from './ui.js';
 import { Director } from './escenas/Director.js';
@@ -52,6 +52,39 @@ function texturaMaxima() {
     if (perder) perder.loseContext();             // este contexto era sólo para preguntar
     return max;
   } catch (e) { return 0; }
+}
+
+// La barra de la pantalla de carga (de 0 a 1)
+function avance(f) {
+  const barra = document.getElementById('barra-carga');
+  if (barra) barra.style.width = `${Math.round(4 + 96 * Math.min(1, f))}%`;
+}
+
+// Baja el atlas de emoji de a pedazos, para mover la barra mientras llega (es
+// lo más pesado: casi 1 MB). Si el navegador no deja leer de a pedazos, se
+// baja de una.
+async function bajarAtlas(img, url, desde, hasta) {
+  try {
+    const r = await fetch(url);
+    if (!r.ok || !r.body || !r.body.getReader) throw new Error('sin pedazos');
+    const total = parseInt(r.headers.get('content-length'), 10) || 0;
+    const lector = r.body.getReader(), pedazos = [];
+    let llegado = 0;
+    for (;;) {
+      const { done, value } = await lector.read();
+      if (done) break;
+      pedazos.push(value);
+      llegado += value.length;
+      // sin tamaño conocido, la barra igual avanza (cada vez más despacio)
+      const f = total ? llegado / total : 1 - 1 / (1 + llegado / 600000);
+      avance(desde + (hasta - desde) * f);
+    }
+    img.src = URL.createObjectURL(new Blob(pedazos, { type: r.headers.get('content-type') || '' }));
+  } catch (e) {
+    img.src = url;
+  }
+  await img.decode();
+  avance(hasta);
 }
 
 // WebP pesa la mitad; los iPhone muy viejos no lo leen y reciben el PNG.
@@ -107,7 +140,7 @@ function vigilarVisibilidad(director, audio) {
     const d = director();
     if (document.hidden) {
       if (d && d.estado !== 'pausa') d.pausar();
-      if (!d || d.estado !== 'pausa') audio.pausar();
+      audio.pausar();                   // (también en la pausa: por si sonaba la cuenta)
     } else if (!d || d.estado !== 'pausa') {
       audio.reanudar();
     }
@@ -132,13 +165,15 @@ async function arrancar() {
   ESCALA.k = escalaParaPantalla(window.innerWidth, window.innerHeight, VISTA.alto);
   const atlas = new URLSearchParams(location.search).get('atlas');      // para probar: ?atlas=sd
   usarAtlas(LADO_ATLAS[atlas] ? atlas : elegirAtlas(maxTextura, ESCALA.k));
+  avance(0.1);
   const imagenEmoji = new Image();
-  imagenEmoji.src = ARCHIVO_EMOJI + ((await soportaWebp()) ? '.webp' : '.png');
+  const archivo = ARCHIVO_EMOJI + ((await soportaWebp()) ? '.webp' : '.png');
   // La mascota (dibujada en SVG) se pasa a imagen, más nítida en pantallas densas
-  const [, , mascota] = await Promise.all([fuente, imagenEmoji.decode(),
+  const [, , mascota] = await Promise.all([fuente, bajarAtlas(imagenEmoji, archivo, 0.12, 0.9),
     lienzoMascota(ESCALA.k >= 1.75 ? 2 : 1.25).catch(() => null)]);
+  avance(0.95);
 
-  const audio = new Audio(CLAVE_SONIDO);
+  const audio = new Audio(CLAVE_SONIDO, CLAVE_MUSICA);
   const ui = new UI(audio, imagenEmoji);
 
   const juego = new Phaser.Game({
@@ -164,6 +199,7 @@ async function arrancar() {
   vigilarOrientacion(director);
   vigilarAlto(juego, director);
   vigilarVisibilidad(director, audio);
+  avance(1);
   document.getElementById('cargando').hidden = true;
   if (DEBUG) window.juego = juego;
 }

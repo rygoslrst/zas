@@ -55,6 +55,7 @@ export class Avanza extends Micro {
         this.estadoG = 'aviso';
         this.guardia.setTexture('emoji', 'boca').setDisplaySize(170, 170);
         this.cambio = t + this.aviso;
+        this.audio.bostezo();
       } else if (this.estadoG === 'aviso') {
         // En el nivel 3, a veces es un amague y vuelve a dormir
         if (this.nivel >= 3 && Math.random() < 0.3) { this.dormir(t); }
@@ -64,6 +65,7 @@ export class Avanza extends Micro {
           this.guardia.setTexture('emoji', 'enojado').setDisplaySize(170, 170);
           this.ojos.setVisible(true);
           this.cambio = t + this.azar(0.45, 0.7) / this.vel;
+          this.audio.alerta();
         }
       } else {
         this.dormir(t);

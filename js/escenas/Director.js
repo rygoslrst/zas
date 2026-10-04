@@ -389,7 +389,7 @@ export class Director extends Phaser.Scene {
     this.mechaFondo.setPosition(this.mechaX0 - 6, this.mechaY).setDisplaySize(this.mechaLargo + 12, 26);
     this.cuerda.setPosition(this.mechaX0, this.mechaY).setSize(this.mechaLargo, 14);
     this.quemado.setPosition(this.mechaX0 + this.mechaLargo, this.mechaY).setDisplaySize(1, 16);
-    this.bomba.setPosition(42, this.mechaY - 8);
+    this.bomba.setPosition(46, this.mechaY - 12);
     if (this.telon.y !== 0) this.telon.y = -(h + 40);
   }
 
@@ -494,6 +494,7 @@ export class Director extends Phaser.Scene {
     this.mostrarDesfile(true);
     this.audio.finPartida();
     if (ganador) this.time.delayedCall(900, () => this.audio.record());
+    this.musicaDelFinal();
     this.ui.mostrarFin({ duelo: true, ganador, puntos: [...du.puntos], ultimo: this.orden || '' });
   }
 
@@ -637,6 +638,8 @@ export class Director extends Phaser.Scene {
     } else {
       this.audio.empieza();
     }
+    // Mientras está el telón, la música sigue: un ritmo al pulso que viene
+    this.audio.empezarTelon(RITMO.BPM_BASE * this.vel, a + (gano === null ? 0.3 : 0.6));
 
     // La carita
     this.ponerCara(this.reaccion, gano === null ? 'cool' : Phaser.Utils.Array.GetRandom(gano ? CARAS_BIEN : CARAS_MAL), 210);
@@ -655,15 +658,15 @@ export class Director extends Phaser.Scene {
     const carteles = [];
     if (gano === null && p) carteles.push(['¡A PRACTICAR!', null, 0x2f7dff]);
     else if (gano === null && gal) carteles.push(['¡PRÁCTICA LIBRE!', null, 0x2f7dff]);
-    else if (gano === null && du) carteles.push(['¡DUELO!', () => this.audio.jefe(), 0xe0339b]);
+    else if (gano === null && du) carteles.push(['¡DUELO!', () => this.audio.duelo(), 0xe0339b]);
     else if (gano === null && this.trasPractica) {
       carteles.push(['¡AHORA EN SERIO!', null, 0xe0339b], [`¡TIENES ${PARTIDA.VIDAS} VIDAS!`, () => this.audio.record(), 0x16a37a]);
     } else if (gano === null) carteles.push(['¡PREPÁRATE!', null, 0x2f7dff]);
     if (p && gano === false && p.intentos > 0) carteles.push(['¡OTRA VEZ!', null, 0xff7a1a]);
     this.trasPractica = false;
-    if (jefeGanado) carteles.push(['¡VIDA EXTRA!', () => this.audio.record(), 0x16a37a]);
-    if (subeRacha) carteles.push([`¡RACHA ×${conComa(mult)}!`, () => this.audio.record(), 0xff7a1a]);
-    if (gano === false && this.vidas === 1) carteles.push(['¡ÚLTIMA VIDA!', null, 0xff4d5a]);
+    if (jefeGanado) carteles.push(['¡VIDA EXTRA!', () => this.audio.vidaExtra(), 0x16a37a]);
+    if (subeRacha) carteles.push([`¡RACHA ×${conComa(mult)}!`, () => this.audio.racha(mult), 0xff7a1a]);
+    if (gano === false && this.vidas === 1) carteles.push(['¡ÚLTIMA VIDA!', () => this.audio.latido(), 0xff4d5a]);
     if (sube) carteles.push(['¡MÁS DIFÍCIL!', () => { this.audio.masDificil(); this.destelloTelon(0xe0339b); }, 0xe0339b]);
     if (acelera) carteles.push(['¡MÁS RÁPIDO!', () => { this.audio.acelera(); this.efectoVelocidad(); }, 0xff7a1a]);
     // El jefe se elige ya, para presentarlo: su cara en grande y su nombre
@@ -761,6 +764,7 @@ export class Director extends Phaser.Scene {
     this.tweens.killTweensOf(this.detalles);
     this.tweens.add({ targets: this.detalles, alpha: 0, duration: 120 });
     this.mostrarConsigna(this.proximo.orden, Clase.CONTROL, nuevo);
+    this.audio.orden();
     this.finIntermedio = this.audio.ahora() + Math.max(0.55, 0.75 / this.vel) + (nuevo ? PARTIDA.EXTRA_NUEVO_S : 0);
   }
 
@@ -776,6 +780,7 @@ export class Director extends Phaser.Scene {
 
   // El corazón que se pierde se parte en dos y se cae
   romperCorazon(c) {
+    this.audio.corazon();
     const k = CELDA_EMOJI / TAM_EMOJI, tam = 82 * k;
     for (const lado of [-1, 1]) {
       const m = this.add.image(c.x, c.y + this.telon.y, 'emoji', 'corazon#').setDisplaySize(tam, tam).setDepth(12)
@@ -834,7 +839,8 @@ export class Director extends Phaser.Scene {
       this.vistos.add(Clase.name);
       guardar(CLAVE_VISTOS, JSON.stringify([...this.vistos]));
     }
-    this.audio.empezarPista(bpm, this.t0, (Math.random() * 1e9) | 0);
+    // (la música sabe cuándo se acaba la mecha: antes, un redoble; los jefes, en menor)
+    this.audio.empezarPista(bpm, this.t0, (Math.random() * 1e9) | 0, { jefe: !!Clase.JEFE, fin: this.t0 + this.dur });
     this.scene.launch(this.clave, {
       director: this, audio: this.audio, nivel: this.nivel, vel: this.vel, dur: this.dur, t0: this.t0, variante,
     });
@@ -853,6 +859,7 @@ export class Director extends Phaser.Scene {
     this.gano = gano;
     this.decididoEn = this.audio.ahora();
     this.restante = limitar(1 - (this.decididoEn - this.t0) / this.dur, 0, 1);
+    this.audio.calmar();
     if (gano) {
       this.golpeHasta = performance.now() + 75;      // el microjuego se congela un instante: "¡pum!"
       this.audio.bien();
@@ -939,6 +946,7 @@ export class Director extends Phaser.Scene {
     this.mostrarDesfile(true);
     this.audio.finPartida();
     if (nuevo) this.time.delayedCall(1300, () => this.audio.record());
+    this.musicaDelFinal();
     const medalla = (MEDALLAS.find(([min]) => this.puntos >= min) || [0, null])[1];
     this.ui.mostrarFin({
       puntos: this.puntos, puntaje: this.puntaje, record: this.record, recordPuntaje: this.recordPuntaje,
@@ -961,8 +969,14 @@ export class Director extends Phaser.Scene {
     this.mostrarDetalles(false);
     this.mostrarDesfile(true);
     this.audio.finPartida();
+    this.musicaDelFinal();
     this.ui.mostrarFin({ galeria: true, ultimo: C.ORDEN, puntos: this.puntos, mejor: Math.max(antes, this.puntos),
       nuevoMejor: this.puntos > antes });
+  }
+
+  // Pasados los jingles del final, la música tranquila del menú
+  musicaDelFinal() {
+    this.time.delayedCall(2600, () => { if (this.estado === 'fin') this.audio.empezarMenu(); });
   }
 
   // Vuelve al menú principal (desde la pausa o desde el final). Si había una
@@ -985,7 +999,8 @@ export class Director extends Phaser.Scene {
     this.practica = null;
     this.ui.mostrarSaltar(false);
     this.modoTitulo();
-    this.audio.reanudar();              // si venía de la pausa, el audio estaba suspendido
+    // (si venía de la pausa, el audio estaba suspendido)
+    this.audio.reanudar().then(() => { if (this.estado === 'titulo') this.audio.empezarMenu(); });
     this.ui.mostrarMenu();
   }
 
@@ -1025,6 +1040,8 @@ export class Director extends Phaser.Scene {
     this.animarMano(time);
     this.animarBrasas(dt);
     const a = this.audio.ahora();
+    // La música (en la lección no: la pista espera congelada, como el juego)
+    if (this.estado !== 'leccion' && this.estado !== 'pausa') this.audio.programar();
     switch (this.estado) {
       case 'intermedio':
         while (this.fases.length && this.fases[0].t <= a) this.fases.shift().fn();
@@ -1044,7 +1061,6 @@ export class Director extends Phaser.Scene {
 
   cuadroMicro(a) {
     const t = a - this.t0;
-    this.audio.programar();
     if (this.decididoEn !== null) {
       if (a - this.decididoEn >= PARTIDA.DESPUES_DE_DECIDIR_S) this.cerrar();
       return;
@@ -1099,6 +1115,7 @@ export class Director extends Phaser.Scene {
       guardar(CLAVE_LECCIONES, JSON.stringify([...this.lecciones]));
     }
     this.estado = 'leccion';
+    this.audio.congelar();
     this.congelado = true;                    // Micro.update no avanza
     this.congeladoEn = this.audio.ahora();
     this.leccionDesde = this.time.now + 250;  // un dedo que ya estaba apoyado no cuenta
@@ -1129,6 +1146,7 @@ export class Director extends Phaser.Scene {
     this.audio.correrPista(pausa);
     this.congelado = false;
     this.estado = 'micro';
+    this.audio.descongelar();
     this.cartelLeccion.ocultar();
     this.tweens.add({ targets: [this.mano, this.anilloMano], alpha: 0, duration: 140 });
   }

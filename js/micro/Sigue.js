@@ -55,13 +55,15 @@ export class Sigue extends Micro {
   paso(dt, t) {
     if (this.decidido) return;
     const cerca = this.dedo && Math.hypot(this.dedo.x - this.bicho.x, this.dedo.y - this.bicho.y) < 80;
-    if (!this.tArranca && cerca) this.tArranca = t;
+    if (!this.tArranca && cerca) { this.tArranca = t; this.audio.agarra(); }
     if (this.tArranca) {
       // Arranca despacito (medio segundo): el dedo que recién lo agarró no lo pierde
       this.u += dt * this.rapidez * Math.min(1, (t - this.tArranca) / 0.5);
       const p = this.curva(this.u);
       this.bicho.setPosition(p.x, p.y).setAngle(Math.sin(this.u * 5) * 15);
-      // Si el dedo se aleja más de un instante, se escapó
+      // Si el dedo se aleja más de un instante, se escapó (al empezar a
+      // alejarse, un aviso)
+      if (!cerca && this.tLejos === 0) this.audio.seEscapa();
       this.tLejos = cerca ? 0 : this.tLejos + dt;
       if (this.tLejos > 0.3) {
         this.perder();

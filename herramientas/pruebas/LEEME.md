@@ -21,6 +21,9 @@ __ver('Frena', 1.5, 1, 1); await __foto('frena')   // captura a los 1,5 s → ca
 
 Para un microjuego nuevo, agrega su bot en `bots.js`. El bot no tiene tiempo
 de reacción: si él pierde, casi seguro el microjuego tiene un caso imposible.
+Si el bot necesita memoria, guárdala en `m.__bot` atada a `m.t0` (como
+Manivela y Lazo): las escenas se reutilizan y, si no, la segunda vez el bot
+arrastra la memoria de la anterior.
 
 **Partida completa jugada por los bots** (prueba todo junto: jefes, racha,
 lecciones, final): los bots quedan en `window.__B`. Empezar una partida normal

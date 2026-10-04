@@ -97,6 +97,13 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    ¡EL DISTINTO! tablero sobre un panel. ¡TOCA EL COLOR! queda con fondo
    neutro a propósito (que no confunda los colores). Además: jugar sólo con
    el botón y el filtro de nombres v2 (ver arriba).
+14. 2026-10-03/04: "haz lo visual y si puedes mejora todo el sonido" →
+   mascota **Zas**, pantalla de carga con avance real, escenarios nuevos,
+   efectos de jefe y de velocidad (ver abajo), y el sonido entero rehecho:
+   música y efectos por separado, música más rica, jefes en menor, ritmo en el
+   telón, música del menú, vibración y sonidos nuevos. En la revisión salieron
+   3 microjuegos con estado que sobrevivía a la escena reutilizada (Duelo: la
+   segunda vez no salía el "¡YA!"; Ataja: sin sonido de patada; Pesca).
 
 ## Cómo es el juego hoy
 
@@ -204,7 +211,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   - El plan gratis **pausa el proyecto tras 7 días sin uso**: antes del
     torneo, jugar/abrir Récords al menos una vez; si se pausó, se reactiva
     desde el panel de Supabase (el juego mientras usa la tabla local).
-- **Galería** (2026-10-03): botón en el título. Los 44 con su ícono (`static
+- **Galería** (2026-10-03): botón en el título. Los 47 con su ícono (`static
   ICONO`, un emoji); los que no salieron en el aparato (`zas_vistos_v1`), en
   silueta con "???". Tocar uno = **práctica libre** de ese microjuego
   (`Director.empezarGaleria`, usa `soloEste`): 4 vidas, más rápido cada 2 y
@@ -228,6 +235,54 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   juego se acomodan a la columna del juego (`--col-izq/--col-der`, ver
   `ui.ajustarColumna`).
 - Celular en **vertical**. Todo se juega con el dedo (o el mouse).
+- **Zas, la mascota** (`js/datos/mascota.js`): una bomba con cara, en SVG, con
+  7 caras (`CARAS`). Al cargar se pasa a un lienzo con borde blanco y sombra
+  (`lienzoMascota`) y queda como textura `mascota` (un marco por cara). Está
+  en la carga, junto al logo del título, en las reacciones del telón
+  (`CARAS_BIEN`/`CARAS_MAL`), al final de la mecha (feliz → asustada en los
+  últimos 3 pulsos → eufórica / mareada; explota con el emoji) y en el final
+  cuando no hay medalla (`#fin-zas`, cara según cómo te fue; también en
+  galería y duelo). Si falla, `ponerCara` usa emoji. El HTML usa copias fijas
+  `assets/zas-*.svg`: **si cambia el dibujo, regenerarlas** (en la consola,
+  `svgMascota(cara)` → POST a `/__captura/x.jpg` → renombrar a .svg), y lo
+  mismo con las del stand (`svgMascota(cara, true)`, versión sticker con el
+  borde dibujado, sin filtros: se imprime nítida).
+- **Efectos de pantalla:** ¡MÁS RÁPIDO! hace girar los rayos y cruza líneas de
+  viento (`efectoVelocidad`); ¡JEFE! pone el telón rojo con un relámpago
+  (`presentarJefe`, `destelloTelon`); al ganar, el microjuego se congela 75 ms
+  (`golpeHasta`). Con "reducir movimiento" del aparato (`MENOS_MOVIMIENTO`)
+  no hay sacudidas de cámara y los destellos son más suaves.
+- **Carga:** `main.js` baja el atlas de emoji de a pedazos (`bajarAtlas`, con
+  `fetch` y `getReader`) para mover la barra; si no se puede, de una.
+- **Sonido** (`js/motor/Audio.js`, todo sintetizado):
+  - Dos botones, **música** y **efectos** (título, final y pausa;
+    `zas_musica_v1`, `zas_sonido_v1`); la tecla M apaga o prende todo. Con la
+    música apagada ni se programa (menos trabajo en aparatos lentos). La
+    vibración (Android; el iPhone no deja) va con los efectos.
+  - En el iPhone, con el interruptor de silencio puesto no suena (como los
+    juegos del iPhone; se decidió no forzarlo). Los créditos lo avisan.
+  - Una pista a la vez (`pista.tipo`): `micro` (al azar por semilla: bombo
+    con clic, caja con cuerpo, platillos a la derecha, acordes —golpecitos o
+    colchón— a la izquierda, melodía de 2 compases con eco, redoble en los
+    últimos 2 pulsos de la mecha, que se calla si ya se decidió), `jefe` (en
+    menor, con el V de la menor armónica, bajo en corcheas), `telon` (ritmo
+    liviano en Do al pulso que viene, mientras está el telón) y `menu`
+    (tranquila, en el título y en el final después de los jingles). Cada
+    pista tiene su salida y se apaga con un fundido. Volúmenes medidos con
+    `OfflineAudioContext` (micro y jefe ~0,06 RMS, como la versión anterior).
+  - Jingles propios: ¡MÁS RÁPIDO!, ¡MÁS DIFÍCIL!, ¡JEFE!, ¡DUELO!, ¡VIDA
+    EXTRA!, ¡RACHA!, ¡ÚLTIMA VIDA! (latidos), corazón que se parte, la orden,
+    la lección que congela y descongela, la cuenta 3-2-1 de la pausa, el turno
+    del duelo, los botones. Y de microjuegos: ruleta (clic por gajo), ¡QUE NO
+    TE VEA! (bostezo de aviso y alerta), ¡DISPARA! (señal, señal falsa y
+    disparo), vasos (tapan y se levantan), ¡NO LO SUELTES! (agarrar y aviso
+    al alejarse).
+  - **Reloj y pausa:** en la pausa el reloj del juego se congela
+    (`_congeladoEn`) y se lleva la cuenta de lo que el audio sonó con el juego
+    quieto (`_desfase`), así la cuenta 3-2-1 suena (`despertar()`) sin que la
+    mecha avance. Las pistas de reloj `juego` se programan en tiempo de juego
+    + `_desfase`; la del menú, con el reloj del audio. `pausar()` se puede
+    llamar de más (al ocultar la página, siempre).
 
 **Microjuegos (42)**, por control:
 - *tocar:* Reventa ¡REVIENTA!, Aplasta ¡APLASTA!, Distinto ¡EL DISTINTO!,
@@ -284,12 +339,16 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
   `<listas>` las escribe `herramientas/filtro_nombres/armar.py`).
 - `js/escenas/Micro.js`: base de todos los microjuegos (ayudas: `fondo()`,
   `tema()`, `emoji()`, `boton()`, `chispas()`, `confeti()`, `cartel()`,
-  `alTocar/alMover/alSoltar`...). Leer su encabezado antes de hacer uno nuevo.
+  `alTocar/alMover/alSoltar`...; para escenarios: `vineta`, `azulejos`,
+  `ventana`, `mesada`, `tablas` y `horizonte(y, 'ciudad'|'cerros'|'dunas')`,
+  éste para el cielo vacío de las pantallas altas). Leer su encabezado antes
+  de hacer uno nuevo.
+- `js/datos/mascota.js`: Zas (ver arriba).
 - `js/micro/<Nombre>.js`: un archivo por microjuego; se registran en
   `js/micro/indice.js` (`MICROS` y `JEFES`).
 - `js/config.js`: todos los números de la partida (ritmo, vidas, velocidad).
 - `js/motor/Audio.js`: reloj (la música manda el tiempo), música inventada al
-  azar para cada microjuego y efectos sintetizados.
+  azar para cada microjuego y efectos sintetizados (ver "Sonido" arriba).
 - `js/motor/Atlas.js`: formas y tipografía (Anton) generadas al cargar.
 - **Coordenadas siempre de 540 de ancho** (alto 760–1170 según la pantalla).
   Se dibuja a la resolución real con una cámara con zoom `ESCALA.k` (hasta 2).
@@ -302,7 +361,10 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
   arrancan ahí. Para volver a probar desde cero: borrar esa clave.
 - **Las escenas se reutilizan:** Phaser relanza la misma instancia de cada
   microjuego. Todo el estado se inicializa en `armar()` (nada en el
-  constructor ni en campos de clase que "sobrevivan").
+  constructor ni en campos de clase que "sobrevivan"). Ojo con las banderas
+  que se prenden en `paso()` (`if (!this.ya) { this.ya = true; ... }`): si no
+  se apagan en `armar()`, la segunda vez no pasa nada. Para buscarlas: listar
+  las propiedades que se asignan fuera de `armar()` y no dentro.
 - **Emoji = Noto "2D"** (Apache 2.0) con borde blanco y sombra, armados por
   `herramientas/armar_emoji.py` en **tres atlas** (desde el 2026-10-03, porque
   el usuario los veía pixelados): `emoji-uhd.webp` (dibujo de 256, 4096x4096,
@@ -347,6 +409,13 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
   `preview_start` con nombre levanta el servidor de ESA carpeta. Solución:
   arrancar `python servidor.py 8124` desde `zas` en segundo plano y abrir el
   panel con `preview_start` pasando la URL `http://localhost:8124/?debug`.
+- Los bots con memoria (`m.__bot`) la atan al `t0` del microjuego: la escena
+  se reutiliza y, si no, la segunda vez el bot cree que ya apoyó el dedo.
+- **Sonido sin oírlo:** importar `js/motor/Audio.js`, darle un
+  `OfflineAudioContext`, llamar `_construir()`, forzar `audioVivo` y
+  `_usarPerf = false`, programar pasos con `_paso` (o llamar un jingle),
+  `startRendering()` y medir pico y RMS. Sirve para encontrar errores y
+  comparar volúmenes con la versión anterior (`git show HEAD:...`).
 - Qué mirar al hacer un bot: que no "haga trampa" con información que el
   jugador no ve, y que no dependa de reflejos imposibles. Si falla, primero
   mirar si es el bot (pasó con Esquiva: el bot viejo se trababa solo; hoy
@@ -358,7 +427,10 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
 `stand/tarjetas.pdf` (8 tarjetitas con QR para repartir), listos para imprimir.
 Se generan con `python herramientas/armar_cartel.py` desde
 `herramientas/plantilla_*.html`; los PDF con Edge headless (instrucciones en ese
-archivo). Los QR se verificaron leyendo los PDF.
+archivo; desde Git Bash Edge no escribe el PDF: usar PowerShell con
+`Start-Process ... -Wait` y un `--user-data-dir` propio). Los QR se
+verificaron leyendo los PDF. Zas va en el cartel (guiñando, junto al logo) y
+en cada tarjetita (con 4 caras distintas): `stand/zas-*.svg`.
 
 ## Pendiente
 
