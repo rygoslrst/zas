@@ -19,7 +19,7 @@ export class Manivela extends Micro {
   // La primera vez: el juego se congela y enseña (ver Director.revisarLeccion)
   static LECCION = {
     titulo: '¡GIRA EL DEDO EN CÍRCULOS!', sub: 'DA VUELTAS SIN LEVANTARLO, COMO CON UNA MANIVELA',
-    gesto: 'girar', lugar: 'arriba', listo: () => true,
+    gesto: 'girar', lugar: 'arriba', listo: () => true, grupo: 'girar',
     objetivo: m => ({ x: m.ejeX, y: m.ejeY }),
   };
 

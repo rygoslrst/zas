@@ -59,19 +59,23 @@ import { Grua } from './Grua.js';
 import { Cuerda } from './Cuerda.js';
 import { Fuego } from './Fuego.js';
 import { Pedalea } from './Pedalea.js';
+import { Dardo } from './Dardo.js';
+import { Une } from './Une.js';
+import { Revuelve } from './Revuelve.js';
+import { Carril } from './Carril.js';
 
 export const MICROS = [
   // tocar
   Reventa, Aplasta, Distinto, NoToques, Cuantos, Frena, Salta, Pesca, Foto, Vasos, Vuela, Suma, Grande, Orden,
-  Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta, Rebota, Cruza,
+  Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta, Rebota, Cruza, Dardo,
   // arrastrar
-  Atrapa, Esquiva, Comer, Limpia, Sigue, Honda, Encaja, Separa, Traza, Puntillas, Fuego,
+  Atrapa, Esquiva, Comer, Limpia, Sigue, Honda, Encaja, Separa, Traza, Puntillas, Fuego, Une,
   // deslizar
-  Corta, Patea, Cable, Flechas, Encesta, Puertas, Cuerda,
+  Corta, Patea, Cable, Flechas, Encesta, Puertas, Cuerda, Carril,
   // machacar y mantener
   Infla, Llena, Grua, Despega, Equilibra, Sopla, Pedalea,
   // girar en círculos y dibujar un lazo
-  Manivela, Lazo,
+  Manivela, Lazo, Revuelve,
 ];
 
 // Jefes: el 8.º microjuego y después cada 12, uno de estos (más largo; si lo

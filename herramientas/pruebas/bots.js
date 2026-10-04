@@ -471,3 +471,46 @@ B.Pedalea = m => {
   const p = m.pedales[m.siguiente];
   ev('pointerdown', p.x, p.y); ev('pointerup', p.x, p.y);
 };
+
+// --- novena tanda (2026-10-04) ---
+// Dardo: toca cuando la línea que se mueve va a estar en el centro (un cuadro después)
+B.Dardo = m => {
+  if (m.t < 0.25 || m.decidido || m.etapa >= 2) return;
+  if (Math.abs(Math.sin(m.fase) * m.amp) <= m.centro * 0.5) { ev('pointerdown', 270, 300); ev('pointerup', 270, 300); }
+};
+// Une: lleva una línea de cada animal a su comida
+B.Une = m => {
+  if (m.t < 0.3 || m.decidido || m.desde) return;
+  const a = m.izq.find(o => !o.unida);
+  if (!a) return;
+  const b = m.der.find(o => o.nombre === a.pareja);
+  ev('pointerdown', a.x, a.y); window.__paso(1);
+  for (let k = 1; k <= 3; k++) { ev('pointermove', a.x + (b.x - a.x) * k / 3, a.y + (b.y - a.y) * k / 3); window.__paso(1); }
+  ev('pointerup', b.x, b.y);
+};
+// Revuelve: círculos dentro de la olla
+B.Revuelve = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  if (!m.__bot || m.__bot.t0 !== m.t0) m.__bot = { t0: m.t0, ang: 0, abajo: false };
+  const b = m.__bot, R = 80;
+  if (!b.abajo) { b.abajo = true; ev('pointerdown', m.ox + R, m.oy); return; }
+  b.ang += 2.6 * 2 * Math.PI / 60;
+  ev('pointermove', m.ox + Math.cos(b.ang) * R, m.oy + Math.sin(b.ang) * R * 0.8);
+};
+// Carril: si viene una piedra por su carril, se pasa a uno libre
+B.Carril = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  // sólo las piedras que llegan en el próximo tercio de segundo (las más lejanas se esquivan después)
+  const horizonte = Math.max(220, m.rapidez * 0.35);
+  const peligro = c => m.piedras.some(p => p.c === c && m.t >= p.t - 0.05 && p.y > m.yAuto - horizonte && p.y < m.yAuto + 90);
+  if (!peligro(m.carril)) return;
+  // el carril más despejado (la próxima piedra más lejos); va de a uno por cuadro
+  const proxima = c => Math.min(1e9, ...m.piedras.filter(p => p.c === c && (m.t < p.t || p.y < m.yAuto + 90))
+    .map(p => (m.t >= p.t ? m.yAuto - p.y : m.yAuto + 60 + (p.t - m.t) * m.rapidez)));
+  // (para ir a la otra punta hay que cruzar el del medio: no si hay una piedra a la altura del auto)
+  const cruzable = c => Math.abs(c - m.carril) < 2 || !m.piedras.some(p => p.c === 1 && p.img && Math.abs(p.y - m.yAuto) < 170);
+  const destino = [0, 1, 2].filter(c => !peligro(c) && cruzable(c)).sort((a, b) => proxima(b) - proxima(a) || Math.abs(a - m.carril) - Math.abs(b - m.carril))[0];
+  if (destino === undefined) return;
+  const x = destino < m.carril ? 40 : 500;
+  ev('pointerdown', x, 600); ev('pointerup', x, 600);
+};

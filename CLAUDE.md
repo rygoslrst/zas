@@ -125,6 +125,10 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    el × y el + de la fuente se veían como puntos ("×1,5") → se dibujan más
    grandes (`AGRANDAR` en Atlas.js). 3 nuevos: Cuerda, Fuego, Pedalea → 49
    + 5 jefes = 54.
+19. 2026-10-04: ¡DISPARA! a veces mostraba la señal verdadera gris (la falsa
+   seguía encendida y la pisaba; lo vio el usuario) → arreglado. 4 nuevos:
+   Dardo, Une, Revuelve, Carril → 53 + 5 jefes = 58. La lección de girar en
+   círculos es una sola para Manivela y Revuelve (`grupo: 'girar'`).
 
 ## Cómo es el juego hoy
 
@@ -253,7 +257,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     las partidas normales (no práctica, galería, duelo ni demo). Sin internet
     quedan pendientes y se suben con lo demás. SQL en
     `herramientas/tabla_en_linea.sql` (al final).
-- **Galería** (2026-10-03): botón en el título. Los 54 con su ícono (`static
+- **Galería** (2026-10-03): botón en el título. Los 58 con su ícono (`static
   ICONO`, un emoji); los que no salieron en el aparato (`zas_vistos_v1`), en
   silueta con "???". Tocar uno = **práctica libre** de ese microjuego
   (`Director.empezarGaleria`, usa `soloEste`): 4 vidas, más rápido cada 2 y
@@ -334,7 +338,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     + `_desfase`; la del menú, con el reloj del audio. `pausar()` se puede
     llamar de más (al ocultar la página, siempre).
 
-**Microjuegos (49)**, por control:
+**Microjuegos (53)**, por control:
 - *tocar:* Reventa ¡REVIENTA!, Aplasta ¡APLASTA!, Distinto ¡EL DISTINTO!,
   NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENA!, Salta
   ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Vasos ¡ENCUENTRA EL DIAMANTE!
@@ -346,7 +350,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   EL PENAL! (eres el arquero), Ruleta ¡FRENA EN LA ESTRELLA!, Rebota ¡NO LO
   DEJES CAER! (globo sobre cactus), Cruza ¡CRUZA LA CALLE! (el pollito entre
   autos; al armarse, comprueba con un planificador que haya un cruce posible
-  y si no, reacomoda los autos)
+  y si no, reacomoda los autos), Dardo ¡DALE AL BLANCO! (dos toques: una línea
+  vertical va y viene, el toque fija el ancho; después una horizontal, el
+  segundo toque fija la altura; el dardo tiene que caer en el centro rojo)
 - *arrastrar:* Atrapa ¡ATRAPA!, Esquiva ¡ESQUIVA!, Comer ¡DALE DE COMER!,
   Limpia ¡LIMPIA!, Sigue ¡NO LO SUELTES!, Honda ¡TUMBA AL CERDO! (honda: tirar
   hacia atrás y soltar; puntos muestran el camino), Encaja ¡PONLO EN SU
@@ -358,7 +364,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   despertar al gato: arrastrar rápido llena la barra de ruido), Fuego ¡APAGA
   EL FUEGO! (con el dedo apoyado, la manguera moja donde está el dedo; cada
   fuego se apaga con un ratito de agua; en el nivel 3 los que no se terminan
-  de apagar vuelven a crecer)
+  de apagar vuelven a crecer), Une ¡UNE LAS PAREJAS! (arrastrar una línea de
+  cada animal a su comida: mono-banana, conejo-zanahoria, abeja-flor,
+  pingüino-pez, sapo-mosca)
 - *deslizar:* Corta ¡CORTA!, Patea ¡PATEA!, Cable ¡CORTA EL ROJO! (y otros
   colores), Flechas ¡SIGUE LAS FLECHAS!, Encesta ¡ENCESTA! (la pelota va
   adonde apunta el gesto; el aro se mueve desde el nivel 2), Puertas ¡CIERRA
@@ -367,7 +375,10 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   chupetín se hamaca; al cortar sale con el impulso que traía y tiene que
   caer en la boca del sapo; el sapo se pone donde caería cortando en un
   momento elegido: en el nivel 1 cerca de una punta del vaivén —medio segundo
-  para acertar—, en el 3 en cualquier parte —0,15 s—)
+  para acertar—, en el 3 en cualquier parte —0,15 s—), Carril ¡CAMBIA DE
+  CARRIL! (tres carriles, piedras de frente; deslizar o tocar un lado; se
+  gana aguantando; cada fila deja libre un carril que también estaba libre
+  en la anterior, así siempre hay por dónde pasar)
 - *tocar rápido / mantener:* Infla ¡INFLA!, Despega ¡DESPEGA!, Llena ¡LLENA EL
   VASO!, Grua ¡SACA EL PELUCHE! (máquina de peluches: mientras se mantiene
   apretado la garra avanza, al soltar baja; un intento; desde el nivel 2 hay
@@ -375,7 +386,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   otro; desde el nivel 2 hay que ganarle a otro ciclista), Equilibra ¡EQUILIBRA! (mantener un lado de
   la pantalla inclina el tablón; sin apretar, se va hacia la pelota), Sopla
   ¡APAGA LAS VELAS!
-- *girar en círculos* (2026-10-03, gesto nuevo): Manivela ¡GIRA LA MANIVELA!
+- *girar en círculos* (2026-10-03, gesto nuevo): Revuelve ¡REVUELVE LA SOPA!
+  (círculos dentro de la olla: los ingredientes giran y la sopa toma color),
+  Manivela ¡GIRA LA MANIVELA!
   (caja sorpresa; cuenta cuánto gira la DIRECCIÓN del dedo, así un círculo
   en cualquier parte vale y un zigzag no; en el nivel 3, para el lado de la
   flecha)
