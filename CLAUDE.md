@@ -129,6 +129,12 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    seguía encendida y la pisaba; lo vio el usuario) → arreglado. 4 nuevos:
    Dardo, Une, Revuelve, Carril → 53 + 5 jefes = 58. La lección de girar en
    círculos es una sola para Manivela y Revuelve (`grupo: 'girar'`).
+20. 2026-10-04: "mejora lo visual" → hojas de contacto de los 58 en la
+   pantalla del notebook (alto 760): ¡PEDALEA!, ¡UNE LAS PAREJAS! y ¡SIN
+   HACER RUIDO! se encimaban → acomodados. Estadio con tribuna y carteles en
+   ¡PATEA! y ¡ATAJA EL PENAL! (`cancha()` en Micro.js), sala de control con
+   luces y franjas de peligro en ¡NO TOQUES NADA!, 3 caras nuevas de Zas
+   (enamorado, sorprendido, llorando) y el desfile de emoji tenue en el telón.
 
 ## Cómo es el juego hoy
 
@@ -282,7 +288,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   `ui.ajustarColumna`).
 - Celular en **vertical**. Todo se juega con el dedo (o el mouse).
 - **Zas, la mascota** (`js/datos/mascota.js`): una bomba con cara, en SVG, con
-  7 caras (`CARAS`). Al cargar se pasa a un lienzo con borde blanco y sombra
+  10 caras (`CARAS`). Al cargar se pasa a un lienzo con borde blanco y sombra
   (`lienzoMascota`) y queda como textura `mascota` (un marco por cara). Está
   en la carga, junto al logo del título, en las reacciones del telón
   (`CARAS_BIEN`/`CARAS_MAL`), al final de la mecha (feliz → asustada en los

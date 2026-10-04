@@ -28,8 +28,8 @@ const AYUDA = {
 };
 // Las reacciones del telón: las caras de Zas, la mascota (si no se pudo
 // dibujar, los emoji de siempre)
-const CARAS_BIEN = ['feliz', 'euforico', 'guino', 'cool'];
-const CARAS_MAL = ['triste', 'mareado', 'asustado'];
+const CARAS_BIEN = ['feliz', 'euforico', 'guino', 'cool', 'enamorado', 'sorprendido'];
+const CARAS_MAL = ['triste', 'mareado', 'asustado', 'llorando'];
 const EMOJI_BIEN = ['contento', 'facha', 'guinio', 'lengua', 'rico'];
 const EMOJI_MAL = ['mareado', 'asustado', 'enojado', 'calavera'];
 const DESFILE = ['globo', 'pizza', 'gato', 'cohete', 'sandia', 'pelota', 'pollito', 'diamante', 'dona', 'sapo'];
@@ -182,13 +182,18 @@ export class Director extends Phaser.Scene {
     }));
   }
 
-  mostrarDesfile(v) { for (const d of this.desfile) d.img.setVisible(v); }
+  // El desfile de emoji que suben por los costados: en el título y el final
+  // bien a la vista; en el telón, tenue y más chico (que no tape el puntaje)
+  mostrarDesfile(v, tenue = false) {
+    for (const d of this.desfile) d.img.setVisible(v).setAlpha(tenue ? 0.3 : 0.75).setDisplaySize(tenue ? 60 : 80, tenue ? 60 : 80);
+  }
 
   // Pone una cara de Zas en una imagen, de "ancho" de ancho (el marco trae
   // el borde blanco). Sin mascota, el emoji que más se le parece.
   ponerCara(img, cara, ancho) {
     if (this.hayMascota) return img.setTexture('mascota', cara).setDisplaySize(ancho, ancho * this.altoMascota);
-    const emoji = { feliz: 'contento', euforico: 'lengua', guino: 'guinio', cool: 'facha', triste: 'enojado', mareado: 'mareado', asustado: 'asustado' };
+    const emoji = { feliz: 'contento', euforico: 'lengua', guino: 'guinio', cool: 'facha', triste: 'enojado', mareado: 'mareado', asustado: 'asustado',
+      enamorado: 'contento', sorprendido: 'boca', llorando: 'mareado' };
     return img.setTexture('emoji', emoji[cara] || 'contento').setDisplaySize(ancho * 0.82, ancho * 0.82);
   }
   mostrarDetalles(v) { for (const o of this.detalles) o.setVisible(v).setAlpha(1); }
@@ -596,7 +601,7 @@ export class Director extends Phaser.Scene {
     this.telonAbajo(false);
     this.tweens.killTweensOf(this.detalles);
     this.mostrarDetalles(true);
-    this.mostrarDesfile(false);
+    this.mostrarDesfile(true, true);
     this.ocultarConsigna();
     this.mostrarMecha(false);
     this.proximo = null;
@@ -849,6 +854,7 @@ export class Director extends Phaser.Scene {
       director: this, audio: this.audio, nivel: this.nivel, vel: this.vel, dur: this.dur, t0: this.t0, variante,
     });
     this.estado = 'micro';
+    this.mostrarDesfile(false);           // (va encima del telón: se va con él)
     this.telonArriba();
     this.consignaAlJuego();
     this.mostrarMecha(true);

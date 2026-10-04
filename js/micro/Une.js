@@ -24,11 +24,14 @@ export class Une extends Micro {
     const n = [2, 3, 4][this.nivel - 1];
     const parejas = this.mezclar(PAREJAS).slice(0, n);
     // Dos columnas de fichas redondas; las comidas, en otro orden
-    const sep = Math.min(170, 640 / n), y0 = this.cy + 30 - ((n - 1) * sep) / 2;
+    // (entre arriba y la mecha: en pantallas bajas, más juntas)
+    const yMin = this.arriba + 150, yMax = this.bajo - 80;
+    const sep = Math.min(170, (yMax - yMin) / Math.max(1, n - 1)), y0 = (yMin + yMax) / 2 - ((n - 1) * sep) / 2;
+    const r = Math.min(66, sep * 0.42);
     const ficha = (x, y, nombre) => {
-      this.circulo(x + 5, y + 8, 66, COLOR.OSCURO, 0.25).setDepth(2);
-      const base = this.circulo(x, y, 66, 0xffffff).setDepth(2);
-      const img = this.emoji(nombre, x, y, 92).setDepth(2);
+      this.circulo(x + 5, y + 8, r, COLOR.OSCURO, 0.25).setDepth(2);
+      const base = this.circulo(x, y, r, 0xffffff).setDepth(2);
+      const img = this.emoji(nombre, x, y, r * 1.4).setDepth(2);
       return { x, y, nombre, base, img, unida: false };
     };
     this.izq = parejas.map(([animal], i) => ({ ...ficha(110, y0 + i * sep, animal), pareja: parejas[i][1] }));

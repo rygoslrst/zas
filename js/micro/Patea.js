@@ -13,6 +13,11 @@ export class Patea extends Micro {
     this.palo0 = 105; this.palo1 = 435;
     this.yLinea = this.arriba + 250;
     const yTravesano = this.yLinea - 150;
+    // Un estadio: la tribuna detrás del arco y el área grande marcada
+    this.cancha(yTravesano - 46);
+    const area = this.add.graphics();
+    area.lineStyle(5, 0xffffff, 0.55).strokeRect(this.palo0 - 70, this.yLinea, this.palo1 - this.palo0 + 140, 220);
+    area.beginPath().arc(this.cx, this.yLinea + 220, 80, 0, Math.PI, false).strokePath();
     this.rect(this.cx, this.yLinea - 75, this.palo1 - this.palo0, 150, 0xffffff, 0.22);
     this.add.tileSprite(this.palo0, yTravesano, this.palo1 - this.palo0, 150, 'atlas', 'lunares').setOrigin(0).setAlpha(0.35);
     this.rect(this.palo0, this.yLinea - 75, 12, 162, 0xffffff);

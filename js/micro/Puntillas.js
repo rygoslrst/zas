@@ -23,7 +23,7 @@ export class Puntillas extends Micro {
     this.tablas(0x9a6a44, 110).setAlpha(0.9);
     this.vineta(0.45);
     this.piso(this.yPiso, 0x6e4a2e);
-    this.emoji('reloj', 80, this.cy - 190, 90).setAlpha(0.95);
+    this.emoji('reloj', 80, this.cy - 60, 84).setAlpha(0.95);
     // La alfombra con el gato dormido, en el medio del camino
     const g = this.add.graphics();
     g.fillStyle(0xd94f6b, 1).fillEllipse(this.cx, this.yPiso + 12, 300, 54);

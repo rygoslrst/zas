@@ -7,7 +7,7 @@
 //  bomba de la mecha). Cada cara es una expresión distinta.
 // ============================================================================
 
-export const CARAS = ['feliz', 'euforico', 'guino', 'cool', 'triste', 'mareado', 'asustado'];
+export const CARAS = ['feliz', 'euforico', 'guino', 'cool', 'triste', 'mareado', 'asustado', 'enamorado', 'sorprendido', 'llorando'];
 export const ANCHO_MASCOTA = 200, ALTO_MASCOTA = 224;
 
 const OSCURO = '#1b1030', CUERPO = '#43307d', CUERPO_CLARO = '#6a54b8';
@@ -17,6 +17,9 @@ const ojo = (x, y, dx = 3, dy = 4, r = 17) =>
   `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r + 4}" fill="#fff" stroke="${OSCURO}" stroke-width="4"/>` +
   `<circle cx="${x + dx}" cy="${y + dy}" r="${r * 0.55}" fill="${OSCURO}"/>` +
   `<circle cx="${x + dx + 3}" cy="${y + dy - 4}" r="3.2" fill="#fff"/>`;
+// Un corazón (los ojos de enamorado)
+const corazon = (x, y, s) => `<path d="M${x} ${y + s * 0.9} C${x - s * 1.5} ${y}, ${x - s * 0.9} ${y - s * 1.2}, ${x} ${y - s * 0.35} ` +
+  `C${x + s * 0.9} ${y - s * 1.2}, ${x + s * 1.5} ${y}, ${x} ${y + s * 0.9} Z" fill="#ff4d6d" stroke="${OSCURO}" stroke-width="4" stroke-linejoin="round"/>`;
 const trazo = (d, w = 7) => `<path d="${d}" fill="none" stroke="${OSCURO}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
 
 const CARA = {
@@ -32,6 +35,14 @@ const CARA = {
     '<path d="M58 150 Q64 162 58 168 Q52 162 58 150 Z" fill="#7fd3ff" stroke="#1b1030" stroke-width="3"/>',
   mareado: trazo('M62 116 L86 140') + trazo('M86 116 L62 140') + trazo('M114 116 L138 140') + trazo('M138 116 L114 140') +
     trazo('M70 168 Q78 158 86 168 T102 168 T118 168 T134 168', 6),
+  enamorado: corazon(74, 126, 20) + corazon(126, 126, 20) + trazo('M74 156 Q100 186 126 156'),
+  sorprendido: trazo('M56 98 Q74 84 92 98', 6) + trazo('M108 98 Q126 84 144 98', 6) +
+    ojo(74, 128, 0, 1, 18) + ojo(126, 128, 0, 1, 18) + `<ellipse cx="100" cy="170" rx="10" ry="12" fill="${OSCURO}"/>`,
+  llorando: trazo('M58 128 Q74 138 90 128') + trazo('M110 128 Q126 138 142 128') +
+    trazo('M64 112 L86 104', 6) + trazo('M136 112 L114 104', 6) +
+    `<path d="M76 176 Q100 150 124 176 Q100 168 76 176 Z" fill="${OSCURO}" stroke="${OSCURO}" stroke-width="6" stroke-linejoin="round"/>` +
+    '<path d="M66 136 Q60 158 66 184" fill="none" stroke="#7fd3ff" stroke-width="10" stroke-linecap="round"/>' +
+    '<path d="M134 136 Q140 158 134 184" fill="none" stroke="#7fd3ff" stroke-width="10" stroke-linecap="round"/>',
   asustado: ojo(72, 124, 0, 0, 19) + ojo(128, 124, 0, 0, 19) +
     `<ellipse cx="100" cy="168" rx="11" ry="14" fill="${OSCURO}"/>` +
     '<path d="M158 82 Q166 98 158 104 Q150 98 158 82 Z" fill="#7fd3ff" stroke="#1b1030" stroke-width="3"/>',
@@ -62,7 +73,7 @@ function silueta(color, extra, triste) {
 // sticker: con borde blanco y sombra dibujados (sin filtros: se imprime nítido;
 // es la que usa el cartel del stand)
 export function svgMascota(cara = 'feliz', sticker = false) {
-  const triste = cara === 'triste' || cara === 'mareado';
+  const triste = cara === 'triste' || cara === 'mareado' || cara === 'llorando';
   if (sticker) {
     const interior = svgMascota(cara).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -12 200 250" width="200" height="250">' +

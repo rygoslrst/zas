@@ -20,7 +20,7 @@ export class Pedalea extends Micro {
     this.tema('cielo');
     this.nubes(2);
     // La ruta: cerros, pasto, el camino y la meta
-    this.yRuta = this.cy + 40;
+    this.yRuta = Math.min(this.cy + 40, this.bajo - 330);    // (en pantallas bajas, más arriba)
     this.horizonte(this.yRuta - 70, 'cerros', 0x9fd88a);
     this.piso(this.yRuta - 30, 0x6cc04a);
     this.rect(this.cx, this.yRuta + 20, this.W, 70, 0x4a4a58).setOrigin(0.5);
@@ -41,12 +41,12 @@ export class Pedalea extends Micro {
     // El rival llega un poco antes de que se acabe la mecha
     if (this.rival) this.rival.v = (this.meta - this.x0) / (this.dur * [1, 0.9, 0.85][this.nivel - 1]);
     // Los dos pedales, abajo
-    const yP = this.bajo - 110;
+    const yP = this.bajo - 96;
     this.pedales = [-1, 1].map((lado, i) => {
       const x = this.cx + lado * 120;
-      const sombra = this.circulo(x, yP + 10, 92, COLOR.OSCURO, 0.3);
-      const base = this.circulo(x, yP, 92, i === 0 ? 0x2f7dff : 0xff7a1a);
-      const aro = this.add.image(x, yP, 'atlas', 'anillo').setDisplaySize(200, 200).setTint(0xffffff).setAlpha(0);
+      const sombra = this.circulo(x, yP + 10, 84, COLOR.OSCURO, 0.3);
+      const base = this.circulo(x, yP, 84, i === 0 ? 0x2f7dff : 0xff7a1a);
+      const aro = this.add.image(x, yP, 'atlas', 'anillo').setDisplaySize(184, 184).setTint(0xffffff).setAlpha(0);
       const flecha = this.add.image(x, yP, 'atlas', 'flecha').setDisplaySize(90, 90).setAngle(lado < 0 ? 180 : 0);
       return { x, y: yP, base, aro, flecha, sombra };
     });

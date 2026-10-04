@@ -16,6 +16,7 @@ export class Ataja extends Micro {
   armar() {
     this.tema('pasto');
     this.pateo = false;
+    this.cancha(this.arriba + 36);
     // El arco, visto desde adentro: los palos abajo, el pateador arriba
     this.yArco = this.bajo - 120;
     this.palo0 = 70; this.palo1 = 470;

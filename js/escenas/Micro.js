@@ -291,6 +291,29 @@ export class Micro extends Phaser.Scene {
     return g;
   }
 
+  // Una cancha de fútbol: franjas de pasto cortado y, arriba (hasta yTribuna),
+  // la tribuna llena de gente con los carteles de publicidad
+  cancha(yTribuna) {
+    const g = this.add.graphics();
+    for (let y = 0, i = 0; y < this.H; y += 70, i++) if (i % 2) g.fillStyle(0xffffff, 0.08).fillRect(0, y, this.W, 70);
+    if (yTribuna > 24) {
+      g.fillStyle(0x2b2d42, 1).fillRect(0, 0, this.W, yTribuna);
+      for (let fila = 0, y = yTribuna - 16; y > -20; y -= 24, fila++) {
+        for (let x = (fila % 2) * 12 + 6; x < this.W; x += 24) {
+          const c = COLOR.FONDOS[(x * 7 + fila * 13) % COLOR.FONDOS.length];
+          g.fillStyle(mezcla(c, 0x000000, 0.25), 1).fillRect(x - 9, y + 4, 18, 14);     // la camiseta
+          g.fillStyle(0xf2c9a0, 1).fillCircle(x, y, 7);                                  // la cara
+        }
+      }
+    }
+    if (yTribuna > 0) {
+      g.fillStyle(0xffffff, 1).fillRect(0, yTribuna, this.W, 24);
+      for (let x = 0, i = 0; x < this.W; x += 90, i++) g.fillStyle(COLOR.FONDOS[(i * 3) % COLOR.FONDOS.length], 1).fillRect(x + 4, yTribuna + 4, 82, 16);
+      g.fillStyle(COLOR.OSCURO, 0.25).fillRect(0, yTribuna + 24, this.W, 8);
+    }
+    return g;
+  }
+
   // Lo que hay debajo del piso (tierra o arena), para que en las pantallas
   // altas no quede un bloque liso: vetas onduladas y piedritas
   subsuelo(x0, x1, y0, color, tipo = 'tierra') {

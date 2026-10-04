@@ -9,8 +9,21 @@ export class NoToques extends Micro {
   static GANA_AL_FINAL = true;
 
   armar() {
-    this.tema('oscuro');
+    // Una sala de control: paneles de metal, luces y franjas de peligro
+    this.fondo([0x4a5d73, 0x1c2430], null);
+    this.azulejos(0, this.H, 0x41526a, 135, 96).setAlpha(0.55);
     const by = this.cy + 150;
+    const franja = this.add.graphics();
+    franja.fillStyle(0xffd23f, 1).fillRect(0, by + 186, this.W, 34);
+    franja.fillStyle(COLOR.OSCURO, 1);
+    for (let x = -40; x < this.W; x += 48) franja.fillTriangle(x, by + 220, x + 24, by + 186, x + 46, by + 186).fillTriangle(x, by + 220, x + 22, by + 220, x + 46, by + 186);
+    this.luces = [];
+    for (let i = 0; i < 6; i++) {
+      const x = 70 + i * 80, y = this.arriba + 40;
+      this.circulo(x, y, 15, COLOR.OSCURO);
+      this.luces.push(this.circulo(x, y, 10, i % 2 ? 0x3ddc84 : 0xff4d5a));
+    }
+    this.vineta(0.4);
     this.circulo(this.cx, by + 22, 172, COLOR.OSCURO, 0.4);
     this.circulo(this.cx, by + 8, 168, 0x3b3f5c);
     this.add.image(this.cx, by + 8, 'atlas', 'anillo').setDisplaySize(330, 330).setTint(0xffd23f);
@@ -43,6 +56,8 @@ export class NoToques extends Micro {
   }
 
   paso(dt, t) {
+    // Las lucecitas del tablero parpadean
+    this.luces.forEach((l, k) => l.setAlpha(Math.sin(t * 6 + k * 1.3) > 0 ? 1 : 0.25));
     const k = 1 + Math.sin(t * 9) * 0.04;
     if (!this.decidido) {
       this.boton.setScale(k * (256 / 128));
