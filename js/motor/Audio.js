@@ -1059,6 +1059,86 @@ export class Audio {
     this._osc('sine', 300, t, 0.07, 0.2, this.sfx, 190);
   }
 
+  // ¡CRUZA EL LABERINTO!: el chispazo al tocar la pared (un zumbido eléctrico)
+  zumbido() {
+    if (!this._ok) return;
+    const c = this.ctx, t = this._t;
+    const o = c.createOscillator(), trem = c.createGain(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain();
+    o.type = 'sawtooth'; o.frequency.value = 118;
+    lfo.type = 'square'; lfo.frequency.value = 30; lg.gain.value = 0.5; trem.gain.value = 0.5;
+    lfo.connect(lg); lg.connect(trem.gain);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.2, t + 0.01);
+    g.gain.setValueAtTime(0.2, t + 0.3);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + 0.45);
+    o.connect(trem); trem.connect(g); g.connect(this.sfx);
+    o.start(t); lfo.start(t); o.stop(t + 0.47); lfo.stop(t + 0.47);
+    this._ruido(t, 0.08, 0.4, this.sfx, 'highpass', 3500);
+  }
+  // ¡AGITA LA BOTELLA!: el líquido que se sacude (k: 0 a 1) y el corcho que salta
+  agitar(k) {
+    if (!this._ok) return;
+    const v = varia();
+    this._ruido(this._t, 0.1, 0.6, this.sfx, 'bandpass', (500 + k * 700) * v, (1300 + k * 900) * v, 1.3);
+    if (Math.random() < 0.6) this._osc('sine', (500 + k * 500) * v, this._t + 0.03, 0.05, 0.1, this.sfx, (1100 + k * 700) * v);
+  }
+  destapar() {
+    if (!this._ok) return;
+    const t = this._t;
+    this._osc('sine', 700, t, 0.08, 0.4, this.sfx, 160);
+    this._ruido(t, 0.03, 0.5, this.sfx, 'highpass', 2500);
+    this._ruidoSuave(t + 0.03, 0.02, 0.9, 0.42, this.sfx, 'highpass', 2600, 1300);
+  }
+  // ¡ARMA EL PUENTE!: alguien que se cae al vacío (el silbido que baja)
+  caida() {
+    if (!this._ok) return;
+    this._osc('sine', 1300, this._t, 0.7, 0.12, this.sfx, 180);
+    this._osc('triangle', 1310, this._t, 0.7, 0.05, this.sfx, 182);
+  }
+  // JEFE EL PANDA BOXEADOR: el puñetazo que se carga (un "uuuh" que sube) y
+  // la campana del ring (k veces)
+  carga() {
+    if (!this._ok) return;
+    this._osc('triangle', 260, this._t, 0.4, 0.12, this.sfx, 820);
+    this._ruidoSuave(this._t, 0.2, 0.4, 0.2, this.sfx, 'bandpass', 300, 1400, 1);
+  }
+  campana(k = 1) {
+    if (!this._ok) return;
+    for (let i = 0; i < k; i++) {
+      const t = this._t + i * 0.2;
+      this._ruido(t, 0.02, 0.4, this.sfx, 'highpass', 3000);
+      for (const [f, dur, pico] of [[880, 1.1, 0.14], [2090, 0.7, 0.08], [3310, 0.45, 0.05], [4720, 0.25, 0.03]]) {
+        this._osc('sine', f, t, dur, pico, this.sfx);
+      }
+    }
+  }
+  // JEFE EL LEÓN: el tirón de la cuerda y el rugido
+  tiron() {
+    if (!this._ok) return;
+    const v = varia();
+    this._ruido(this._t, 0.06, 0.45, this.sfx, 'bandpass', 900 * v, 400, 1.5);
+    this._osc('triangle', 210 * v, this._t, 0.06, 0.12, this.sfx, 150);
+  }
+  rugido() {
+    if (!this._ok) return;
+    const c = this.ctx, t = this._t;
+    const o = c.createOscillator(), f = c.createBiquadFilter(), trem = c.createGain(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(110, t);
+    o.frequency.linearRampToValueAtTime(150, t + 0.25);
+    o.frequency.exponentialRampToValueAtTime(70, t + 0.75);
+    f.type = 'lowpass'; f.frequency.value = 900; f.Q.value = 3;
+    lfo.frequency.value = 17; lg.gain.value = 0.4; trem.gain.value = 0.6;
+    lfo.connect(lg); lg.connect(trem.gain);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.5, t + 0.08);
+    g.gain.setValueAtTime(0.5, t + 0.45);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + 0.8);
+    o.connect(f); f.connect(trem); trem.connect(g); g.connect(this.sfx);
+    o.start(t); lfo.start(t); o.stop(t + 0.82); lfo.stop(t + 0.82);
+    this._ruidoSuave(t, 0.08, 0.8, 0.3, this.sfx, 'bandpass', 700, 300, 0.8);
+  }
+
   // Chorro de agua continuo (microjuego LLENÁ): ruido filtrado mientras dure.
   // (Apagarlo funciona siempre; prenderlo, sólo con el audio andando.)
   chorro(on) {

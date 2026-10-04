@@ -8,7 +8,7 @@
 //  Para hacer uno nuevo: una clase que extiende Micro, con
 //    static ORDEN = '¡ATRAPÁ!'      la consigna que se ve al empezar
 //    static CONTROL = 'arrastrar'   tocar | arrastrar | deslizar | mantener | machacar | girar |
-//                                   enlazar | nada (la ayuda y la mano de la orden, en el Director)
+//                                   enlazar | sacudir | nada (la ayuda y la mano de la orden, en el Director)
 //    static ICONO = 'globo'         el emoji que lo representa en la galería
 //    static LECCION = {...}         opcional: lección de "primera vez" (ver Director.revisarLeccion)
 //    static PULSOS = 8              cuánto dura, en pulsos de la música

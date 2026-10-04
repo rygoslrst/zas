@@ -63,21 +63,27 @@ import { Dardo } from './Dardo.js';
 import { Une } from './Une.js';
 import { Revuelve } from './Revuelve.js';
 import { Carril } from './Carril.js';
+import { Apila } from './Apila.js';
+import { Laberinto } from './Laberinto.js';
+import { Agita } from './Agita.js';
+import { Puente } from './Puente.js';
+import { Boxeo } from './Boxeo.js';
+import { Tira } from './Tira.js';
 
 export const MICROS = [
   // tocar
   Reventa, Aplasta, Distinto, NoToques, Cuantos, Frena, Salta, Pesca, Foto, Vasos, Vuela, Suma, Grande, Orden,
-  Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta, Rebota, Cruza, Dardo,
+  Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta, Rebota, Cruza, Dardo, Apila,
   // arrastrar
-  Atrapa, Esquiva, Comer, Limpia, Sigue, Honda, Encaja, Separa, Traza, Puntillas, Fuego, Une,
+  Atrapa, Esquiva, Comer, Limpia, Sigue, Honda, Encaja, Separa, Traza, Puntillas, Fuego, Une, Laberinto,
   // deslizar
   Corta, Patea, Cable, Flechas, Encesta, Puertas, Cuerda, Carril,
   // machacar y mantener
-  Infla, Llena, Grua, Despega, Equilibra, Sopla, Pedalea,
-  // girar en círculos y dibujar un lazo
-  Manivela, Lazo, Revuelve,
+  Infla, Llena, Grua, Despega, Equilibra, Sopla, Pedalea, Puente,
+  // girar en círculos, dibujar un lazo y sacudir
+  Manivela, Lazo, Revuelve, Agita,
 ];
 
 // Jefes: el 8.º microjuego y después cada 12, uno de estos (más largo; si lo
 // ganas, vida extra)
-export const JEFES = [Simon, Torta, Carrera, Marciano, Pulpo];
+export const JEFES = [Simon, Torta, Carrera, Marciano, Pulpo, Boxeo, Tira];

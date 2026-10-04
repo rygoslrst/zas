@@ -148,6 +148,13 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 22. 2026-10-04: el nombre de los créditos (se le venía preguntando): el
    usuario pidió **"Rafael Rodriguez, 4to H"** → arriba de Créditos, en la
    lista ("Juego") y en `<meta name="author">`.
+23. 2026-10-04: "crea más microjuegos" (y, a mitad de camino, "agregar
+   nuevos jefes") → 4 microjuegos: Apila, Laberinto, Agita (gesto nuevo:
+   sacudir) y Puente; 2 jefes: Boxeo (EL PANDA BOXEADOR) y Tira (EL LEÓN
+   FORZUDO) → 57 + 7 jefes = 64. El emoji `guante` es de lana (🧤): los
+   guantes de box se dibujan (`guanteDeBox` en Boxeo.js). El panel del
+   navegador oculto no termina de cargar el juego (`img.decode()` no resuelve
+   con la página oculta): se probó con Edge sin ventana (ver "Cómo probar").
 
 ## Cómo es el juego hoy
 
@@ -175,9 +182,10 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   3 o más), "¡SE CORTÓ LA RACHA!". El tope de la base cuenta con el ×2.
 - **Primera vez** de cada microjuego en el aparato (`zas_vistos_v1`): sello
   "¡NUEVO!" en la orden y 0,5 s más de orden (`EXTRA_NUEVO_S`). Si el
-  microjuego tiene `static LECCION` (17: los de mantener, los de "toca rápido"
-  —una sola lección para los tres, `grupo: 'machacar'`—, Honda, Ritmo, Cruza,
-  Sigue, Flechas, Encesta, Ataja, Manivela, Lazo y los 5 jefes), la primera vez se CONGELA como
+  microjuego tiene `static LECCION` (los de mantener, los de "toca rápido"
+  —una sola lección para todos, `grupo: 'machacar'`, también el jefe Tira—,
+  Honda, Ritmo, Cruza, Sigue, Flechas, Encesta, Ataja, Manivela, Lazo,
+  Laberinto, Agita, Puente y los jefes), la primera vez se CONGELA como
   en la práctica, con su cartel y la mano sobre el objeto
   (`zas_lecciones_v1`). `listo(m)` dice cuándo (p. ej. Ataja: con la pelota ya
   pateada, porque tirarse antes pierde) y `objetivo(m)` dónde va la mano. No
@@ -276,7 +284,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     las partidas normales (no práctica, galería, duelo ni demo). Sin internet
     quedan pendientes y se suben con lo demás. SQL en
     `herramientas/tabla_en_linea.sql` (al final).
-- **Galería** (2026-10-03): botón en el título. Los 58 con su ícono (`static
+- **Galería** (2026-10-03): botón en el título. Los 64 con su ícono (`static
   ICONO`, un emoji); los que no salieron en el aparato (`zas_vistos_v1`), en
   silueta con "???". Tocar uno = **práctica libre** de ese microjuego
   (`Director.empezarGaleria`, usa `soloEste`): 4 vidas, más rápido cada 2 y
@@ -376,7 +384,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     + `_desfase`; la del menú, con el reloj del audio. `pausar()` se puede
     llamar de más (al ocultar la página, siempre).
 
-**Microjuegos (53)**, por control:
+**Microjuegos (57)**, por control:
 - *tocar:* Reventa ¡REVIENTA!, Aplasta ¡APLASTA!, Distinto ¡EL DISTINTO!,
   NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENA!, Salta
   ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Vasos ¡ENCUENTRA EL DIAMANTE!
@@ -390,7 +398,10 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   autos; al armarse, comprueba con un planificador que haya un cruce posible
   y si no, reacomoda los autos), Dardo ¡DALE AL BLANCO! (dos toques: una línea
   vertical va y viene, el toque fija el ancho; después una horizontal, el
-  segundo toque fija la altura; el dardo tiene que caer en el centro rojo)
+  segundo toque fija la altura; el dardo tiene que caer en el centro rojo),
+  Apila ¡APILA LAS CAJAS! (una grúa lleva la caja de lado a lado; al tocar
+  cae derecho y su centro tiene que quedar sobre la caja de abajo; 2/3/3
+  cajas, más angostas y la grúa más rápida con el nivel)
 - *arrastrar:* Atrapa ¡ATRAPA!, Esquiva ¡ESQUIVA!, Comer ¡DALE DE COMER!,
   Limpia ¡LIMPIA!, Sigue ¡NO LO SUELTES!, Honda ¡TUMBA AL CERDO! (honda: tirar
   hacia atrás y soltar; puntos muestran el camino), Encaja ¡PONLO EN SU
@@ -404,7 +415,10 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   fuego se apaga con un ratito de agua; en el nivel 3 los que no se terminan
   de apagar vuelven a crecer), Une ¡UNE LAS PAREJAS! (arrastrar una línea de
   cada animal a su comida: mono-banana, conejo-zanahoria, abeja-flor,
-  pingüino-pez, sapo-mosca)
+  pingüino-pez, sapo-mosca), Laberinto ¡CRUZA EL LABERINTO! (arrastrar al
+  pingüino por un camino en zigzag hasta el pez; tocar el borde es un
+  chispazo; se revisa de a 8 px para que un dedo rápido no atraviese
+  paredes; 1/2/3 tramos horizontales y el camino más angosto)
 - *deslizar:* Corta ¡CORTA!, Patea ¡PATEA!, Cable ¡CORTA EL ROJO! (y otros
   colores), Flechas ¡SIGUE LAS FLECHAS!, Encesta ¡ENCESTA! (la pelota va
   adonde apunta el gesto; el aro se mueve desde el nivel 2), Puertas ¡CIERRA
@@ -423,7 +437,9 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   bombas al lado del peluche), Pedalea ¡PEDALEA! (tocar un pedal y después el
   otro; desde el nivel 2 hay que ganarle a otro ciclista), Equilibra ¡EQUILIBRA! (mantener un lado de
   la pantalla inclina el tablón; sin apretar, se va hacia la pelota), Sopla
-  ¡APAGA LAS VELAS!
+  ¡APAGA LAS VELAS!, Puente ¡ARMA EL PUENTE! (como Stick Hero: mientras se
+  mantiene, una tabla crece hacia arriba; al soltar cae hacia la otra orilla
+  y la punta tiene que quedar sobre ella; un intento)
 - *girar en círculos* (2026-10-03, gesto nuevo): Revuelve ¡REVUELVE LA SOPA!
   (círculos dentro de la olla: los ingredientes giran y la sopa toma color),
   Manivela ¡GIRA LA MANIVELA!
@@ -433,8 +449,13 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
 - *dibujar una vuelta* (gesto nuevo): Lazo ¡ENCIERRA LA OVEJA! (el lazo se
   cierra solo al volver cerca de un punto anterior; en el nivel 3 hay un zorro
   que no debe quedar adentro y que nunca se le pega a la oveja)
+- *sacudir* (2026-10-04, gesto nuevo: `CONTROL = 'sacudir'`, ayuda "SACUDE
+  EL DEDO", la mano va y viene rápido): Agita ¡AGITA LA BOTELLA! (cuenta las
+  vueltas del dedo de más de 45 px en cualquiera de los dos ejes; las que
+  hacen falta salen del tiempo, 2,6/3/3,4 por segundo; desde el nivel 2 la
+  espuma baja si se deja de agitar)
 
-**Jefes (5):** Simon ¡REPITE! (secuencia de colores; el que la muestra es un
+**Jefes (7):** Simon ¡REPITE! (secuencia de colores; el que la muestra es un
 ROBOT —antes un marciano, igual que el jefe Marciano—), Torta ¡DEFIENDE EL
 PASTEL! (hormigas), Carrera ¡ESCAPA! (tocar para saltar obstáculos; un ogro
 te persigue, 3 choques y pierdes) y Marciano ¡DERROTA AL MARCIANO! (arrastrar
@@ -444,7 +465,19 @@ acierta ~55 % en niveles 1-2 y ~35 % en el 3) y Pulpo ¡CORTA LOS TENTÁCULOS!
 (2026-10-03, el primero que se juega deslizando: tentáculos que crecen desde
 los costados hacia el tesoro; cada corte le baja vida; 3 que llegan y pierdes;
 su vida es 66/62/62 % de los tentáculos que salen, y un bot que corta todo gana
-con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
+con ~4-6 s de sobra), Boxeo ¡NOQUEA AL PANDA! (2026-10-04, EL PANDA
+BOXEADOR, en primera persona: el panda carga un puñetazo —guante rojo que
+parpadea y un "uuuh"— y hay que tocar justo antes para esquivar —0,5 s de
+esquive y 0,25 s sin poder volver a esquivar, así machacar no sirve—; si no
+pega, queda mareado y cada toque es un golpe nuestro; 12/14/15 golpes; 3
+puñetazos recibidos y pierdes; en el nivel 3 amaga a veces; la lección se
+congela justo antes del primer puñetazo y el toque que descongela es el
+esquive) y Tira ¡TIRA DE LA CUERDA! (EL LEÓN FORZUDO, el primero de "toca
+rápido": cada toque tira; el león tira siempre y, de a ratos, ruge y tira el
+doble; la fuerza sale del tiempo para que a 5,5/6,3/7 toques por segundo se
+gane con un cuarto del tiempo de sobra; Zas —la mascota— y el león quedan
+quietos y el barro se corre hacia el que va perdiendo). Un jefe dura
+`PULSOS × pulso × √vel`.
 
 - **Compartir** (botón en el final): con `navigator.share` manda una imagen
   de 1080 x 1350 (`js/tarjeta.js`: logo, Zas, puntaje, "¿ME GANAS?" y la
@@ -591,6 +624,13 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
   panel con `preview_start` pasando la URL `http://localhost:8124/?debug`.
 - Los bots con memoria (`m.__bot`) la atan al `t0` del microjuego: la escena
   se reutiliza y, si no, la segunda vez el bot cree que ya apoyó el dedo.
+- **Panel del navegador oculto:** el juego se queda en "CARGANDO"
+  (`img.decode()` no resuelve con la página oculta; y si el panel se abre
+  con tamaño 0, Phaser falla con "Framebuffer status: Incomplete
+  Attachment"). Alternativa: Edge sin ventana por CDP (un script de Python
+  sin librerías: `--headless=new --remote-debugging-port`, `Page.navigate` y
+  `Runtime.evaluate` con `awaitPromise`): carga, corre el arnés y `__foto`
+  igual; los 64 × 2 niveles con 2 partidas tardan ~110 s.
 - **Sonido sin oírlo:** importar `js/motor/Audio.js`, darle un
   `OfflineAudioContext`, llamar `_construir()`, forzar `audioVivo` y
   `_usarPerf = false`, programar pasos con `_paso` (o llamar un jingle),

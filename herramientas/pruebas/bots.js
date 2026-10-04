@@ -514,3 +514,52 @@ B.Carril = m => {
   const x = destino < m.carril ? 40 : 500;
   ev('pointerdown', x, 600); ev('pointerup', x, 600);
 };
+
+// --- 2026-10-04: Apila, Laberinto, Agita, Puente y los jefes Boxeo y Tira ---
+const tocarBot = (x, y) => { ev('pointerdown', x, y); ev('pointerup', x, y); };
+// Apila: suelta la caja cuando está justo encima de la torre (cae derecho)
+B.Apila = m => {
+  if (m.t < 0.25 || m.decidido || !m.colgada) return;
+  if (Math.abs(m.colgada.x - m.torre[m.torre.length - 1].x) < 10) tocarBot(270, 400);
+};
+// Laberinto: agarra al pingüino y lo lleva por el medio del camino
+B.Laberinto = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  if (!m.__bot || m.__bot.t0 !== m.t0) {
+    const pts = [];
+    m.recorrer(4, (x, y) => pts.push({ x, y }));
+    const fin = m.camino[m.camino.length - 1];
+    pts.push({ x: fin.x, y: fin.y });
+    // la rapidez: el camino entero en el 60 % del tiempo
+    m.__bot = { t0: m.t0, pts, i: 0, porCuadro: Math.max(1, Math.ceil(pts.length / ((m.dur - 0.4) * 0.6 * 60))), abajo: false };
+  }
+  const b = m.__bot;
+  if (!b.abajo) { b.abajo = true; ev('pointerdown', m.xP, m.yP); return; }
+  b.i = Math.min(b.pts.length - 1, b.i + b.porCuadro);
+  ev('pointermove', b.pts[b.i].x, b.pts[b.i].y);
+};
+// Agita: de un lado a otro, 120 px, cada 4 cuadros
+B.Agita = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  if (!m.__bot || m.__bot.t0 !== m.t0) m.__bot = { t0: m.t0, k: 0, abajo: false };
+  const b = m.__bot;
+  if (!b.abajo) { b.abajo = true; ev('pointerdown', m.bx, m.by); return; }
+  b.k++;
+  ev('pointermove', m.bx + (Math.floor(b.k / 4) % 2 ? 60 : -60), m.by);
+};
+// Puente: mantiene hasta que la tabla llega al medio de la otra orilla
+B.Puente = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  const meta = m.xA + m.anchoOrilla / 2 - (m.xBorde - 4);
+  if (m.estadoP === 'espera') ev('pointerdown', 270, 300);
+  else if (m.estadoP === 'crece' && m.largo + (m.rapidez / 60) / 2 >= meta) ev('pointerup', 270, 300);
+};
+// Boxeo: esquiva justo antes del puñetazo (no los amagos) y, mareado, pega
+B.Boxeo = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  if (m.estadoP === 'mareado') { if (m.t >= m.proximaPina) tocarBot(270, 300); return; }
+  const viene = (m.estadoP === 'carga' && !m.amago && m.t >= m.tFin - 0.2) || m.estadoP === 'golpe';
+  if (viene && m.t >= m.recuperaHasta && m.t >= m.esquiveHasta) tocarBot(m.lado > 0 ? 60 : 480, 500);
+};
+// Tira: 8,6 toques por segundo
+B.Tira = m => { if (m.t >= 0.25 && !m.decidido && ++cuadro % 7 === 0) tocarBot(270, 400); };

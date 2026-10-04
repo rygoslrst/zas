@@ -25,6 +25,7 @@ import { LECCIONES, VEL_PRACTICA, CartelLeccion } from './Practica.js';
 const AYUDA = {
   tocar: 'TOCA', arrastrar: 'ARRASTRA', deslizar: 'DESLIZA EL DEDO', mantener: 'MANTÉN PRESIONADO',
   machacar: 'TOCA RÁPIDO', nada: 'NO TOQUES NADA', girar: 'GIRA EN CÍRCULOS', enlazar: 'DIBUJA UNA VUELTA',
+  sacudir: 'SACUDE EL DEDO',
 };
 // Las reacciones del telón: las caras de Zas, la mascota (si no se pudo
 // dibujar, los emoji de siempre)
@@ -283,7 +284,7 @@ export class Director extends Phaser.Scene {
     this.manoBase = { x: cx - ancho / 2 + 30, y: cy + 150 };
     this.ayuda.setPosition(cx - ancho / 2 + 80, cy + 150);
     this.mano.setVisible(true).setAlpha(1).setFrame(control === 'nada' ? 'diablo' : 'dedo').setDisplaySize(64, 64);
-    this.anilloMano.setVisible(control !== 'nada' && control !== 'arrastrar').setAlpha(0);
+    this.anilloMano.setVisible(!['nada', 'arrastrar', 'sacudir'].includes(control)).setAlpha(0);
     this.tManoCero = this.time.now;
   }
 
@@ -325,6 +326,7 @@ export class Director extends Phaser.Scene {
       case 'deslizar': { const f = (t * 1.4) % 1; x += (-20 + f * 60) * g; y += (24 - f * 60) * g; this.mano.setAlpha(f < 0.8 ? 1 : (1 - f) * 5); break; }
       case 'mantener': y += 8; anillo = (t * 1.1) % 1; break;
       case 'girar': x += Math.cos(t * 7) * 26 * g; y += Math.sin(t * 7) * 26 * g; break;
+      case 'sacudir': x += Math.sin(t * 16) * 30 * g; y += Math.abs(Math.cos(t * 16)) * 6; break;
       case 'enlazar': x += Math.cos(t * 4.5) * 42 * g; y += Math.sin(t * 4.5) * 34 * g; break;
       case 'tirar': {                                   // la honda: estira hacia atrás y suelta
         const f = (t * 0.9) % 1, e = f < 0.7 ? f / 0.7 : 1 - (f - 0.7) / 0.3;
