@@ -57,13 +57,14 @@ export class Sopla extends Micro {
     this.ultimoSoplo = this.t;
     v.vida -= 1 / this.porVela;
     this.humo(v.x - 30 - this.azar(0, 20), v.y + 10, 40);
-    this.audio.inflar(Math.min(1, this.soplos++ / this.necesarios));
+    this.soplos++;
+    this.audio.soplido();
     if (v.vida <= 1e-6) {                       // (1 - 1/3 - 1/3 - 1/3 no da justo 0)
       v.prendida = false;
       v.llama.setVisible(false);
       v.brillo.setVisible(false);
       this.humo(v.x, v.y - 10, 60);
-      this.audio.pop();
+      this.audio.apagar();
       this.actual++;
       // Lo que sobró de ese soplido sirve para la vela siguiente
       const sig = this.velas[this.actual];

@@ -22,6 +22,11 @@
 
 const midi = n => 440 * Math.pow(2, (n - 69) / 12);
 const esperar = ms => new Promise(r => setTimeout(r, ms));
+// Un poquito de azar en la afinación (±4 %): el mismo efecto repetido diez
+// veces seguidas no suena a máquina
+const varia = () => 0.96 + Math.random() * 0.08;
+const SEG_RUIDO = 2;              // el ruido grabado (los ruidos más largos duran 1,2 s)
+const VOL_MASTER = 0.9, VOL_DEMO = 0.45;
 
 const MAYOR = [0, 2, 4, 5, 7, 9, 11];
 const MENOR = [0, 2, 3, 5, 7, 8, 10];
@@ -98,6 +103,8 @@ export class Audio {
     this.pista = null;
     this.quiereMenu = false;       // en el título y el final: la música del menú, apenas se pueda
     this.chorroActivo = null;
+    this._enDemo = false;
+    this._ultimos = {};            // cuándo sonó por última vez cada efecto con límite
     this.puedeVibrar = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
   }
 
@@ -134,7 +141,7 @@ export class Audio {
     this.comp.threshold.value = -12; this.comp.ratio.value = 4;
     this.comp.connect(c.destination);
     this.master = c.createGain();
-    this.master.gain.value = 0.9;
+    this.master.gain.value = this._enDemo ? VOL_DEMO : VOL_MASTER;
     this.master.connect(this.comp);
     this.musica = c.createGain();
     this.musica.gain.value = this.musicaOn ? 0.5 : 0;
@@ -155,8 +162,8 @@ export class Audio {
     this.ecoEnvio.connect(this.eco); this.eco.connect(opaco); opaco.connect(vuelta); vuelta.connect(this.eco);
     opaco.connect(salidaEco);
     salidaEco.connect(this._paneo(0.3, this.musica));
-    const n = c.sampleRate;
-    this.ruido = c.createBuffer(1, n, n);
+    const n = Math.round(c.sampleRate * SEG_RUIDO);
+    this.ruido = c.createBuffer(1, n, c.sampleRate);
     const d = this.ruido.getChannelData(0);
     for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
   }
@@ -199,6 +206,14 @@ export class Audio {
     this.efectos = on;
     try { localStorage.setItem(this.claveEfectos, on ? '1' : '0'); } catch (e) { /* nada */ }
     if (this.sfx) this.sfx.gain.setTargetAtTime(on ? 0.9 : 0, this.ctx.currentTime, 0.02);
+  }
+
+  // La demo (el juego solo, en el título): no vibra y suena a media voz, para
+  // que en el stand no aturda una partida tras otra
+  get enDemo() { return this._enDemo; }
+  set enDemo(v) {
+    this._enDemo = v;
+    if (this.master) this.master.gain.setTargetAtTime(v ? VOL_DEMO : VOL_MASTER, this.ctx.currentTime, 0.15);
   }
 
   // Vibración corta (Android; el iPhone no deja). Va con los efectos.
@@ -359,7 +374,9 @@ export class Audio {
     const r = azar(20261011);
     this._nuevaPista({
       tipo: 'menu', reloj: 'audio', bpm: 96, t0: this.ctx.currentTime + 0.1, raiz: 48, escala: MAYOR,
-      prog: [0, 5, 3, 4], mel: melodia(r, RITMOS[1], 72, PENTA_MAYOR), bajo: [0, 10], volumen: 0.7,
+      prog: [0, 5, 3, 4], bajo: [0, 10], volumen: 0.85,
+      // Dos frases de dos compases (en el stand suena horas: que no canse tan rápido)
+      mel: [...melodia(r, RITMOS[1], 72, PENTA_MAYOR), ...melodia(r, RITMOS[3], 72, PENTA_MAYOR)],
       onda: 'triangle',
     });
   }
@@ -374,8 +391,14 @@ export class Audio {
     setTimeout(() => { try { p.salida.disconnect(); } catch (e) { /* nada */ } }, 600);
   }
 
-  // Ya se decidió el microjuego: sin redoble final
-  calmar() { if (this.pista) this.pista.calma = true; }
+  // Ya se decidió el microjuego: sin redoble final, y la música da un paso
+  // atrás para que se oiga bien el ¡bien! o el ¡error! (y el efecto del juego)
+  calmar() {
+    const p = this.pista;
+    if (!p) return;
+    p.calma = true;
+    p.salida.gain.setTargetAtTime((p.volumen || 1) * 0.6, this.ctx.currentTime, 0.05);
+  }
 
   // La lección congela el juego: la pista retoma donde quedó, corrida en el tiempo.
   correrPista(seg) {
@@ -471,8 +494,10 @@ export class Audio {
   // --------------------------------------------------------------------------
   //  VOCES
   // --------------------------------------------------------------------------
+  // Ataque de 2 ms (sin el "clic" de empezar de golpe) y caída exponencial
   _env(g, t, pico, dur) {
-    g.gain.setValueAtTime(pico, t);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(pico, t + 0.002);
     g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
   }
 
@@ -499,7 +524,34 @@ export class Audio {
     const g = c.createGain();
     this._env(g, t, pico, dur);
     s.connect(f); f.connect(g); g.connect(destino);
-    s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
+    // Desde un lugar al azar del ruido, pero que alcance para todo el sonido
+    s.start(t, Math.random() * Math.max(0, SEG_RUIDO - dur - 0.05)); s.stop(t + dur + 0.02);
+  }
+
+  // Un ruido que entra suave (soplidos, rugidos): sube en 'ataque' segundos
+  _ruidoSuave(t, ataque, dur, pico, destino, tipoFiltro, fFiltro, fFinal, q = 1) {
+    const c = this.ctx;
+    const s = c.createBufferSource();
+    s.buffer = this.ruido;
+    const f = c.createBiquadFilter();
+    f.type = tipoFiltro; f.Q.value = q;
+    f.frequency.setValueAtTime(fFiltro, t);
+    if (fFinal) f.frequency.exponentialRampToValueAtTime(fFinal, t + dur);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(pico, t + ataque);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    s.connect(f); f.connect(g); g.connect(destino);
+    s.start(t, Math.random() * Math.max(0, SEG_RUIDO - dur - 0.05)); s.stop(t + dur + 0.02);
+  }
+
+  // Para los efectos que pueden pedirse muchas veces seguidas: ¿pasó al menos
+  // 'seg' desde la última vez?
+  _cada(nombre, seg) {
+    const t = this.ctx.currentTime;
+    if (t - (this._ultimos[nombre] ?? -9) < seg) return false;
+    this._ultimos[nombre] = t;
+    return true;
   }
 
   // Bombo: el golpe grave que baja, con un "clic" arriba para que se oiga en
@@ -595,7 +647,7 @@ export class Audio {
     this.vibrar(40);
     if (!this._ok) return;
     const t = this._t;
-    this._osc('sine', 120, t, 0.4, 0.8, this.sfx, 38);
+    this._osc('sine', 120, t, 0.4, 0.6, this.sfx, 38);
     this._ruido(t, 0.3, 0.35, this.sfx, 'lowpass', 1800, 200);
     this._metales([48, 51, 55, 60], t, 0.75, 0.09);
     this._arpegio([60, 63, 67, 72, 75], 0.06, 0.16, 'square', 0.07, t + 0.3);
@@ -608,20 +660,20 @@ export class Audio {
   }
   record() {
     if (!this._ok) return;
-    this._arpegio([72, 76, 79, 84, 79, 84, 88], 0.09, 0.2, 'square', 0.1);
+    this._arpegio([72, 76, 79, 84, 79, 84, 88], 0.09, 0.2, 'square', 0.12);
   }
   // ¡VIDA EXTRA!: arpegio brillante y un destello arriba
   vidaExtra() {
     if (!this._ok) return;
-    this._arpegio([72, 79, 84, 88, 91], 0.06, 0.16, 'square', 0.09);
-    this._arpegio([96, 103, 108], 0.05, 0.25, 'triangle', 0.08, this._t + 0.32);
+    this._arpegio([72, 79, 84, 88, 91], 0.06, 0.16, 'square', 0.12);
+    this._arpegio([96, 103, 108], 0.05, 0.25, 'triangle', 0.1, this._t + 0.32);
   }
   // ¡RACHA!: una llamarada y un arpegio (más agudo con ×2)
   racha(mult) {
     if (!this._ok) return;
     const b = mult >= 2 ? 76 : 72;
     this._ruido(this._t, 0.4, 0.18, this.sfx, 'bandpass', 700, 3200, 1.5);
-    this._arpegio([b, b + 4, b + 7, b + 12, b + 16], 0.055, 0.16, 'square', 0.09, this._t + 0.08);
+    this._arpegio([b, b + 4, b + 7, b + 12, b + 16], 0.055, 0.16, 'square', 0.12, this._t + 0.08);
   }
   // ¡ÚLTIMA VIDA!: dos latidos
   latido() {
@@ -629,7 +681,8 @@ export class Audio {
     if (!this._ok) return;
     for (const t of [0, 0.2, 0.75, 0.95]) {
       this._osc('sine', 70, this._t + t, 0.16, t % 0.75 ? 0.35 : 0.55, this.sfx, 40);
-      this._osc('triangle', 150, this._t + t, 0.08, 0.1, this.sfx, 90);     // (para los parlantes chicos)
+      this._osc('triangle', 150, this._t + t, 0.08, 0.1, this.sfx, 90);
+      this._ruido(this._t + t, 0.06, t % 0.75 ? 0.25 : 0.4, this.sfx, 'lowpass', 600);     // (para los parlantes chicos)
     }
   }
   // Anuncio de jefe: redoble que crece, un golpe de gong y metales disonantes
@@ -641,8 +694,8 @@ export class Audio {
       const ti = t + 0.5 * (1 - Math.pow(1 - i / 12, 1.4));
       this._ruido(ti, 0.07, 0.12 + 0.03 * i, this.sfx, 'highpass', 1400);
     }
-    this._osc('sine', 70, t + 0.5, 1.1, 0.85, this.sfx, 30);
-    this._ruido(t + 0.5, 1.2, 0.4, this.sfx, 'lowpass', 1500, 120);
+    this._osc('sine', 70, t + 0.5, 1.1, 0.65, this.sfx, 30);
+    this._ruido(t + 0.5, 1.2, 0.34, this.sfx, 'lowpass', 1500, 120);
     this._metales([45, 48, 51, 54], t + 0.5, 1.1, 0.1, 300, 2000);
   }
   // ¡DUELO!: una fanfarria del oeste y un latigazo
@@ -701,15 +754,15 @@ export class Audio {
   explosion() {
     this.vibrar([70, 40, 110]);
     if (!this._ok) return;
-    this._ruido(this._t, 0.6, 0.7, this.sfx, 'lowpass', 2500, 120);
-    this._osc('sine', 90, this._t, 0.5, 0.6, this.sfx, 30);
+    this._ruido(this._t, 0.6, 0.6, this.sfx, 'lowpass', 2500, 120);
+    this._osc('sine', 90, this._t, 0.5, 0.5, this.sfx, 30);
   }
   // Al decidirse el microjuego (además del sonido de cada uno)
   bien() {
     this.vibrar(15);
     if (!this._ok) return;
-    this._osc('triangle', midi(84), this._t, 0.12, 0.18, this.sfx);
-    this._osc('triangle', midi(91), this._t + 0.07, 0.2, 0.18, this.sfx);
+    this._osc('triangle', midi(84), this._t, 0.12, 0.24, this.sfx);
+    this._osc('triangle', midi(91), this._t + 0.07, 0.2, 0.24, this.sfx);
   }
   error() {
     this.vibrar(50);
@@ -718,27 +771,31 @@ export class Audio {
     this._osc('square', 168, this._t, 0.22, 0.1, this.sfx, 126);
   }
 
-  toque() { if (this._ok) this._osc('sine', 900, this._t, 0.05, 0.18, this.sfx, 600); }
+  toque() { if (this._ok) { const v = varia(); this._osc('sine', 900 * v, this._t, 0.05, 0.18, this.sfx, 600 * v); } }
   pop() {
     if (!this._ok) return;
-    this._ruido(this._t, 0.08, 0.5, this.sfx, 'highpass', 2500);
-    this._osc('sine', 700, this._t, 0.08, 0.3, this.sfx, 180);
+    const v = varia();
+    this._ruido(this._t, 0.08, 0.5, this.sfx, 'highpass', 2500 * v);
+    this._osc('sine', 700 * v, this._t, 0.08, 0.3, this.sfx, 180);
   }
   plaf() {
     if (!this._ok) return;
-    this._ruido(this._t, 0.14, 0.6, this.sfx, 'lowpass', 1400, 300);
-    this._osc('sine', 160, this._t, 0.12, 0.4, this.sfx, 60);
+    const v = varia();
+    this._ruido(this._t, 0.14, 0.6, this.sfx, 'lowpass', 1400 * v, 300);
+    this._osc('sine', 160 * v, this._t, 0.12, 0.4, this.sfx, 60);
   }
-  corte() { if (this._ok) this._ruido(this._t, 0.14, 0.45, this.sfx, 'bandpass', 2500, 8000, 2); }
-  zas() { if (this._ok) this._ruido(this._t, 0.18, 0.3, this.sfx, 'bandpass', 600, 2500, 1.5); }
+  corte() { if (this._ok) { const v = varia(); this._ruido(this._t, 0.14, 0.45, this.sfx, 'bandpass', 2500 * v, 8000 * v, 2); } }
+  zas() { if (this._ok) { const v = varia(); this._ruido(this._t, 0.18, 0.55, this.sfx, 'bandpass', 600 * v, 2500 * v, 1.5); } }
   salto() {
     if (!this._ok) return;
-    this._osc('sine', 300, this._t, 0.14, 0.2, this.sfx, 760);
+    const v = varia();
+    this._osc('sine', 300 * v, this._t, 0.14, 0.2, this.sfx, 760 * v);
   }
   golpe() {
     if (!this._ok) return;
-    this._ruido(this._t, 0.2, 0.6, this.sfx, 'lowpass', 1200, 200);
-    this._osc('sawtooth', 110, this._t, 0.18, 0.25, this.sfx, 45);
+    const v = varia();
+    this._ruido(this._t, 0.2, 0.6, this.sfx, 'lowpass', 1200 * v, 200);
+    this._osc('sawtooth', 110 * v, this._t, 0.18, 0.25, this.sfx, 45);
   }
   // Una nota que sube con cada acierto (reventar globos, contar...)
   acierto(k) {
@@ -747,21 +804,24 @@ export class Audio {
   }
   mordida() {
     if (!this._ok) return;
-    this._ruido(this._t, 0.06, 0.5, this.sfx, 'lowpass', 1800);
-    this._ruido(this._t + 0.1, 0.06, 0.5, this.sfx, 'lowpass', 1500);
+    const v = varia();
+    this._ruido(this._t, 0.06, 0.5, this.sfx, 'lowpass', 1800 * v);
+    this._ruido(this._t + 0.1, 0.06, 0.5, this.sfx, 'lowpass', 1500 * v);
   }
   freno() {
     if (!this._ok) return;
-    this._ruido(this._t, 0.45, 0.35, this.sfx, 'bandpass', 2200, 1200, 6);
+    this._ruido(this._t, 0.45, 0.5, this.sfx, 'bandpass', 2200, 1200, 6);
     this._osc('sawtooth', 820, this._t, 0.4, 0.05, this.sfx, 700);
   }
+  // Un bombeo (inflar, cargar): un soplo y una notita que sube con k (0 a 12)
   inflar(k) {
     if (!this._ok) return;
-    this._ruido(this._t, 0.07, 0.3, this.sfx, 'bandpass', 500 + k * 90, 900 + k * 120, 2);
+    this._ruido(this._t, 0.09, 0.9, this.sfx, 'bandpass', 500 + k * 90, 900 + k * 120, 1.4);
+    this._osc('triangle', midi(60 + k * 2), this._t, 0.07, 0.07, this.sfx, midi(64 + k * 2));
   }
   patada() {
     if (!this._ok) return;
-    this._osc('sine', 180, this._t, 0.1, 0.6, this.sfx, 60);
+    this._osc('sine', 180 * varia(), this._t, 0.1, 0.6, this.sfx, 60);
     this._ruido(this._t, 0.05, 0.4, this.sfx, 'lowpass', 2000);
   }
   silbato() {
@@ -782,21 +842,22 @@ export class Audio {
   }
   aleteo() {
     if (!this._ok) return;
-    this._ruido(this._t, 0.1, 0.3, this.sfx, 'bandpass', 700, 1600, 1.5);
+    const v = varia();
+    this._ruido(this._t, 0.1, 0.7, this.sfx, 'bandpass', 700 * v, 1600 * v, 1.5);
   }
 
   // --- De algunos microjuegos ----------------------------------------------------
   // La ruleta: un clic de madera por cada gajo que pasa por la flecha
   tictac() {
-    if (!this._ok) return;
+    if (!this._ok || !this._cada('tictac', 0.03)) return;      // (la rueda a toda velocidad)
     this._ruido(this._t, 0.025, 0.7, this.sfx, 'bandpass', 3200, null, 4);
     this._osc('sine', 1900, this._t, 0.018, 0.08, this.sfx);
   }
   // Una alarma corta (¡SIN HACER RUIDO!: el gato se despierta)
   alerta() {
     if (!this._ok) return;
-    this._osc('square', 1400, this._t, 0.06, 0.1, this.sfx);
-    this._osc('square', 1400, this._t + 0.09, 0.08, 0.1, this.sfx);
+    this._osc('square', 1400, this._t, 0.06, 0.16, this.sfx);
+    this._osc('square', 1400, this._t + 0.09, 0.08, 0.16, this.sfx);
   }
   // ¡DISPARA!: la señal (la falsa suena apagada) y el disparo
   senal(falsa) {
@@ -807,27 +868,195 @@ export class Audio {
   }
   disparo() {
     if (!this._ok) return;
-    this._ruido(this._t, 0.03, 0.7, this.sfx, 'highpass', 3000);
-    this._ruido(this._t, 0.3, 0.8, this.sfx, 'lowpass', 3500, 250);
-    this._osc('sine', 170, this._t, 0.2, 0.6, this.sfx, 45);
+    this._ruido(this._t, 0.03, 0.4, this.sfx, 'highpass', 3000);
+    this._ruido(this._t + 0.004, 0.3, 0.5, this.sfx, 'lowpass', 3500, 250);
+    this._osc('sine', 170, this._t, 0.2, 0.4, this.sfx, 45);
   }
   // ¡ENCUENTRA EL DIAMANTE!: el vaso que baja a la mesa y el que se levanta
   tapa() {
     if (!this._ok) return;
     this._osc('sine', 240, this._t, 0.09, 0.4, this.sfx, 120);
     this._ruido(this._t, 0.05, 0.25, this.sfx, 'lowpass', 900);
+    this._ruido(this._t, 0.03, 0.3, this.sfx, 'bandpass', 1200, null, 3);
   }
   revelar(diamante) {
     if (!this._ok) return;
-    this._ruido(this._t, 0.15, 0.15, this.sfx, 'bandpass', 600, 2400, 1.2);
+    this._ruido(this._t, 0.15, 0.4, this.sfx, 'bandpass', 600, 2400, 1.2);
     if (diamante) this._arpegio([88, 95, 100], 0.05, 0.3, 'triangle', 0.08, this._t + 0.1);
   }
   // ¡NO LO SUELTES!: lo agarraste / se te está escapando
   agarra() { if (this._ok) this._osc('sine', 500, this._t, 0.09, 0.16, this.sfx, 950); }
   seEscapa() {
+    if (!this._ok || !this._cada('seEscapa', 0.3)) return;     // (el dedo justo en el borde)
+    this._osc('square', 760, this._t, 0.05, 0.12, this.sfx);
+    this._osc('square', 640, this._t + 0.08, 0.07, 0.12, this.sfx);
+  }
+
+  // ¡CIERRA LAS PUERTAS!: el portazo (madera que golpea y vibra) y el fantasma
+  portazo() {
     if (!this._ok) return;
-    this._osc('square', 760, this._t, 0.05, 0.08, this.sfx);
-    this._osc('square', 640, this._t + 0.08, 0.07, 0.08, this.sfx);
+    const t = this._t, v = varia();
+    this._osc('sine', 95 * v, t, 0.26, 0.6, this.sfx, 48);
+    this._ruido(t, 0.16, 0.55, this.sfx, 'lowpass', 900 * v, 180);
+    this._ruido(t, 0.09, 0.3, this.sfx, 'bandpass', 380 * v, null, 3);
+    this._ruido(t + 0.05, 0.05, 0.12, this.sfx, 'bandpass', 1400 * v, null, 4);     // el picaporte
+  }
+  fantasma() {
+    if (!this._ok) return;
+    const c = this.ctx, t = this._t;
+    const o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(330, t);
+    o.frequency.exponentialRampToValueAtTime(190, t + 0.7);
+    lfo.frequency.value = 6; lg.gain.value = 14;
+    lfo.connect(lg); lg.connect(o.frequency);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.16, t + 0.12);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + 0.75);
+    o.connect(g); g.connect(this.sfx);
+    o.start(t); lfo.start(t); o.stop(t + 0.77); lfo.stop(t + 0.77);
+  }
+  // ¡CAMBIA DE CARRIL!: el choque (un golpe seco, latas y vidrios)
+  choque() {
+    if (!this._ok) return;
+    const t = this._t;
+    this._osc('sine', 85, t, 0.35, 0.55, this.sfx, 35);
+    this._ruido(t, 0.5, 0.6, this.sfx, 'lowpass', 3200, 150);
+    for (let i = 0; i < 4; i++) {
+      this._ruido(t + 0.02 + i * 0.06 + Math.random() * 0.03, 0.09, 0.4 - i * 0.07, this.sfx, 'bandpass', 2400 + Math.random() * 2600, null, 7);
+    }
+    for (const [dt, n] of [[0.08, 100], [0.15, 105], [0.21, 98]]) this._osc('sine', midi(n), t + dt, 0.16, 0.05, this.sfx);
+  }
+  // ¡DALE AL BLANCO!: el dardo que se clava en el corcho (y el palito que vibra)
+  clavar() {
+    if (!this._ok) return;
+    const c = this.ctx, t = this._t;
+    this._ruido(t, 0.03, 0.55, this.sfx, 'bandpass', 1800, null, 2);
+    this._osc('sine', 420, t, 0.08, 0.4, this.sfx, 160);
+    // El palito: una nota grave con un temblor rápido de volumen
+    const o = c.createOscillator(), trem = c.createGain(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain();
+    o.type = 'triangle'; o.frequency.value = 210;
+    lfo.frequency.value = 24; lg.gain.value = 0.5; trem.gain.value = 0.5;
+    lfo.connect(lg); lg.connect(trem.gain);
+    this._env(g, t, 0.14, 0.32);
+    o.connect(trem); trem.connect(g); g.connect(this.sfx);
+    o.start(t); lfo.start(t); o.stop(t + 0.34); lfo.stop(t + 0.34);
+  }
+  // ¡ENCESTA!: el aro de metal (parciales que no son armónicos: suena a metal)
+  // y la red cuando entra
+  aro() {
+    if (!this._ok) return;
+    const t = this._t, v = varia();
+    this._ruido(t, 0.03, 0.35, this.sfx, 'highpass', 2000);
+    for (const [f, dur, pico] of [[520, 0.55, 0.16], [1230, 0.38, 0.09], [1910, 0.26, 0.06], [2760, 0.16, 0.04]]) {
+      this._osc('sine', f * v, t, dur, pico, this.sfx);
+    }
+  }
+  red() {
+    if (!this._ok) return;
+    this._ruidoSuave(this._t, 0.03, 0.3, 0.32, this.sfx, 'bandpass', 3200, 1100, 0.9);
+  }
+  // ¡NO TOQUES NADA!: la sirena de la sala de control
+  sirena() {
+    if (!this._ok) return;
+    const c = this.ctx, t = this._t;
+    const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(620, t);
+    for (let i = 0; i < 2; i++) {
+      o.frequency.linearRampToValueAtTime(1250, t + 0.2 + i * 0.4);
+      o.frequency.linearRampToValueAtTime(620, t + 0.4 + i * 0.4);
+    }
+    f.type = 'lowpass'; f.frequency.value = 2600;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.08, t + 0.02);
+    g.gain.setValueAtTime(0.08, t + 0.65);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + 0.82);
+    o.connect(f); f.connect(g); g.connect(this.sfx);
+    o.start(t); o.stop(t + 0.84);
+  }
+  // ¡GIRA LA MANIVELA!: el trinquete (clic de metal, más agudo cuanto más falta poco)
+  trinquete(k) {
+    if (!this._ok) return;
+    const t = this._t;
+    this._ruido(t, 0.035, 1.5, this.sfx, 'bandpass', 2000 + k * 1400, null, 5);
+    this._osc('square', 900 + k * 500, t, 0.02, 0.08, this.sfx);
+  }
+  // ¡PEDALEA!: la pedalada (un envión de aire y la cadena)
+  pedal(k) {
+    if (!this._ok) return;
+    const t = this._t;
+    this._ruido(t, 0.14, 0.6, this.sfx, 'bandpass', 380 + k * 60, 950 + k * 90, 1.4);
+    this._ruido(t + 0.03, 0.025, 0.45, this.sfx, 'bandpass', 4200, null, 6);
+    this._ruido(t + 0.07, 0.025, 0.35, this.sfx, 'bandpass', 3900, null, 6);
+  }
+  // ¡REVUELVE LA SOPA!: burbujas (una nota que sube de golpe), más agudas al final
+  burbuja(k) {
+    if (!this._ok) return;
+    const t = this._t, v = varia();
+    this._osc('sine', (240 + k * 30) * v, t, 0.07, 0.22, this.sfx, (650 + k * 70) * v);
+    if (Math.random() < 0.5) this._osc('sine', (330 + k * 30) * v, t + 0.06, 0.05, 0.12, this.sfx, (900 + k * 70) * v);
+  }
+  // ¡SIN HACER RUIDO!: un pasito (fuerte: si va demasiado rápido)
+  paso(fuerte) {
+    if (!this._ok || !this._cada('paso', 0.09)) return;
+    const t = this._t, v = varia();
+    this._ruido(t, 0.05, fuerte ? 0.5 : 0.22, this.sfx, 'lowpass', (fuerte ? 1400 : 700) * v);
+    this._osc('sine', 150 * v, t, 0.05, fuerte ? 0.3 : 0.14, this.sfx, 85);
+  }
+  // ¡DESPEGA!: el cohete (rugido que crece, el temblor grave y un silbido)
+  cohete() {
+    if (!this._ok) return;
+    const t = this._t;
+    this._ruidoSuave(t, 0.25, 1.15, 0.6, this.sfx, 'bandpass', 220, 2600, 0.7);
+    this._osc('sine', 62, t, 0.9, 0.55, this.sfx, 38);
+    this._osc('sine', 500, t + 0.1, 0.9, 0.05, this.sfx, 2000);
+  }
+  // ¡APAGA LAS VELAS!: el soplido y la llama que se apaga
+  soplido() {
+    if (!this._ok) return;
+    this._ruidoSuave(this._t, 0.03, 0.2, 0.42, this.sfx, 'bandpass', 1300 * varia(), 900, 0.7);
+  }
+  apagar() {
+    if (!this._ok) return;
+    this._ruidoSuave(this._t, 0.01, 0.35, 0.3, this.sfx, 'highpass', 2800, 6500);
+  }
+  // ¡PESCA!: el pez que sale del agua
+  chapuzon() {
+    if (!this._ok) return;
+    const t = this._t;
+    this._ruido(t, 0.32, 0.55, this.sfx, 'lowpass', 2600, 350);
+    this._osc('sine', 300, t + 0.02, 0.08, 0.25, this.sfx, 900);
+    this._osc('sine', 420, t + 0.12, 0.06, 0.15, this.sfx, 1100);
+  }
+  // ¡ENLAZA LA OVEJA!: ¡beee! (una nota que tiembla rápido)
+  balido() {
+    if (!this._ok) return;
+    const c = this.ctx, t = this._t + 0.05;
+    const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+    const lfo = c.createOscillator(), lg = c.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(520, t);
+    o.frequency.linearRampToValueAtTime(480, t + 0.5);
+    f.type = 'bandpass'; f.frequency.value = 1300; f.Q.value = 1.5;
+    lfo.frequency.value = 23; lg.gain.value = 0.5;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.4, t + 0.04);
+    g.gain.setValueAtTime(0.4, t + 0.35);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + 0.55);
+    const temblor = c.createGain();
+    temblor.gain.value = 0.6;
+    lfo.connect(lg); lg.connect(temblor.gain);
+    o.connect(f); f.connect(temblor); temblor.connect(g); g.connect(this.sfx);
+    o.start(t); lfo.start(t); o.stop(t + 0.57); lfo.stop(t + 0.57);
+  }
+  // ¡LA GRÚA!: la garra que se cierra en el aire
+  clac() {
+    if (!this._ok) return;
+    const t = this._t;
+    this._ruido(t, 0.04, 0.45, this.sfx, 'bandpass', 2900, null, 8);
+    this._ruido(t + 0.06, 0.05, 0.35, this.sfx, 'bandpass', 2100, null, 8);
+    this._osc('sine', 300, t, 0.07, 0.2, this.sfx, 190);
   }
 
   // Chorro de agua continuo (microjuego LLENÁ): ruido filtrado mientras dure.

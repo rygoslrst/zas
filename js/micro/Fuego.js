@@ -85,6 +85,7 @@ export class Fuego extends Micro {
       if (f.vida <= 0) {
         f.img.setVisible(false);
         this.humo(f.x, f.y - 10, 80);
+        this.audio.apagar();
         this.audio.acierto(this.fuegos.filter(o => o.vida <= 0).length);
         continue;
       }

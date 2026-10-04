@@ -90,7 +90,7 @@ export class Carril extends Micro {
       const xAuto = this.auto.x;
       if (Math.abs(p.y - this.yAuto) < 80 && Math.abs(this.carriles[p.c] - xAuto) < 70) {
         this.perder();
-        this.audio.golpe();
+        this.audio.choque();
         this.cameras.main.shake(200, 0.012);
         this.auto.setAngle(-60);
         this.cartel(this.cx, this.arriba + 120, '¡CRASH!', COLOR.MAL, 66);

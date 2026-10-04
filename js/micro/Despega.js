@@ -38,7 +38,7 @@ export class Despega extends Micro {
 
   despegar() {
     this.ganar();
-    this.audio.acelera();
+    this.audio.cohete();
     this.cartel(this.cx, this.cy - 60, '¡DESPEGUE!', COLOR.ORO, 72);
     this.fuego = this.emoji('fuego', this.cx, this.yBase + 80, 90).setAngle(180);
     this.tweens.add({ targets: [this.cohete, this.fuego], y: `-=${this.H + 200}`, duration: 900, ease: 'Quad.easeIn' });

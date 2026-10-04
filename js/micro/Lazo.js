@@ -98,13 +98,12 @@ export class Lazo extends Micro {
     this.dibujar(lazo, true);
     if (dentro.some(a => a.nombre === 'zorro')) {
       this.perder();
-      this.audio.error();
       this.cartel(this.cx, this.y0 - 20, '¡ENCERRASTE AL ZORRO!', COLOR.MAL, 46);
       return;
     }
     if (dentro.some(a => a.nombre === 'oveja')) {
       this.ganar();
-      this.audio.bien();
+      this.audio.balido();
       const o = this.animales[0];
       this.rebote(o.img, 1.4);
       this.emoji('corazon', o.x + 40, o.y - 50, 50).setDepth(25);

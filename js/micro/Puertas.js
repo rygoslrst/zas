@@ -107,7 +107,7 @@ export class Puertas extends Micro {
     p.cerrada = true;
     this.tweens.add({ targets: p.hoja, scaleX: 1, duration: 90, ease: 'Quad.easeIn' });
     this.tweens.add({ targets: p.fantasma, alpha: 0, duration: 90 });
-    this.audio.golpe();
+    this.audio.portazo();
     this.cameras.main.shake(70, 0.006);
     this.cartel(p.x, this.yPuerta - p.alto / 2 - 40, '¡PUM!', COLOR.ORO, 40);
     if (this.puertas.every(o => o.cerrada)) {
@@ -129,6 +129,7 @@ export class Puertas extends Micro {
         .setPosition(p.x + Math.sin(t * 4 + p.x) * 6, this.yPuerta + 10 + Math.sin(t * 6 + p.x) * 5);
       if (k >= 1) {
         this.perder();
+        this.audio.fantasma();
         p.fantasma.setScale(p.escala * 1.25);
         this.cartel(p.x, this.yPuerta - p.alto / 2 - 40, '¡BUU!', COLOR.MAL, 52);
         return;

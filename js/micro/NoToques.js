@@ -48,7 +48,7 @@ export class NoToques extends Micro {
     this.boton.setTint(0x9d0208).setScale(this.boton.scaleX * 0.94);
     this.letrero.setText('¡NOOO!');
     this.emoji('sirena', this.cx, this.arriba + 60, 110);
-    this.audio.golpe();
+    this.audio.sirena();
   }
 
   alGanar() {

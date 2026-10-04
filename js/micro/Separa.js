@@ -80,7 +80,6 @@ export class Separa extends Micro {
     this.tweens.add({ targets: p.img, x: lugar.x, y: this.yLugar - 20, displayWidth: 90, displayHeight: 90, duration: 130, ease: 'Quad.easeIn' });
     if (lugar.comida !== p.esComida) {
       this.perder();
-      this.audio.error();
       this.cartel(lugar.x, this.yLugar - 180, p.esComida ? '¡ESO SE COME!' : '¡ESO NO SE COME!', COLOR.MAL, 38);
       return;
     }

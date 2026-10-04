@@ -60,7 +60,7 @@ export class Pedalea extends Micro {
       this.siguiente = 1 - this.siguiente;
       this.hechos++;
       this.x = Math.min(this.meta, this.x0 + this.hechos * this.pasoX);
-      this.audio.inflar(Math.min(8, this.hechos));
+      this.audio.pedal(Math.min(8, this.hechos * 8 / this.toques));
       if (this.hechos >= this.toques) this.llegar(true);
     });
   }

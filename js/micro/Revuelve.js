@@ -90,11 +90,10 @@ export class Revuelve extends Micro {
     this.cuenta.setText(`${Math.min(this.vueltas, Math.floor(v))} / ${this.vueltas}`);
     this.dibujarSopa(k);
     const cuartos = Math.floor(v * 4);
-    if (cuartos > this.cuartos) this.audio.inflar(Math.min(8, cuartos));
+    if (cuartos > this.cuartos) this.audio.burbuja(Math.min(8, cuartos * 2 / this.vueltas));
     this.cuartos = cuartos;
     if (v >= this.vueltas) {
       this.ganar();
-      this.audio.bien();
       for (let i = 0; i < 3; i++) this.humo(this.ox + (i - 1) * 90, this.oy - 40, 90);
       this.cartel(this.cx, this.arriba + 210, '¡SOPA LISTA!', COLOR.ORO, 62);
     }

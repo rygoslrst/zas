@@ -110,6 +110,7 @@ export class Encesta extends Micro {
       const error = Math.abs(x - this.xAro);
       if (error < MARGEN) {
         this.ganar();
+        this.audio.red();
         this.sacudida = 1;
         this.vx = (this.xAro - x) * 2;
         this.confeti(this.xAro, this.yAro);
@@ -119,7 +120,7 @@ export class Encesta extends Micro {
       if (error < MARGEN + 34) {                 // pega en el aro y sale
         this.vx = Math.sign(x - this.xAro) * 260;
         this.vy = -280;
-        this.audio.golpe();
+        this.audio.aro();
         this.cartel(x, this.yAro - 70, '¡CASI!', COLOR.MAL, 44);
       }
     }

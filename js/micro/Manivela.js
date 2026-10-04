@@ -129,7 +129,7 @@ export class Manivela extends Micro {
     this.barra.displayWidth = Math.max(1, 192 * Math.min(1, v / this.vueltas));
     this.cuenta.setText(`${Math.min(this.vueltas, Math.floor(v))} / ${this.vueltas}`);
     const cuartos = Math.floor(v * 4);
-    if (cuartos > this.cuartos) this.audio.inflar(Math.min(1, v / this.vueltas));
+    if (cuartos > this.cuartos) this.audio.trinquete(Math.min(1, v / this.vueltas));
     this.cuartos = cuartos;
     if (v >= this.vueltas) this.abrir();
   }

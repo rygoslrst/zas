@@ -33,6 +33,14 @@ microjuego sin decidir, `__B[director.clave](microjuego)`; después `__paso(1)`.
 Conviene de a ~20 s por llamada. Ojo: al final pide el nombre; no guardarlo
 (iría a la tabla de verdad).
 
+## Sonidos
+
+`http://localhost:8124/herramientas/pruebas/sonidos.html` (con el servidor
+andando): un botón por cada sonido y música del juego para oírlos, con el pico
+y el volumen (RMS) en dB debajo. `await __medir()` devuelve todas las medidas
+(sin compresor). Ningún efecto debería pasar de −3 dB de pico ni quedar por
+debajo de −34 dB RMS.
+
 ## Filtro de nombres
 
 `http://localhost:8124/herramientas/pruebas/filtro.html` (con el servidor

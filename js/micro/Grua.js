@@ -119,7 +119,7 @@ export class Grua extends Micro {
       .sort((a, b) => Math.abs(a.x - this.x) - Math.abs(b.x - this.x))[0];
     if (!cerca) {
       this.perder();
-      this.audio.golpe();
+      this.audio.clac();
       this.cartel(this.x, this.yPremios - 140, '¡NADA!', COLOR.MAL, 56);
       return;
     }

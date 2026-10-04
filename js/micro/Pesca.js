@@ -58,7 +58,7 @@ export class Pesca extends Micro {
           p.pescado = true;
           this.pez = p;
           this.ganar();
-          this.audio.bien();
+          this.audio.chapuzon();
           this.chispas(this.cx, this.yPeces, 10);
           this.cartel(this.cx, this.yPeces - 100, '¡PICÓ!', COLOR.ORO, 64);
         }

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sonidos de ZAS</title>
+<!--
+  Todos los sonidos del juego, para oírlos uno por uno y comparar volúmenes.
+  Abrir con el servidor de pruebas: python servidor.py 8124 →
+  http://localhost:8124/herramientas/pruebas/sonidos.html
+  Al lado de cada uno: el pico y el volumen (el RMS más alto en 50 ms), en dB,
+  medidos sin el compresor final. Para las pruebas automáticas: __medir().
+-->
+<style>
+  :root { --fondo: #1b1b2f; --texto: #f4f4f8; --boton: #2f3a66; --borde: #4a5899; --tenue: #9aa3c7; --alto: #ff6b6b; }
+  body { margin: 0; padding: 16px; background: var(--fondo); color: var(--texto); font: 15px system-ui, sans-serif; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  h2 { margin: 22px 0 8px; font-size: 16px; color: var(--tenue); text-transform: uppercase; letter-spacing: 0.06em; }
+  p { margin: 0 0 12px; color: var(--tenue); }
+  .grupo { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+  button { background: var(--boton); color: var(--texto); border: 1px solid var(--borde); border-radius: 8px; padding: 8px 10px; font: inherit; text-align: left; cursor: pointer; }
+  button:active { transform: translateY(1px); }
+  small { display: block; color: var(--tenue); font-size: 12px; margin-top: 2px; }
+  small.fuerte { color: var(--alto); }
+</style>
+</head>
+<body>
+<h1>Sonidos de ZAS</h1>
+<p>Toca un botón para oírlo. Debajo: pico / volumen en dB.</p>
+<div id="lista"></div>
+<script type="module">
+import { Audio } from '../../js/motor/Audio.js';
+
+// [nombre visible, función, argumentos]
+const GRUPOS = {
+  'Entre microjuegos': [
+    ['gano'], ['perdio'], ['empieza'], ['orden'], ['acelera'], ['masDificil'], ['jefe'], ['duelo'], ['turno'],
+    ['racha', 1], ['racha', 2], ['vidaExtra'], ['latido'], ['corazon'], ['finPartida'], ['record'],
+  ],
+  'Mecha, pausa y lección': [
+    ['tic', false], ['tic', true], ['explosion'], ['bien'], ['error'], ['cuenta', 3], ['cuenta', 0],
+    ['congelar'], ['descongelar'], ['clic'],
+  ],
+  'Efectos de muchos microjuegos': [
+    ['toque'], ['pop'], ['plaf'], ['corte'], ['zas'], ['salto'], ['golpe'], ['acierto', 0], ['acierto', 8],
+    ['mordida'], ['freno'], ['inflar', 0], ['inflar', 12], ['patada'], ['silbato'], ['obturador'], ['aleteo'],
+  ],
+  'Propios de un microjuego': [
+    ['tictac'], ['alerta'], ['senal', false], ['senal', true], ['disparo'], ['tapa'], ['revelar', false], ['revelar', true],
+    ['agarra'], ['seEscapa'], ['portazo'], ['fantasma'], ['choque'], ['clavar'], ['aro'], ['red'], ['sirena'],
+    ['trinquete', 0], ['trinquete', 1], ['pedal', 0], ['pedal', 8], ['burbuja', 0], ['burbuja', 8],
+    ['paso', false], ['paso', true], ['cohete'], ['soplido'], ['apagar'], ['chapuzon'], ['balido'], ['clac'],
+  ],
+};
+const MUSICAS = [['música de microjuego', 'micro'], ['música de jefe', 'jefe'], ['telón', 'telon'], ['menú', 'menu']];
+
+// Claves propias: no tocan los botones de sonido del juego
+let vivo = null;
+async function enVivo() {
+  if (!vivo) { vivo = new Audio('zas-prueba-efectos', 'zas-prueba-musica'); await vivo.desbloquear(); }
+  return vivo;
+}
+let latido = 0;
+async function sonarMusica(tipo) {
+  const a = await enVivo();
+  cancelAnimationFrame(latido);
+  if (tipo === 'menu') { a.empezarMenu(); } else {
+    a.iniciarPartida();
+    if (tipo === 'telon') a.empezarTelon(120, a.ahora() + 0.1);
+    else a.empezarPista(120, a.ahora() + 0.1, Math.floor(Math.random() * 1e6), { jefe: tipo === 'jefe' });
+  }
+  const bucle = () => { a.programar(); latido = requestAnimationFrame(bucle); };
+  bucle();
+}
+
+// Medición: un contexto sin conexión, sin compresor
+async function medirUno(fn, args, seg = 2.6) {
+  const sr = 22050;
+  const ctx = new OfflineAudioContext(1, Math.round(sr * seg), sr);
+  const a = new Audio('zas-prueba-efectos', 'zas-prueba-musica');
+  a.ctx = ctx; a._construir();
+  Object.defineProperty(a, 'audioVivo', { get: () => true });
+  a._usarPerf = false;
+  a.master.disconnect(); a.master.connect(ctx.destination);
+  if (typeof fn === 'function') fn(a); else a[fn](...args);
+  const d = (await ctx.startRendering()).getChannelData(0);
+  let pico = 0;
+  for (const x of d) pico = Math.max(pico, Math.abs(x));
+  const ventana = Math.round(sr * 0.05);
+  let suma = 0, rms = 0;
+  for (let i = 0; i < d.length; i++) {
+    suma += d[i] * d[i];
+    if (i >= ventana) suma -= d[i - ventana] * d[i - ventana];
+    if (i >= ventana - 1) rms = Math.max(rms, Math.sqrt(Math.max(0, suma) / ventana));
+  }
+  const db = v => v > 0 ? Math.round(20 * Math.log10(v) * 10) / 10 : -99;
+  return { pico: db(pico), rms: db(rms) };
+}
+// La música: dos compases a 120
+function musica(tipo) {
+  return a => {
+    if (tipo === 'menu') { a._sonarMenu(); a.pista.t0 = 0.05; } else if (tipo === 'telon') a.empezarTelon(120, 0.05);
+    else a.empezarPista(120, 0.05, 4321, { jefe: tipo === 'jefe' });
+    const p = a.pista, seg16 = 60 / p.bpm / 4;
+    for (let k = 0; k < 32; k++) a._paso(p, k, p.t0 + k * seg16, p.t0 + k * seg16, seg16);
+  };
+}
+
+window.__medir = async () => {
+  const r = {};
+  for (const lista of Object.values(GRUPOS)) for (const [fn, ...args] of lista) r[[fn, ...args].join(' ')] = await medirUno(fn, args);
+  for (const [nombre, tipo] of MUSICAS) r[nombre] = await medirUno(musica(tipo), [], 4.4);
+  return r;
+};
+
+const lista = document.getElementById('lista');
+for (const [titulo, efectos] of Object.entries(GRUPOS)) {
+  lista.insertAdjacentHTML('beforeend', `<h2>${titulo}</h2>`);
+  const g = document.createElement('div');
+  g.className = 'grupo';
+  lista.append(g);
+  for (const [fn, ...args] of efectos) {
+    const b = document.createElement('button');
+    b.innerHTML = `${fn}${args.length ? ` (${args.join(', ')})` : ''}<small>…</small>`;
+    b.onclick = async () => { const a = await enVivo(); a[fn](...args); };
+    g.append(b);
+    medirUno(fn, args).then(({ pico, rms }) => {
+      const s = b.querySelector('small');
+      s.textContent = `${pico} / ${rms} dB`;
+      if (pico > -1) s.className = 'fuerte';
+    });
+  }
+}
+lista.insertAdjacentHTML('beforeend', '<h2>Música</h2>');
+const gm = document.createElement('div');
+gm.className = 'grupo';
+lista.append(gm);
+for (const [nombre, tipo] of [...MUSICAS, ['parar', null]]) {
+  const b = document.createElement('button');
+  b.textContent = nombre;
+  b.onclick = async () => {
+    if (!tipo) { cancelAnimationFrame(latido); if (vivo) vivo.detenerPista(); return; }
+    sonarMusica(tipo);
+  };
+  gm.append(b);
+}
+</script>
+</body>
+</html>

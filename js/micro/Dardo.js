@@ -78,12 +78,12 @@ export class Dardo extends Micro {
         const dist = Math.hypot(x - this.bx, y - this.by);
         if (dist <= this.centro) {
           this.ganar();
-          this.audio.golpe();
+          this.audio.clavar();
           this.chispas(x, y, 14);
           this.cartel(this.cx, this.arriba + 110, dist <= this.centro * 0.35 ? '¡JUSTO AL CENTRO!' : '¡EN EL BLANCO!', COLOR.ORO, 56);
         } else {
           this.perder();
-          this.audio.golpe();
+          this.audio.clavar();
           this.cartel(this.cx, this.arriba + 110, '¡AFUERA!', COLOR.MAL, 62);
         }
       },

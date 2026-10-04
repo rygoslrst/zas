@@ -70,7 +70,7 @@ export class Puntillas extends Micro {
     this.sombraH.x = this.x;
     // Pasitos: más fuertes y seguidos cuanto más rápido
     this.pasos += Math.abs(this.x - antes);
-    if (this.pasos > 34) { this.pasos = 0; this.audio.tictac(); }
+    if (this.pasos > 34) { this.pasos = 0; this.audio.paso(v > this.limite); }
     // El ruido sube si va más rápido que el límite y baja de a poco si no
     if (v > this.limite) this.ruido += ((v - this.limite) / this.limite) * dt * 2.6 + dt * 0.4;
     else this.ruido = Math.max(0, this.ruido - dt * 0.35);

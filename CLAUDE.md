@@ -135,6 +135,16 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    ¡PATEA! y ¡ATAJA EL PENAL! (`cancha()` en Micro.js), sala de control con
    luces y franjas de peligro en ¡NO TOQUES NADA!, 3 caras nuevas de Zas
    (enamorado, sorprendido, llorando) y el desfile de emoji tenue en el telón.
+21. 2026-10-04: "analiza todo el aspecto sonoro y mejóralo" → errores: el
+   ruido grabado duraba 1 s y empezaba en un punto al azar de hasta 0,5 s, así
+   que todo ruido de más de medio segundo se cortaba (el gong del jefe, el
+   platillo, la explosión); 4 microjuegos sonaban ¡bien!/¡error! dos veces
+   (el Director ya los hace sonar); Manivela y Sopla le pasaban 0..1 a
+   `inflar` (espera 0..12: el tono no subía); `inflar` quedaba ~28 dB bajo la
+   música (no se oía al machacar) y el disparo y el choque llegaban al tope.
+   Además: 16 sonidos propios en lugar del `golpe` de siempre, variación de
+   afinación, la música da un paso atrás al decidirse, demo a media voz y
+   `herramientas/pruebas/sonidos.html` para oírlos y medirlos todos.
 
 ## Cómo es el juego hoy
 
@@ -328,15 +338,34 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     menor, con el V de la menor armónica, bajo en corcheas), `telon` (ritmo
     liviano en Do al pulso que viene, mientras está el telón) y `menu`
     (tranquila, en el título y en el final después de los jingles). Cada
-    pista tiene su salida y se apaga con un fundido. Volúmenes medidos con
-    `OfflineAudioContext` (micro y jefe ~0,06 RMS, como la versión anterior).
+    pista tiene su salida y se apaga con un fundido. Al decidirse el
+    microjuego (`calmar`) la pista baja al 60 % (se oye el ¡bien!/¡error!).
+    El menú tiene 4 compases de melodía (en el stand suena horas).
   - Jingles propios: ¡MÁS RÁPIDO!, ¡MÁS DIFÍCIL!, ¡JEFE!, ¡DUELO!, ¡VIDA
     EXTRA!, ¡RACHA!, ¡ÚLTIMA VIDA! (latidos), corazón que se parte, la orden,
     la lección que congela y descongela, la cuenta 3-2-1 de la pausa, el turno
     del duelo, los botones. Y de microjuegos: ruleta (clic por gajo),
     ¡DISPARA! (señal, señal falsa y disparo), vasos (tapan y se levantan),
     ¡NO LO SUELTES! (agarrar y aviso al alejarse), ¡SACA EL PELUCHE! (motor
-    de la garra) y ¡SIN HACER RUIDO! (pasitos y la alarma del gato).
+    de la garra y `clac` al cerrarla en el aire), ¡SIN HACER RUIDO! (`paso`,
+    fuerte si va rápido, y la alarma del gato), ¡CIERRA LAS PUERTAS!
+    (`portazo`, `fantasma`), ¡CAMBIA DE CARRIL! (`choque`), ¡DALE AL BLANCO!
+    (`clavar`), ¡ENCESTA! (`aro` al pegar en el aro, `red` al entrar), ¡NO
+    TOQUES NADA! (`sirena`), Manivela (`trinquete`), ¡PEDALEA! (`pedal`),
+    ¡REVUELVE LA SOPA! (`burbuja`), ¡DESPEGA! (`cohete`; antes usaba el jingle
+    de ¡MÁS RÁPIDO! y confundía), velas (`soplido`, `apagar`, también en
+    ¡APAGA EL FUEGO!), ¡PESCA! (`chapuzon`) y el lazo (`balido`).
+  - **Reglas de los efectos:** los genéricos (toque, pop, golpe, zas...)
+    varían ±4 % la afinación (`varia()`): repetidos no suenan a máquina. Los
+    que se pueden pedir cada cuadro tienen límite (`_cada`: tictac, seEscapa,
+    paso). Toda envolvente tiene 2 ms de ataque (sin clic). El ruido grabado
+    dura `SEG_RUIDO` = 2 s y `_ruido` empieza donde alcance para todo el
+    sonido. Ningún efecto debe pasar de −3 dB de pico ni quedar bajo −34 dB
+    RMS (medido sin compresor; la música de microjuego da ~−15 RMS):
+    `herramientas/pruebas/sonidos.html` los mide todos (`__medir()`) y deja
+    oírlos uno por uno. Los graves solos no se oyen en un celular: todo golpe
+    grave lleva algo de medios (ruido filtrado o un clic).
+  - **Demo:** a media voz (`enDemo` baja el master a 0,45) y sin vibrar.
   - **Reloj y pausa:** en la pausa el reloj del juego se congela
     (`_congeladoEn`) y se lleva la cuenta de lo que el audio sonó con el juego
     quieto (`_desfase`), así la cuenta 3-2-1 suena (`despertar()`) sin que la
