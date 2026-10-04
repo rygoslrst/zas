@@ -212,9 +212,30 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     (o borrarlos: `delete from public.records where nombre = '...'`). El
     2026-10-03 el usuario pidió vaciar la tabla antes del torneo (se hizo
     con `truncate ... restart identity`).
-  - El plan gratis **pausa el proyecto tras 7 días sin uso**: antes del
-    torneo, jugar/abrir Récords al menos una vez; si se pausó, se reactiva
-    desde el panel de Supabase (el juego mientras usa la tabla local).
+  - El plan gratis **pausa el proyecto tras 7 días sin uso**. Lo evitaría
+    `herramientas/mantener-base.yml` (GitHub le hace una consulta cada 2
+    días), PERO todavía no está activado: hay que moverlo a
+    `.github/workflows/` y el acceso de git de este equipo no tiene permiso
+    para subir eso (falta el permiso `workflow`: `gh auth refresh -s workflow`,
+    lo tiene que hacer el usuario). Mientras, basta con que alguien abra el
+    juego al menos una vez por semana. Si igual se pausó, se reactiva desde
+    el panel de Supabase (el juego mientras usa la tabla local).
+  - **Tabla de hoy y de siempre** (2026-10-04): pestañas "Hoy | Siempre" en
+    Récords (sin elegir, abre la de hoy; si hoy no hay, la de siempre).
+    "Hoy" = desde las 0:00 de Chile (`inicio_de_hoy()` en la base;
+    `mejores_de_hoy`). Se pide el nombre si el puntaje entra en CUALQUIERA de
+    las dos. Al guardar, se abre la de hoy con la fila resaltada. Los
+    costados del stand muestran la de hoy (o la de siempre, si hoy no hay).
+    En el aparato se guardan los 30 mejores (la de hoy sin conexión sale de
+    ahí).
+  - **Todas las partidas** (sin nombre: puntaje y microjuegos), tabla
+    `partidas`, RPC `terminar_partida` (mismo tope que `anotar_record`, clave
+    para no contar dos veces, 300 por minuto) → al final, "Quedaste #57 de
+    230 partidas · hoy, #5 de 40" (`#fin-puesto`); `contar_partidas` → en el
+    título "1.234 partidas jugadas · 57 hoy" y en el costado del stand. Sólo
+    las partidas normales (no práctica, galería, duelo ni demo). Sin internet
+    quedan pendientes y se suben con lo demás. SQL en
+    `herramientas/tabla_en_linea.sql` (al final).
 - **Galería** (2026-10-03): botón en el título. Los 47 con su ícono (`static
   ICONO`, un emoji); los que no salieron en el aparato (`zas_vistos_v1`), en
   silueta con "???". Tocar uno = **práctica libre** de ese microjuego

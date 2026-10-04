@@ -62,6 +62,7 @@
   <p class="bajada">Microjuegos de 4 segundos.<br>¿Cuántos aguantas?</p>
   <button id="btn-jugar" class="cta" type="button">Jugar</button>
   <p id="titulo-record" class="record"></p>
+  <p id="titulo-contador" class="contador" hidden></p>
   <div class="fila-botones">
     <button class="boton texto ancho" data-accion="records" type="button">Récords</button>
     <button class="boton texto ancho" data-accion="galeria" type="button">Galería</button>
@@ -88,6 +89,7 @@
   <p id="fin-detalle" class="detalle"></p>
   <p id="fin-veredicto" class="bajada"></p>
   <p id="fin-record" class="record"></p>
+  <p id="fin-puesto" class="fin-puesto" hidden></p>
   <button id="anotar-luego" class="boton texto chico subrayado" type="button" hidden>Anotar mi nombre en la tabla</button>
   <div id="fin-nombre" class="caja-nombre" hidden>
     <p class="caja-titulo">¡Entraste a la tabla de récords!</p>
@@ -144,6 +146,10 @@
 <section id="records" class="panel" hidden role="dialog" aria-modal="true" aria-labelledby="records-titulo">
   <div class="panel-cuerpo desplazable">
     <h2 id="records-titulo">Récords</h2>
+    <div class="pestanas" role="tablist" aria-label="Qué récords">
+      <button class="pestana" role="tab" type="button" data-tabla="hoy" aria-selected="false">Hoy</button>
+      <button class="pestana" role="tab" type="button" data-tabla="siempre" aria-selected="true">Siempre</button>
+    </div>
     <p id="nota-tabla" class="nota-tabla">Los 10 mejores puntajes.</p>
     <ol id="tabla" class="tabla"></ol>
     <p id="tabla-vacia" class="nota-tabla" hidden>Todavía no hay récords. ¡Juega una partida!</p>

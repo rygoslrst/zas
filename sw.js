@@ -9,7 +9,7 @@
 //  versión nueva vuelve a bajar los que ya se usaban.
 //  Lo que no es del juego (la tabla de récords en Supabase) va directo a la red.
 // ============================================================================
-const VERSION = '6d7a1ac5ada8';
+const VERSION = 'dc701694076c';
 const ARCHIVOS = [
   './',
   'index.html',

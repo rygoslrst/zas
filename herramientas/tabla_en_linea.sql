@@ -301,3 +301,83 @@ grant execute on function public.mejores_records(integer) to anon;
 
 -- ---------------------------------------------------------------- listas
 -- Correr herramientas/filtro_nombres/sincronizar.sql (lo escribe armar.py).
+
+-- ============================================================================
+--  PARTIDAS Y TABLA DE HOY (2026-10-04)
+--  Cada partida terminada se anota SIN nombre (puntaje y microjuegos): así
+--  cada uno sabe en qué puesto quedó entre todas ("Quedaste #57 de 230") y el
+--  título muestra cuántas se jugaron. "Hoy" es desde las 0:00 de Chile.
+-- ============================================================================
+create table if not exists public.partidas (
+  id bigint generated always as identity primary key,
+  creado timestamptz not null default now(),
+  puntaje integer not null check (puntaje >= 0 and puntaje % 10 = 0),
+  rondas integer not null check (rondas between 0 and 150),
+  clave uuid unique
+);
+create index if not exists partidas_puntaje on public.partidas (puntaje);
+create index if not exists partidas_creado on public.partidas (creado);
+alter table public.partidas enable row level security;
+revoke all on public.partidas from anon, authenticated;
+
+create or replace function public.inicio_de_hoy() returns timestamptz
+language sql stable set search_path = '' as $$
+  select (date_trunc('day', now() at time zone 'America/Santiago')) at time zone 'America/Santiago';
+$$;
+
+-- Anota una partida y dice el puesto entre todas y entre las de hoy (los
+-- empates comparten puesto). Con la misma clave (reintento) no se repite.
+create or replace function public.terminar_partida(p_puntaje integer, p_rondas integer, p_clave uuid default null)
+returns json language plpgsql security definer set search_path = '' as $$
+declare
+  hoy timestamptz := public.inicio_de_hoy();
+  mio integer := p_puntaje;
+begin
+  if p_rondas is null or p_rondas < 0 or p_rondas > 150
+     or p_puntaje is null or p_puntaje < 0 or p_puntaje % 10 <> 0
+     or p_puntaje > p_rondas * 740 + ((p_rondas + 4) / 12 + 1) * 1480 then
+    raise exception 'puntaje imposible';
+  end if;
+  if p_clave is not null and exists (select 1 from public.partidas x where x.clave = p_clave) then
+    select x.puntaje into mio from public.partidas x where x.clave = p_clave;
+  else
+    if (select count(*) from public.partidas x where x.creado > now() - interval '1 minute') >= 300 then
+      raise exception 'demasiadas partidas: espera un momento';
+    end if;
+    insert into public.partidas (puntaje, rondas, clave) values (p_puntaje, p_rondas, p_clave);
+  end if;
+  return json_build_object(
+    'puesto', (select count(*) from public.partidas x where x.puntaje > mio) + 1,
+    'total', (select count(*) from public.partidas),
+    'puesto_hoy', (select count(*) from public.partidas x where x.creado >= hoy and x.puntaje > mio) + 1,
+    'total_hoy', (select count(*) from public.partidas x where x.creado >= hoy));
+end $$;
+
+create or replace function public.contar_partidas() returns json
+language sql stable security definer set search_path = '' as $$
+  select json_build_object('total', (select count(*) from public.partidas),
+                           'hoy', (select count(*) from public.partidas where creado >= public.inicio_de_hoy()));
+$$;
+
+create or replace function public.mejores_de_hoy(cuantos integer default 10)
+returns table (nombre text, puntaje integer, rondas integer, creado timestamptz)
+language sql stable security definer set search_path = '' as $$
+  select case when public.nombre_prohibido(r.nombre) then 'JUGADOR' else r.nombre end,
+         r.puntaje, r.rondas, r.creado
+  from (
+    select x.nombre, x.puntaje, x.rondas, x.creado
+    from public.records x
+    where not x.oculto and x.creado >= public.inicio_de_hoy()
+    order by x.puntaje desc, x.rondas desc, x.creado asc
+    limit least(greatest(coalesce(cuantos, 10), 1), 50)
+  ) r
+  order by r.puntaje desc, r.rondas desc, r.creado asc;
+$$;
+
+revoke all on function public.inicio_de_hoy() from public, anon, authenticated;
+revoke all on function public.terminar_partida(integer, integer, uuid) from public, authenticated;
+revoke all on function public.contar_partidas() from public, authenticated;
+revoke all on function public.mejores_de_hoy(integer) from public, authenticated;
+grant execute on function public.terminar_partida(integer, integer, uuid) to anon;
+grant execute on function public.contar_partidas() to anon;
+grant execute on function public.mejores_de_hoy(integer) to anon;

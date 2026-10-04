@@ -387,6 +387,35 @@ body.tactil .solo-mouse { display: none; }
 
 /* --- Tabla de récords ------------------------------------------------------------ */
 .nota-tabla { color: #cfc3f5; margin-bottom: 10px; }
+/* Hoy | Siempre */
+.pestanas { display: flex; gap: 6px; margin: 2px 0 10px; }
+.pestana {
+  appearance: none;
+  flex: 1;
+  height: 40px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 250, 240, 0.25);
+  background: transparent;
+  color: var(--crema);
+  font-family: var(--display);
+  font-size: 17px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.pestana[aria-selected="true"] { background: var(--oro); border-color: var(--oro); color: var(--noche); }
+/* "1.234 partidas jugadas · 57 hoy" en el título */
+.contador { font-size: clamp(13px, 3.6vw, 15px); color: var(--lila); margin-top: -4px; }
+/* "Quedaste #57 de 230 partidas" en el final */
+.fin-puesto {
+  font-family: var(--display);
+  font-size: clamp(16px, 4.6vw, 20px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--oro);
+  animation: aparecerPuesto 0.35s ease-out both;
+}
+@keyframes aparecerPuesto { from { opacity: 0; transform: translateY(6px); } }
 .tabla { list-style: none; display: flex; flex-direction: column; gap: 4px; counter-reset: puesto; }
 .panel-cuerpo .tabla li {
   display: grid;
@@ -680,5 +709,5 @@ body.tactil .solo-mouse { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .cta, #fin .record.nuevo, .telefono, #titulo h1, .medalla, .caja-nombre, .cuenta.pum, .zas-carga, .zas-titulo,
-  .lado-zas, .demo-toca, .aviso { animation: none; }
+  .lado-zas, .demo-toca, .aviso, .fin-puesto { animation: none; }
 }

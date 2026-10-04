@@ -12,7 +12,7 @@ import { MICROS, JEFES } from './micro/indice.js';
 import { CLAVE_GALERIA, MODO_STAND, STAND, URL_JUEGO, ANCHO } from './config.js';
 import { dibujarTarjeta } from './tarjeta.js';
 import { leerTabla, entraEnTabla, anotar, revisarNombre, ultimoNombre, recordarNombre, precargar, enLinea,
-  hayPendientes, subirPendientes } from './tabla.js';
+  hayPendientes, subirPendientes, terminarPartida, contarPartidas } from './tabla.js';
 
 const $ = id => document.getElementById(id);
 const AVISO_PANTALLA_S = 3.8;      // lo que tarda en irse el aviso de pantalla completa (Chrome en Android)
@@ -24,6 +24,16 @@ const ICONO_MUDO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l
 const NOTA = '<path d="M9 18V6.5l10-2.5v11.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.8" fill="currentColor"/><circle cx="16.5" cy="15.5" r="2.8" fill="currentColor"/>';
 const ICONO_MUSICA = `<svg viewBox="0 0 24 24" aria-hidden="true">${NOTA}</svg>`;
 const ICONO_SIN_MUSICA = `<svg viewBox="0 0 24 24" aria-hidden="true">${NOTA}<path d="M3.5 3.5l17 17" stroke="#1b1030" stroke-width="5" stroke-linecap="round"/><path d="M3.5 3.5l17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+
+// "Quedaste #57 de 230 partidas · hoy, #5 de 40"
+function textoPuesto(r) {
+  const n = conPuntos;
+  if (r.total > 1 && r.puesto === 1) return `¡La mejor de las ${n(r.total)} partidas!`;
+  if (r.total_hoy > 1 && r.puesto_hoy === 1) return `¡La mejor de hoy! · #${n(r.puesto)} de ${n(r.total)} en total`;
+  let t = `Quedaste #${n(r.puesto)} de ${n(r.total)} ${r.total === 1 ? 'partida' : 'partidas'}`;
+  if (r.total_hoy > 1 && r.total_hoy < r.total) t += ` · hoy, #${n(r.puesto_hoy)} de ${n(r.total_hoy)}`;
+  return t;
+}
 
 // Qué decir según cuántos aguantaste
 function veredicto(p) {
@@ -93,6 +103,10 @@ export class UI {
       b.addEventListener('click', () => this.abrirRecords(true));
     }
     $('cerrar-records').addEventListener('click', () => this.abrirRecords(false));
+    // Dos tablas: la de HOY (el día del torneo es la que importa) y la de siempre
+    for (const b of document.querySelectorAll('[data-tabla]')) {
+      b.addEventListener('click', () => this.abrirRecords(true, this.resaltar, false, b.dataset.tabla));
+    }
     this.galeria = $('galeria');
     for (const b of document.querySelectorAll('[data-accion="galeria"]')) {
       b.addEventListener('click', () => this.abrirGaleria(true));
@@ -159,9 +173,21 @@ export class UI {
   conectar(director) {
     this.director = director;
     this.mostrarRecord();
+    this.mostrarContador();
     this.titulo.hidden = false;
     document.body.classList.add('listo');
     this.ajustarColumna();
+  }
+
+  // Cuántas partidas se jugaron (de todos, en todos los aparatos)
+  async mostrarContador() {
+    const c = await contarPartidas();
+    this.partidasHoy = c ? c.hoy : null;
+    const p = $('titulo-contador');
+    p.hidden = !c || c.total < 1;
+    if (!c) return;
+    p.textContent = `${conPuntos(c.total)} ${c.total === 1 ? 'partida jugada' : 'partidas jugadas'}`
+      + (c.hoy && c.hoy < c.total ? ` · ${conPuntos(c.hoy)} hoy` : '');
   }
 
   // El mejor puntaje de este aparato (la tabla de récords es otra cosa: la de todos)
@@ -205,13 +231,18 @@ export class UI {
   // La tabla del costado. nuevo: { nombre, puntaje } recién anotado (se resalta)
   async actualizarLado(nuevo = null) {
     if (!this.ladosVisibles) return;
-    const tabla = await leerTabla();
+    // La de hoy (el día del torneo, la que importa); si hoy no hay, la de siempre
+    let cual = 'hoy', tabla = await leerTabla(false, 'hoy');
+    if (!tabla.length) { cual = 'siempre'; tabla = await leerTabla(); }
     const ol = $('lado-lista');
     ol.textContent = '';
+    $('lado-tabla').querySelector('.lado-titulo').textContent = cual === 'hoy' ? 'Récords de hoy' : 'Récords';
     // Lo que entró desde la última lectura (alguien jugando en su celular, o
     // el que acaba de anotarse acá) se ilumina un momento
-    const antes = this.ladoAntes, ahora = new Set(tabla.map(e => `${e.nombre}|${e.puntaje}`));
+    const antes = this.ladoCual === cual ? this.ladoAntes : null;
+    const ahora = new Set(tabla.map(e => `${e.nombre}|${e.puntaje}`));
     this.ladoAntes = ahora;
+    this.ladoCual = cual;
     tabla.forEach((e, i) => {
       const li = document.createElement('li');
       const recien = nuevo ? e.nombre === nuevo.nombre && e.puntaje === nuevo.puntaje
@@ -226,8 +257,10 @@ export class UI {
       ol.appendChild(li);
     });
     ol.hidden = tabla.length === 0;
+    const c = enLinea ? await contarPartidas() : null;
     $('lado-nota').textContent = !tabla.length ? '¡Todavía no hay récords! ¿Serás el primero?'
-      : enLinea ? 'En vivo: los 10 mejores de todos' : 'Los mejores de este aparato (sin conexión)';
+      : !enLinea ? 'Los mejores de este aparato (sin conexión)'
+        : 'En vivo' + (c && c.hoy ? ` · ${conPuntos(c.hoy)} ${c.hoy === 1 ? 'partida' : 'partidas'} hoy` : '');
   }
 
   // El botón de pausa se ve sólo durante la partida
@@ -431,6 +464,7 @@ export class UI {
   // De vuelta al menú principal
   mostrarMenu() {
     this.ultimoToque = performance.now();          // (stand: la demo espera su rato en el título)
+    this.mostrarContador();
     this.cancelarCuenta();
     this.turno.hidden = true;
     this.pausa.hidden = true;
@@ -602,6 +636,17 @@ export class UI {
     this.mostrarRecord();
     this.fin.hidden = false;
     this.finDesde = performance.now();
+    // En qué puesto quedó entre TODAS las partidas (llega de internet: aparece
+    // cuando llega; sin conexión no se muestra y la partida se sube después)
+    const puesto = $('fin-puesto');
+    puesto.hidden = true;
+    const esta = this.finId = (this.finId || 0) + 1;
+    terminarPartida(d.puntaje, d.puntos).then(r => {
+      if (!r || esta !== this.finId || this.fin.hidden) return;
+      puesto.textContent = textoPuesto(r);
+      puesto.hidden = false;
+      if (this.ladosVisibles) this.actualizarLado();
+    });
     // ¿Entra en la tabla? Entonces se pide el nombre (con el último ya escrito)
     this.ultimaPartida = null;
     this.cerrarNombre();
@@ -618,6 +663,7 @@ export class UI {
   // (no hay tabla ni medalla: es para practicar)
   mostrarFinGaleria(d) {
     this.fin.classList.add('galeria');
+    $('fin-puesto').hidden = true;
     this.ultimaPartida = null;
     this.cerrarNombre();
     const micro = $('fin-micro');
@@ -640,6 +686,7 @@ export class UI {
   // El final del duelo: quién ganó y cuántos superó cada uno
   mostrarFinDuelo(d) {
     this.fin.classList.add('duelo');
+    $('fin-puesto').hidden = true;
     this.ultimaPartida = null;
     this.cerrarNombre();
     this.fin.querySelector('.causa').textContent = d.ganador ? `¡Gana el jugador ${d.ganador}!` : '¡Empate!';
@@ -712,24 +759,37 @@ export class UI {
     this.ultimaPartida = null;
     this.cerrarNombre();
     this.finDesde = performance.now();
-    if (!this.fin.hidden) this.abrirRecords(true, r.puesto, !r.enLinea);
+    if (!this.fin.hidden) this.abrirRecords(true, { nombre: revisado.nombre, puntaje: p.puntaje }, !r.enLinea, 'hoy');
     this.actualizarLado({ nombre: revisado.nombre, puntaje: p.puntaje });
   }
 
-  // La tabla de récords (puesto: la fila que se acaba de anotar, resaltada).
-  // Se abre al instante y se llena cuando llega (de internet puede tardar).
-  async abrirRecords(v, puesto = 0, soloLocal = false) {
-    if (!v) { this.records.hidden = true; return; }
+  // La tabla de récords. cual: 'hoy' o 'siempre' (sin decir: la de hoy, y si
+  // hoy todavía no hay, la de siempre). resaltar: { nombre, puntaje } de la
+  // fila que se acaba de anotar. Se abre al instante y se llena cuando llega.
+  async abrirRecords(v, resaltar = null, soloLocal = false, cual = null) {
+    if (!v) { this.records.hidden = true; this.resaltar = null; return; }
+    this.resaltar = resaltar;
     const ol = $('tabla'), nota = $('nota-tabla');
+    const pedido = this.pedidoTabla = (this.pedidoTabla || 0) + 1;
     ol.textContent = '';
     $('tabla-vacia').hidden = true;
     nota.textContent = 'Cargando…';
     this.records.hidden = false;
-    $('cerrar-records').focus();
-    const tabla = await leerTabla(soloLocal);
-    if (this.records.hidden) return;
-    nota.textContent = enLinea ? 'Los 10 mejores puntajes de todos.' : 'Los 10 mejores de este aparato (sin conexión).';
+    this.marcarPestana(cual || 'hoy');
+    if (!cual) $('cerrar-records').focus();
+    let tabla = await leerTabla(soloLocal, cual || 'hoy');
+    if (!cual && !tabla.length) {
+      cual = 'siempre';
+      this.marcarPestana(cual);
+      tabla = await leerTabla(soloLocal, cual);
+    }
+    cual = cual || 'hoy';
+    if (this.records.hidden || pedido !== this.pedidoTabla) return;
+    nota.textContent = !enLinea ? `Los 10 mejores de ${cual === 'hoy' ? 'hoy en ' : ''}este aparato (sin conexión).`
+      : cual === 'hoy' ? 'Los 10 mejores de hoy, de todos.' : 'Los 10 mejores de todos los tiempos.';
     if (hayPendientes()) nota.textContent += ' Tu puntaje se subirá a la tabla de todos apenas haya conexión.';
+    $('tabla-vacia').textContent = cual === 'hoy' ? 'Hoy todavía no hay récords. ¡Juega una partida!'
+      : 'Todavía no hay récords. ¡Juega una partida!';
     $('tabla-vacia').hidden = tabla.length > 0;
     if (tabla.length) {
       const cabeza = document.createElement('li');
@@ -744,7 +804,7 @@ export class UI {
     }
     tabla.forEach((e, i) => {
       const li = document.createElement('li');
-      if (i + 1 === puesto) li.className = 'yo';
+      if (resaltar && e.nombre === resaltar.nombre && e.puntaje === resaltar.puntaje) li.className = 'yo';
       for (const [clase, texto] of [['pos', i + 1], ['nom', e.nombre], ['pts', conPuntos(e.puntaje)], ['ron', e.rondas]]) {
         const s = document.createElement('span');
         s.className = clase;
@@ -753,6 +813,10 @@ export class UI {
       }
       ol.appendChild(li);
     });
+  }
+
+  marcarPestana(cual) {
+    for (const b of document.querySelectorAll('[data-tabla]')) b.setAttribute('aria-selected', String(b.dataset.tabla === cual));
   }
 
   // La medalla (un emoji del atlas, dibujado en un canvas del HTML). Sin

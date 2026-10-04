@@ -11,7 +11,7 @@
 //  base de datos no contesta, se usa ésta y el juego sigue igual.
 // ============================================================================
 
-import { CLAVE_TABLA, CLAVE_NOMBRE, CLAVE_PENDIENTES } from './config.js';
+import { CLAVE_TABLA, CLAVE_NOMBRE, CLAVE_PENDIENTES, CLAVE_PARTIDAS } from './config.js';
 import { nombreProhibido } from './filtroNombres.js';
 
 export const TAMANO_TABLA = 10;
@@ -25,10 +25,15 @@ const ESPERA_MS = 3500;         // si no contesta en este tiempo, se usa la del 
 const ESPERA_ANOTAR_MS = 8000;  // para guardar se espera más (con mala señal tarda)
 const VIGENCIA_MS = 30000;      // cuánto sirve la última tabla leída para decidir si "entras"
 const MAX_PENDIENTES = 10;
+const MAX_PARTIDAS = 30;
+const GUARDADOS_LOCAL = 30;     // en el aparato se guardan más (la tabla de hoy sale de ahí sin internet)
 
 // true si la última tabla que se mostró es la de todos (en línea)
 export let enLinea = false;
-let ultima = null;              // { lista, momento } de la última lectura en línea
+// La última lectura en línea de cada tabla: { lista, momento }
+// ('siempre': los mejores de todos los tiempos; 'hoy': desde las 0:00 de Chile)
+const ultimas = { siempre: null, hoy: null };
+const olvidarTablas = () => { ultimas.siempre = ultimas.hoy = null; };
 
 async function rpc(funcion, datos, espera = ESPERA_MS) {
   const ctl = new AbortController();
@@ -75,35 +80,77 @@ function ordenar(lista) {
   return lista.sort((a, b) => b.puntaje - a.puntaje || b.rondas - a.rondas || a.fecha - b.fecha);
 }
 
-function tablaLocal() { return ordenar(leerLocal()).slice(0, TAMANO_TABLA); }
+function inicioDeHoy() { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); }
 
+function tablaLocal(cual = 'siempre') {
+  const desde = cual === 'hoy' ? inicioDeHoy() : 0;
+  return ordenar(leerLocal().filter(e => (e.fecha || 0) >= desde)).slice(0, TAMANO_TABLA);
+}
+
+// cual: 'siempre' (los mejores de todos los tiempos) u 'hoy'.
 // soloLocal: para mostrar la del aparato aunque haya red (si anotar en línea falló)
-export async function leerTabla(soloLocal = false) {
-  if (soloLocal) { enLinea = false; return tablaLocal(); }
+export async function leerTabla(soloLocal = false, cual = 'siempre') {
+  if (soloLocal) { enLinea = false; return tablaLocal(cual); }
   try {
-    const filas = await rpc('mejores_records', { cuantos: TAMANO_TABLA });
+    const filas = await rpc(cual === 'hoy' ? 'mejores_de_hoy' : 'mejores_records', { cuantos: TAMANO_TABLA });
     const lista = filas.map(f => ({ nombre: f.nombre, puntaje: f.puntaje, rondas: f.rondas, fecha: Date.parse(f.creado) }));
-    ultima = { lista, momento: Date.now() };
+    ultimas[cual] = { lista, momento: Date.now() };
     enLinea = true;
     return lista;
   } catch (e) {
     enLinea = false;
-    return tablaLocal();
+    return tablaLocal(cual);
   }
 }
 
 // Se llama al empezar cada partida: así, al terminar, ya se sabe al instante
 // si el puntaje entra (sin esperar a la red). De paso sube lo pendiente.
 export function precargar() {
-  subirPendientes().catch(() => {}).then(() => leerTabla()).catch(() => {});
+  subirPendientes().catch(() => {}).then(() => Promise.all([leerTabla(), leerTabla(false, 'hoy')])).catch(() => {});
 }
 
-// ¿Este puntaje entra en la tabla?
-export async function entraEnTabla(puntaje) {
-  if (puntaje <= 0) return false;
-  const t = ultima && Date.now() - ultima.momento < VIGENCIA_MS ? ultima.lista : await leerTabla();
+// ¿Este puntaje entra en la tabla de todos los tiempos o en la de hoy?
+async function entraEn(cual, puntaje) {
+  const u = ultimas[cual];
+  const t = u && Date.now() - u.momento < VIGENCIA_MS ? u.lista : await leerTabla(false, cual);
   return t.length < TAMANO_TABLA || puntaje > t[t.length - 1].puntaje;
 }
+export async function entraEnTabla(puntaje) {
+  if (puntaje <= 0) return false;
+  const [siempre, hoy] = await Promise.all([entraEn('siempre', puntaje), entraEn('hoy', puntaje)]);
+  return siempre || hoy;
+}
+
+// --------------------------------------------------------------------------
+//  Todas las partidas (sin nombre): para el puesto de cada uno y el contador
+// --------------------------------------------------------------------------
+// Anota una partida terminada. Devuelve { puesto, total, puesto_hoy,
+// total_hoy } o null si no hay internet (entonces queda pendiente).
+export async function terminarPartida(puntaje, rondas) {
+  const p = { puntaje, rondas, clave: claveNueva() };
+  try {
+    return await rpc('terminar_partida', { p_puntaje: puntaje, p_rondas: rondas, p_clave: p.clave });
+  } catch (err) {
+    if (!/imposible/.test(err.motivo || '')) guardarPartidaPendiente(p);
+    return null;
+  }
+}
+
+// { total, hoy } o null
+export async function contarPartidas() {
+  try { return await rpc('contar_partidas', {}); } catch (e) { return null; }
+}
+
+function leerPartidasPendientes() {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLAVE_PARTIDAS));
+    return Array.isArray(v) ? v.filter(p => p && typeof p.puntaje === 'number' && p.clave) : [];
+  } catch (e) { return []; }
+}
+function guardarPartidasPendientes(lista) {
+  try { localStorage.setItem(CLAVE_PARTIDAS, JSON.stringify(lista.slice(-MAX_PARTIDAS))); } catch (e) { /* nada */ }
+}
+function guardarPartidaPendiente(p) { guardarPartidasPendientes([...leerPartidasPendientes(), p]); }
 
 // Anota una partida (en línea y, por las dudas, en el aparato). Devuelve el
 // puesto (1 = el mejor) y si quedó en la tabla en línea o sólo en el aparato.
@@ -111,13 +158,13 @@ export async function entraEnTabla(puntaje) {
 // PENDIENTE y se vuelve a intentar al empezar la próxima partida.
 export async function anotar(nombre, puntaje, rondas) {
   const e = { nombre, puntaje, rondas, fecha: Date.now() };
-  const t = ordenar([...leerLocal(), e]).slice(0, TAMANO_TABLA);
+  const t = ordenar([...leerLocal(), e]).slice(0, GUARDADOS_LOCAL);
   try { localStorage.setItem(CLAVE_TABLA, JSON.stringify(t)); } catch (err) { /* modo privado */ }
   const p = { nombre, puntaje, rondas, clave: claveNueva() };
   for (let intento = 0; ; intento++) {
     try {
       const puesto = await subir(p);
-      ultima = null;
+      olvidarTablas();
       return { puesto, enLinea: true };
     } catch (err) {
       const motivo = err.motivo || '';
@@ -149,6 +196,7 @@ function guardarPendientes(lista) {
 function guardarPendiente(p) { guardarPendientes([...leerPendientes().filter(o => o.clave !== p.clave), p]); }
 
 export function hayPendientes() { return leerPendientes().length > 0; }
+export function hayPartidasPendientes() { return leerPartidasPendientes().length > 0; }
 
 // Sube lo que quedó pendiente (de a uno; si falla por la red, se deja para después)
 let subiendo = null;
@@ -162,7 +210,16 @@ export function subirPendientes() {
         if (!/imposible/.test(err.motivo || '')) break;             // sin red o muy ocupada: más tarde
       }
       guardarPendientes(leerPendientes().filter(o => o.clave !== p.clave));
-      ultima = null;
+      olvidarTablas();
+    }
+    // Y las partidas terminadas sin internet (para el puesto y el contador)
+    for (const p of leerPartidasPendientes()) {
+      try {
+        await rpc('terminar_partida', { p_puntaje: p.puntaje, p_rondas: p.rondas, p_clave: p.clave });
+      } catch (err) {
+        if (!/imposible/.test(err.motivo || '')) break;
+      }
+      guardarPartidasPendientes(leerPartidasPendientes().filter(o => o.clave !== p.clave));
     }
   })().finally(() => { subiendo = null; });
   return subiendo;

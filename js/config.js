@@ -108,6 +108,7 @@ export const CLAVE_PUNTAJE = 'zas_puntaje_v1';        // el mejor puntaje de est
 export const CLAVE_TABLA = 'zas_tabla_v1';            // la tabla de récords (ver tabla.js)
 export const CLAVE_NOMBRE = 'zas_nombre_v1';          // el último nombre anotado
 export const CLAVE_PENDIENTES = 'zas_pendientes_v1';  // puntajes que no se pudieron subir todavía
+export const CLAVE_PARTIDAS = 'zas_partidas_pendientes_v1';   // partidas terminadas sin subir (sin internet)
 export const CLAVE_VISTOS = 'zas_vistos_v1';          // microjuegos que ya se jugaron en este aparato
 export const CLAVE_LECCIONES = 'zas_lecciones_v1';    // lecciones de "primera vez" ya mostradas
 export const CLAVE_GALERIA = 'zas_galeria_v1';        // la mejor marca de cada microjuego en la galería
