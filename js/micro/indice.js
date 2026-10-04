@@ -49,6 +49,9 @@ import { Sopla } from './Sopla.js';
 import { Vasos } from './Vasos.js';
 import { Honda } from './Honda.js';
 import { Marciano } from './Marciano.js';
+import { Manivela } from './Manivela.js';
+import { Lazo } from './Lazo.js';
+import { Pulpo } from './Pulpo.js';
 
 export const MICROS = [
   // tocar
@@ -60,7 +63,10 @@ export const MICROS = [
   Corta, Patea, Cable, Flechas, Encesta,
   // machacar y mantener
   Infla, Llena, Avanza, Despega, Equilibra, Sopla,
+  // girar en círculos y dibujar un lazo
+  Manivela, Lazo,
 ];
 
-// Jefes: cada 12 microjuegos, uno de estos (más largo; si lo ganás, vida extra)
-export const JEFES = [Simon, Torta, Carrera, Marciano];
+// Jefes: el 8.º microjuego y después cada 12, uno de estos (más largo; si lo
+// ganas, vida extra)
+export const JEFES = [Simon, Torta, Carrera, Marciano, Pulpo];

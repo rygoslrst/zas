@@ -353,3 +353,47 @@ B.Marciano = m => {
   }
   ev('pointermove', mejor, m.yNave);
 };
+// --- 2026-10-03: gestos nuevos y el quinto jefe ---
+// Gira el dedo en círculos (2,6 vueltas por segundo), para el lado pedido
+B.Manivela = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  const b = m.__bot || (m.__bot = { ang: 0, abajo: false });
+  const cx = m.ejeX - 160, cy = m.ejeY - 120, R = 70, dir = m.sentido || 1;
+  if (!b.abajo) { b.abajo = true; ev('pointerdown', cx + R, cy); return; }
+  b.ang += dir * 2.6 * 2 * Math.PI / 60;
+  ev('pointermove', cx + Math.cos(b.ang) * R, cy + Math.sin(b.ang) * R);
+};
+// Dibuja una vuelta alrededor de donde va a estar la oveja (con el zorro lejos)
+B.Lazo = m => {
+  if (m.t < 0.3 || m.decidido) return;
+  const b = m.__bot || (m.__bot = { puntos: null, i: 0 });
+  if (b.puntos) {
+    if (b.i < b.puntos.length) { const p = b.puntos[b.i++]; ev('pointermove', p.x, p.y); }
+    else { const p = b.puntos[b.puntos.length - 1]; ev('pointerup', p.x, p.y); b.puntos = null; }
+    return;
+  }
+  const o = m.animales.find(a => a.nombre === 'oveja'), z = m.animales.find(a => a.nombre === 'zorro');
+  const dz = z ? Math.hypot(z.x - o.x, z.y - o.y) : 1e9;
+  if (dz < 180) return;
+  const cx = o.x + Math.cos(o.rumbo) * o.rapidez * 0.2, cy = o.y + Math.sin(o.rumbo) * o.rapidez * 0.2;
+  const R = Math.min(95, Math.max(70, dz - 105));
+  b.puntos = [];
+  for (let k = 0; k <= 24; k++) { const a = (k / 22) * 2 * Math.PI; b.puntos.push({ x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R }); }
+  b.i = 1;
+  ev('pointerdown', b.puntos[0].x, b.puntos[0].y);
+};
+// Corta de través cada tentáculo apenas asoma
+B.Pulpo = m => {
+  if (m.t < 0.2 || m.decidido) return;
+  for (const o of m.tentaculos) {
+    if (o.estado !== 'crece' || o.puntos.length < 3) continue;
+    const i = Math.max(1, Math.floor(o.puntos.length * 0.7)), p = o.puntos[i], q = o.puntos[i - 1];
+    if (p.x < 30 || p.x > m.W - 30) continue;
+    const l = Math.hypot(p.x - q.x, p.y - q.y) || 1, nx = -(p.y - q.y) / l, ny = (p.x - q.x) / l;
+    ev('pointerdown', p.x + nx * 60, p.y + ny * 60); window.__paso(1);
+    ev('pointermove', p.x, p.y);
+    ev('pointermove', p.x - nx * 60, p.y - ny * 60);
+    ev('pointerup', p.x - nx * 60, p.y - ny * 60);
+    return;
+  }
+};

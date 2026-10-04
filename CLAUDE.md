@@ -126,7 +126,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   "¡NUEVO!" en la orden y 0,5 s más de orden (`EXTRA_NUEVO_S`). Si el
   microjuego tiene `static LECCION` (17: los de mantener, los de "toca rápido"
   —una sola lección para los tres, `grupo: 'machacar'`—, Honda, Ritmo, Cruza,
-  Sigue, Flechas, Encesta, Ataja y los 4 jefes), la primera vez se CONGELA como
+  Sigue, Flechas, Encesta, Ataja, Manivela, Lazo y los 5 jefes), la primera vez se CONGELA como
   en la práctica, con su cartel y la mano sobre el objeto
   (`zas_lecciones_v1`). `listo(m)` dice cuándo (p. ej. Ataja: con la pelota ya
   pateada, porque tirarse antes pierde) y `objetivo(m)` dónde va la mano. No
@@ -221,7 +221,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   `ui.ajustarColumna`).
 - Celular en **vertical**. Todo se juega con el dedo (o el mouse).
 
-**Microjuegos (40)**, por control:
+**Microjuegos (42)**, por control:
 - *tocar:* Reventa ¡REVIENTA!, Aplasta ¡APLASTA!, Distinto ¡EL DISTINTO!,
   NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENA!, Salta
   ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Vasos ¡ENCUENTRA EL DIAMANTE!
@@ -245,14 +245,25 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   VASO!, Avanza ¡QUE NO TE VEA!, Equilibra ¡EQUILIBRA! (mantener un lado de
   la pantalla inclina el tablón; sin apretar, se va hacia la pelota), Sopla
   ¡APAGA LAS VELAS!
+- *girar en círculos* (2026-10-03, gesto nuevo): Manivela ¡GIRA LA MANIVELA!
+  (caja sorpresa; cuenta cuánto gira la DIRECCIÓN del dedo, así un círculo
+  en cualquier parte vale y un zigzag no; en el nivel 3, para el lado de la
+  flecha)
+- *dibujar una vuelta* (gesto nuevo): Lazo ¡ENCIERRA LA OVEJA! (el lazo se
+  cierra solo al volver cerca de un punto anterior; en el nivel 3 hay un zorro
+  que no debe quedar adentro y que nunca se le pega a la oveja)
 
-**Jefes (4):** Simon ¡REPITE! (secuencia de colores; el que la muestra es un
+**Jefes (5):** Simon ¡REPITE! (secuencia de colores; el que la muestra es un
 ROBOT —antes un marciano, igual que el jefe Marciano—), Torta ¡DEFIENDE EL
 PASTEL! (hormigas), Carrera ¡ESCAPA! (tocar para saltar obstáculos; un ogro
 te persigue, 3 choques y pierdes) y Marciano ¡DERROTA AL MARCIANO! (arrastrar
 la nave, que dispara sola; el marciano tira meteoros; su vida es una parte de
 los tiros posibles —36/32/25 %—, calibrada con un bot que esquiva perfecto y
-acierta ~55 % en niveles 1-2 y ~35 % en el 3). Un jefe dura `PULSOS × pulso × √vel`.
+acierta ~55 % en niveles 1-2 y ~35 % en el 3) y Pulpo ¡CORTA LOS TENTÁCULOS!
+(2026-10-03, el primero que se juega deslizando: tentáculos que crecen desde
+los costados hacia el tesoro; cada corte le baja vida; 3 que llegan y pierdes;
+su vida es 66/62/62 % de los tentáculos que salen, y un bot que corta todo gana
+con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
 
 ## Cómo está hecho (lo esencial)
 

@@ -7,7 +7,10 @@
 //
 //  Para hacer uno nuevo: una clase que extiende Micro, con
 //    static ORDEN = '¡ATRAPÁ!'      la consigna que se ve al empezar
-//    static CONTROL = 'arrastrar'   tocar | arrastrar | deslizar | mantener | machacar | nada
+//    static CONTROL = 'arrastrar'   tocar | arrastrar | deslizar | mantener | machacar | girar |
+//                                   enlazar | nada (la ayuda y la mano de la orden, en el Director)
+//    static ICONO = 'globo'         el emoji que lo representa en la galería
+//    static LECCION = {...}         opcional: lección de "primera vez" (ver Director.revisarLeccion)
 //    static PULSOS = 8              cuánto dura, en pulsos de la música
 //    static GANA_AL_FINAL = false   true: aguantar hasta el final es ganar
 //    static VARIANTES = [...]       opcional: [{ orden: '¡CORTÁ EL ROJO!', ... }]; la
@@ -26,7 +29,7 @@ import { CELDA_EMOJI, TAM_EMOJI } from '../datos/emoji.js';
 
 // Emoji de Noto que miran hacia la izquierda
 const MIRAN_IZQUIERDA = new Set(['pez', 'pez_globo', 'pollito', 'abeja', 'tiburon', 'corredor', 'pato',
-  'ballena', 'dinosaurio', 'unicornio', 'tortuga', 'cohete', 'hormiga']);
+  'ballena', 'dinosaurio', 'unicornio', 'tortuga', 'cohete', 'hormiga', 'oveja']);
 
 // Fondos temáticos: [color de arriba, color de abajo], patrón y decoración animada
 export const TEMAS = {

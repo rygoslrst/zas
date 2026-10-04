@@ -24,7 +24,7 @@ import { LECCIONES, VEL_PRACTICA, CartelLeccion } from './Practica.js';
 
 const AYUDA = {
   tocar: 'TOCA', arrastrar: 'ARRASTRA', deslizar: 'DESLIZA EL DEDO', mantener: 'MANTÉN PRESIONADO',
-  machacar: 'TOCA RÁPIDO', nada: 'NO TOQUES NADA',
+  machacar: 'TOCA RÁPIDO', nada: 'NO TOQUES NADA', girar: 'GIRA EN CÍRCULOS', enlazar: 'DIBUJA UNA VUELTA',
 };
 const CARAS_BIEN = ['contento', 'facha', 'guinio', 'lengua', 'rico'];
 const CARAS_MAL = ['mareado', 'asustado', 'enojado', 'calavera'];
@@ -294,6 +294,8 @@ export class Director extends Phaser.Scene {
       case 'arrastrar': x += Math.sin(t * 5 / g) * 34 * g; break;
       case 'deslizar': { const f = (t * 1.4) % 1; x += (-20 + f * 60) * g; y += (24 - f * 60) * g; this.mano.setAlpha(f < 0.8 ? 1 : (1 - f) * 5); break; }
       case 'mantener': y += 8; anillo = (t * 1.1) % 1; break;
+      case 'girar': x += Math.cos(t * 7) * 26 * g; y += Math.sin(t * 7) * 26 * g; break;
+      case 'enlazar': x += Math.cos(t * 4.5) * 42 * g; y += Math.sin(t * 4.5) * 34 * g; break;
       case 'tirar': {                                   // la honda: estira hacia atrás y suelta
         const f = (t * 0.9) % 1, e = f < 0.7 ? f / 0.7 : 1 - (f - 0.7) / 0.3;
         x -= e * 70; y += e * 45; break;
