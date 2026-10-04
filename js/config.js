@@ -82,6 +82,19 @@ export const COLOR = {
 };
 
 export const DEBUG = new URLSearchParams(location.search).has('debug');
+// MODO STAND (para el notebook o la tablet del stand del torneo): abrir el
+// juego con ?stand. Si nadie toca el título en un rato, el juego se juega solo
+// (demo); el final, la pausa y los paneles vuelven solos al título; y cada
+// jugador nuevo recibe las lecciones de primera vez (no se recuerdan).
+export const MODO_STAND = new URLSearchParams(location.search).has('stand');
+export const STAND = {
+  DEMO_TRAS_S: 20,          // sin tocar nada en el título, empieza la demo
+  DEMO_RONDAS: 12,          // la demo juega esto y vuelve al título
+  VOLVER_FIN_S: 25,         // en el final, sin tocar nada, vuelve al título
+  VOLVER_NOMBRE_S: 60,      // ...si estaba escribiendo su nombre, espera más
+  VOLVER_PAUSA_S: 60,       // una partida en pausa abandonada
+  CERRAR_PANEL_S: 40,       // récords, galería o créditos abiertos
+};
 // Si el aparato pide "reducir movimiento" (accesibilidad), sin sacudidas de
 // pantalla y con destellos más suaves
 export const MENOS_MOVIMIENTO = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -96,3 +109,4 @@ export const CLAVE_PENDIENTES = 'zas_pendientes_v1';  // puntajes que no se pudi
 export const CLAVE_VISTOS = 'zas_vistos_v1';          // microjuegos que ya se jugaron en este aparato
 export const CLAVE_LECCIONES = 'zas_lecciones_v1';    // lecciones de "primera vez" ya mostradas
 export const CLAVE_GALERIA = 'zas_galeria_v1';        // la mejor marca de cada microjuego en la galería
+export const URL_JUEGO = 'https://rygoslrst.github.io/zas/';

@@ -10,6 +10,29 @@ import { MICROS, JEFES } from './micro/indice.js';
 import { ARCHIVO_EMOJI, LADO_ATLAS, usarAtlas } from './datos/emoji.js';
 import { lienzoMascota } from './datos/mascota.js';
 
+// Instalar en la pantalla de inicio: Chrome avisa que se puede con
+// "beforeinstallprompt", a veces antes de que exista la interfaz (que muestra
+// el botón "Instalar en el teléfono" cuando hay pedido).
+const instalar = { pedido: null, alCambiar: () => {} };
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalar.pedido = e; instalar.alCambiar(); });
+window.addEventListener('appinstalled', () => { instalar.pedido = null; instalar.alCambiar(); });
+
+// JUGAR SIN INTERNET: el service worker (sw.js, lo arma herramientas/armar_sw.py)
+// guarda el juego en el aparato: la segunda vez carga al instante y anda sin
+// conexión. En localhost no (se probarían versiones viejas), salvo con ?sw.
+function registrarSW(archivoAtlas) {
+  const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  if (!('serviceWorker' in navigator) || (local && !new URLSearchParams(location.search).has('sw'))) return;
+  navigator.serviceWorker.register('sw.js').then(() => {
+    // El atlas de emoji de este aparato también tiene que quedar guardado: si
+    // se bajó antes de que el service worker manejara la página, se pide de
+    // nuevo a través de él (sale de la caché del navegador: no se baja otra vez)
+    const guardar = () => fetch(archivoAtlas).catch(() => {});
+    if (navigator.serviceWorker.controller) guardar();
+    else navigator.serviceWorker.addEventListener('controllerchange', guardar, { once: true });
+  }).catch(() => { /* sin service worker: el juego anda igual */ });
+}
+
 // ----------------------------------------------------------------------------
 //  Que el navegador no se coma los toques: sin esto, arrastrar el dedo hace
 //  scroll, dos toques rápidos hacen zoom y deslizar desde arriba recarga la
@@ -174,7 +197,7 @@ async function arrancar() {
   avance(0.95);
 
   const audio = new Audio(CLAVE_SONIDO, CLAVE_MUSICA);
-  const ui = new UI(audio, imagenEmoji);
+  const ui = new UI(audio, imagenEmoji, instalar);
 
   const juego = new Phaser.Game({
     type: Phaser.WEBGL,
@@ -182,7 +205,7 @@ async function arrancar() {
     width: Math.round(ANCHO * ESCALA.k),
     height: Math.round(VISTA.alto * ESCALA.k),
     backgroundColor: '#1b1030',
-    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.NO_CENTER },     // lo centra el CSS (#juego): si centraran los dos, quedaría corrido a la derecha
     // mipmaps: la placa guarda versiones reducidas de los emoji y los achica sin "dientes"
     render: { antialias: true, pixelArt: false, roundPixels: false, powerPreference: 'high-performance',
       mipmapFilter: 'LINEAR_MIPMAP_LINEAR' },
@@ -202,6 +225,7 @@ async function arrancar() {
   avance(1);
   document.getElementById('cargando').hidden = true;
   if (DEBUG) window.juego = juego;
+  setTimeout(() => registrarSW(archivo), 3000);      // después: que no le quite red a la carga
 }
 
 arrancar();

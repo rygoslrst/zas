@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>ZAS — prueba del service worker</title></head>
+<body>
+<!--
+  Prueba de "jugar sin internet" (ver LEEME). Con el servidor andando, abrir
+  primero http://localhost:8124/?sw (instala el service worker) y después esta
+  página: escribe en #informe qué quedó guardado. Sirve con Edge sin ventana:
+    msedge --headless=new --user-data-dir=<perfil> --virtual-time-budget=8000
+           --dump-dom http://localhost:8124/herramientas/pruebas/sw.html
+-->
+<pre id="informe">esperando…</pre>
+<script>
+(async () => {
+  const informe = document.getElementById('informe');
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    const cajas = await caches.keys();
+    const caja = cajas.length ? await caches.open(cajas[0]) : null;
+    const claves = caja ? (await caja.keys()).map(r => new URL(r.url).pathname) : [];
+    const esperados = ['/', '/index.html', '/vendor/phaser.min.js', '/js/main.js', '/js/micro/Lazo.js', '/estilo.css',
+      '/fuentes/anton-latin.woff2', '/manifest.webmanifest', '/herramientas/pruebas/bots.js'];
+    informe.textContent = JSON.stringify({
+      registros: regs.map(r => r.scope + ' ' + (r.active ? r.active.state : 'sin activo')),
+      cajas, guardados: claves.length,
+      atlas: claves.filter(u => u.includes('/assets/emoji')),
+      faltan: esperados.filter(u => !claves.includes(u)),
+    });
+  } catch (e) { informe.textContent = 'ERROR ' + e; }
+})();
+</script>
+</body>
+</html>

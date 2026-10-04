@@ -547,6 +547,129 @@ body.tactil .solo-mouse { display: none; }
 
 #error { z-index: 50; background: var(--noche); }
 
+/* --- Compartir ---------------------------------------------------------------- */
+.boton.compartir { background: var(--coral); border-color: var(--coral); color: #fff; gap: 8px; }
+.boton.compartir:hover { background: #ff8585; }
+.boton.compartir svg { width: 18px; height: 18px; }
+
+/* Un aviso corto abajo ("¡Copiado!") */
+.aviso {
+  position: fixed;
+  left: 50%;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 35;
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: var(--crema);
+  color: var(--noche);
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  animation: aparecer 0.2s ease-out both;
+}
+@keyframes aparecer { from { transform: translate(-50%, 12px); opacity: 0; } }
+
+/* --- A los costados del juego (si hay lugar): QR y récords en vivo ------------ */
+.lado {
+  position: fixed;
+  top: 50%;
+  z-index: 15;
+  width: var(--ancho-lado, 300px);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  pointer-events: none;
+}
+.lado.izq { left: calc(var(--col-izq, 0px) / 2); }
+.lado.der { left: calc(100vw - var(--col-der, 0px) / 2); }
+.lado-titulo {
+  font-family: var(--display);
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--oro);
+  transform: rotate(-3deg);
+  text-shadow: 0 4px 0 var(--noche);
+}
+.lado-qr {
+  width: min(220px, 80%);
+  height: auto;
+  background: #fff;
+  padding: 10px;
+  border-radius: 16px;
+  border: 4px solid var(--noche);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
+  transform: rotate(-2deg);
+}
+.lado-url { font-family: var(--display); font-size: 20px; letter-spacing: 0.04em; color: var(--crema); }
+.lado-zas {
+  width: 110px;
+  height: auto;
+  filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff);
+  animation: saludo 2.6s ease-in-out infinite;
+}
+.lado-lista {
+  list-style: none;
+  width: 100%;
+  background: rgba(27, 16, 48, 0.75);
+  border: 2px solid rgba(255, 250, 240, 0.16);
+  border-radius: 16px;
+  padding: 10px 14px;
+}
+.lado-lista li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 5px 2px;
+  font-size: 17px;
+  border-bottom: 1px solid rgba(255, 250, 240, 0.08);
+}
+.lado-lista li:last-child { border-bottom: 0; }
+.lado-lista .pos { width: 1.6em; font-family: var(--display); color: var(--lila); text-align: right; }
+.lado-lista .nom { flex: 1; text-align: left; font-weight: 700; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lado-lista .pts { font-family: var(--display); color: var(--oro); }
+.lado-lista li:nth-child(1) .pos, .lado-lista li:nth-child(1) .nom { color: var(--oro); }
+.lado-lista li.nuevo { animation: destacar 1.6s ease-out; }
+@keyframes destacar { from { background: rgba(255, 210, 63, 0.35); } to { background: transparent; } }
+.lado-nota { font-size: 14px; color: var(--lila); }
+
+/* --- Modo stand: la demo se juega sola hasta que alguien toca ---------------- */
+#demo {
+  z-index: 25;
+  justify-content: space-between;
+  background: transparent;
+  cursor: pointer;
+  padding-top: max(18px, env(safe-area-inset-top));
+  padding-bottom: max(70px, env(safe-area-inset-bottom));
+}
+.demo-cinta {
+  font-family: var(--display);
+  font-size: 22px;
+  letter-spacing: 0.3em;
+  padding: 4px 16px 4px 22px;
+  border-radius: 999px;
+  background: rgba(27, 16, 48, 0.75);
+  color: var(--crema);
+}
+.demo-toca {
+  font-family: var(--display);
+  font-size: clamp(30px, 9vw, 46px);
+  text-transform: uppercase;
+  color: var(--oro);
+  padding: 8px 26px 10px;
+  border-radius: 18px;
+  background: rgba(27, 16, 48, 0.82);
+  border: 3px solid var(--oro);
+  animation: latir 0.9s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .cta, #fin .record.nuevo, .telefono, #titulo h1, .medalla, .caja-nombre, .cuenta.pum, .zas-carga, .zas-titulo { animation: none; }
+  .cta, #fin .record.nuevo, .telefono, #titulo h1, .medalla, .caja-nombre, .cuenta.pum, .zas-carga, .zas-titulo,
+  .lado-zas, .demo-toca, .aviso { animation: none; }
 }

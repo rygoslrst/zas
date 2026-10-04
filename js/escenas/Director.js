@@ -15,7 +15,7 @@
 // ============================================================================
 
 import { ANCHO, VISTA, ESCALA, RITMO, PARTIDA, COLOR, DEBUG, CLAVE_RECORD, CLAVE_ESCALA, CLAVE_PRACTICA,
-  CLAVE_PUNTAJE, CLAVE_VISTOS, CLAVE_LECCIONES, CLAVE_GALERIA } from '../config.js';
+  CLAVE_PUNTAJE, CLAVE_VISTOS, CLAVE_LECCIONES, CLAVE_GALERIA, MODO_STAND, STAND } from '../config.js';
 import { crearAtlas } from '../motor/Atlas.js';
 import { EMOJI, TAM_EMOJI, CELDA_EMOJI } from '../datos/emoji.js';
 import { MICROS, JEFES } from '../micro/indice.js';
@@ -87,7 +87,9 @@ export class Director extends Phaser.Scene {
     this.avisoHasta = 0;
     this.leccion = null;
     this.vistos = leerConjunto(CLAVE_VISTOS);          // microjuegos ya jugados en este aparato
-    this.lecciones = leerConjunto(CLAVE_LECCIONES);    // lecciones de "primera vez" ya vistas
+    // lecciones de "primera vez" ya vistas (en el stand no se recuerdan: cada
+    // jugador nuevo las recibe; ver volverAlTitulo)
+    this.lecciones = MODO_STAND ? new Set() : leerConjunto(CLAVE_LECCIONES);
     // En una lección de la práctica, el primer toque descongela el juego. (El
     // Director está arriba: recibe el toque antes que el microjuego, que
     // después lo recibe también y lo cuenta como jugada.)
@@ -755,7 +757,7 @@ export class Director extends Phaser.Scene {
     }
     // ¿Primera vez que se ve en este aparato? Sello de NUEVO y la orden dura más
     // (en el duelo, el jugador 2 recibe lo mismo que el 1, aunque ya "se vio")
-    let nuevo = !this.practica && !this.soloEste && !this.vistos.has(Clase.name);
+    let nuevo = !this.practica && !this.soloEste && !this.demo && !this.vistos.has(Clase.name);
     if (this.duelo) {
       if (this.duelo.turno === 0) this.duelo.nuevo = nuevo;
       else nuevo = !!this.duelo.nuevo;
@@ -823,7 +825,7 @@ export class Director extends Phaser.Scene {
     // ve uno con mecánica menos obvia (static LECCION), la suya. Una vez por
     // aparato (por grupo: las de "toca rápido" se enseñan una sola vez).
     this.leccion = this.practica ? LECCIONES[this.practica.paso] : null;
-    if (!this.practica && !this.soloEste && Clase.LECCION) {
+    if (!this.practica && !this.soloEste && !this.demo && Clase.LECCION) {
       const id = Clase.LECCION.grupo || Clase.name;
       if (!this.lecciones.has(id)) this.leccion = { ...Clase.LECCION, id };
     }
@@ -835,7 +837,7 @@ export class Director extends Phaser.Scene {
     this.leccionMostrada = false;
     this.tFinConsigna = 0.3;          // la lección congela recién con el juego a la vista
     this.orden = orden;
-    if (!this.soloEste && !this.vistos.has(Clase.name)) {
+    if (!this.soloEste && !this.demo && !this.vistos.has(Clase.name)) {
       this.vistos.add(Clase.name);
       guardar(CLAVE_VISTOS, JSON.stringify([...this.vistos]));
     }
@@ -899,6 +901,8 @@ export class Director extends Phaser.Scene {
     }
     if (this.duelo) { this.terminarTurno(); return; }
     this.rondas++;
+    // La demo del stand: juega un rato y vuelve al título (sin récords)
+    if (this.demo && ((!this.gano && this.vidas <= 1) || this.rondas >= STAND.DEMO_RONDAS)) { this.terminarDemo(); return; }
     if (this.gano) this.racha++;
     else { this.rachaPerdida = this.racha; this.racha = 0; }
     if (this.gano) {
@@ -983,6 +987,38 @@ export class Director extends Phaser.Scene {
   // partida en curso, se abandona.
   irAlMenu() {
     if (this.estado !== 'pausa' && this.estado !== 'fin') return;
+    this.volverAlTitulo();
+  }
+
+  // MODO STAND: si nadie toca el título, el juego se juega solo con los bots
+  // de las pruebas (herramientas/pruebas/bots.js, los carga la interfaz). Sin
+  // lecciones, sin récords y sin marcar microjuegos como vistos. El primer
+  // toque de verdad la corta y vuelve al título.
+  empezarDemo() {
+    if (this.estado !== 'titulo' || !window.__B) return;
+    this.demo = true;
+    this.audio.iniciarPartida();
+    this.practica = null;
+    if (this.galeria) { this.galeria = null; this.soloEste = this.soloEsteUrl; }
+    this.ui.mostrarDemo(true);
+    this.reiniciarPartida();
+    this.intermedio(null);
+  }
+
+  terminarDemo() {
+    if (this.demo) this.volverAlTitulo();
+  }
+
+  // Cada cuadro de la demo: el bot de ese microjuego juega
+  jugarDemo() {
+    const m = this.clave && this.scene.get(this.clave), bot = window.__B && window.__B[this.clave];
+    if (!m || !bot || m.decidido || !m.sys.isActive()) return;
+    try { bot(m); } catch (e) { /* si el bot falla, el microjuego se pierde solo */ }
+  }
+
+  // Al título, abandonando lo que hubiera (pausa, final o demo)
+  volverAlTitulo() {
+    if (this.demo) { this.demo = false; this.ui.mostrarDemo(false); }
     this.galeria = null;
     this.duelo = null;
     this.esperandoTurno = false;
@@ -998,6 +1034,7 @@ export class Director extends Phaser.Scene {
     this.proximo = null;
     this.practica = null;
     this.ui.mostrarSaltar(false);
+    if (MODO_STAND) this.lecciones = new Set();        // el que sigue, las recibe de nuevo
     this.modoTitulo();
     // (si venía de la pausa, el audio estaba suspendido)
     this.audio.reanudar().then(() => { if (this.estado === 'titulo') this.audio.empezarMenu(); });
@@ -1008,6 +1045,7 @@ export class Director extends Phaser.Scene {
   //  Pausa (al salir de la pestaña o apagar la pantalla)
   // --------------------------------------------------------------------------
   pausar() {
+    if (this.demo) { this.terminarDemo(); return; }          // la demo no se pausa: se corta
     if (!['micro', 'intermedio', 'cerrando', 'leccion'].includes(this.estado)) return;
     this.previo = this.estado;
     this.estado = 'pausa';
@@ -1053,7 +1091,7 @@ export class Director extends Phaser.Scene {
           else if (!this.esperandoTurno) this.prepararMicro();
         }
         break;
-      case 'micro': this.cuadroMicro(a); break;
+      case 'micro': if (this.demo) this.jugarDemo(); this.cuadroMicro(a); break;
       case 'leccion': this.cartelLeccion.animar(time); break;
     }
     if (this.estado === 'intermedio' && this.proximo && a >= this.finIntermedio) this.empezarMicro();
@@ -1112,7 +1150,7 @@ export class Director extends Phaser.Scene {
     this.leccionMostrada = true;
     if (lec.id) {                             // las de "primera vez", una sola vez por aparato
       this.lecciones.add(lec.id);
-      guardar(CLAVE_LECCIONES, JSON.stringify([...this.lecciones]));
+      if (!MODO_STAND) guardar(CLAVE_LECCIONES, JSON.stringify([...this.lecciones]));
     }
     this.estado = 'leccion';
     this.audio.congelar();

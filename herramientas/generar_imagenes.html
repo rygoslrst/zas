@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>ZAS — generar íconos y vista previa</title>
+<link rel="stylesheet" href="../estilo.css">
+<style>
+  body { overflow: auto; padding: 20px; touch-action: auto; user-select: text; }
+  img, canvas { max-width: 300px; margin: 8px; vertical-align: top; background: #fff2; }
+  pre { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<!--
+  Genera (con el servidor de desarrollo andando: python servidor.py), en capturas/:
+    icono.svg, icono-192.png, icono-512.png, icono-mascara-512.png,
+    icono-apple.png (180) y vista-previa.jpg (1200 x 630, la del link)
+  Después: moverlos a assets/ (ver CLAUDE.md). Se rehacen si cambia Zas.
+-->
+<pre id="estado">Generando…</pre>
+<div id="muestras"></div>
+<script type="module">
+import { svgMascota } from '../js/datos/mascota.js';
+import { usarAtlas, ARCHIVO_EMOJI } from '../js/datos/emoji.js';
+import { dibujarVistaPrevia } from '../js/tarjeta.js';
+
+const estado = document.getElementById('estado'), muestras = document.getElementById('muestras');
+
+// El ícono: Zas guiñando sobre el violeta del juego, con rayos.
+// redondo: con las esquinas redondeadas (íconos comunes); si no, cuadrado
+// entero (los "maskable" de Android y el de iPhone: el sistema los recorta).
+// zona: qué parte del alto ocupa Zas.
+function svgIcono(redondo, zona) {
+  const zas = svgMascota('guino', true);
+  const alto = 512 * zona, ancho = alto * 200 / 250;
+  const interior = zas.replace(/width="200" height="250"/,
+    `x="${(512 - ancho) / 2 + 8}" y="${(512 - alto) / 2 + 6}" width="${ancho}" height="${alto}"`);
+  const rayos = Array.from({ length: 16 }, (_, k) => {
+    const a0 = k / 16 * Math.PI * 2, a1 = a0 + Math.PI / 16, R = 400;
+    return `M256 256L${(256 + Math.cos(a0) * R).toFixed(1)} ${(256 + Math.sin(a0) * R).toFixed(1)}L${(256 + Math.cos(a1) * R).toFixed(1)} ${(256 + Math.sin(a1) * R).toFixed(1)}Z`;
+  }).join('');
+  const r = redondo ? 112 : 0;
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">' +
+    '<defs><radialGradient id="luz" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#5a3bc0"/>' +
+    '<stop offset=".55" stop-color="#3a2585"/><stop offset="1" stop-color="#1b1030"/></radialGradient>' +
+    `<clipPath id="borde"><rect width="512" height="512" rx="${r}"/></clipPath></defs>` +
+    `<g clip-path="url(#borde)"><rect width="512" height="512" fill="url(#luz)"/>` +
+    `<path d="${rayos}" fill="#fff" opacity=".07"/></g>` + interior + '</svg>';
+}
+
+async function aImagen(svg) {
+  const img = new Image();
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  await img.decode();
+  return img;
+}
+
+async function png(svg, lado) {
+  const c = document.createElement('canvas');
+  c.width = c.height = lado;
+  c.getContext('2d').drawImage(await aImagen(svg), 0, 0, lado, lado);
+  return c;
+}
+
+async function guardar(nombre, cuerpo) {
+  const r = await fetch('/__captura/' + nombre, { method: 'POST', body: cuerpo });
+  return `${nombre}: ${r.status === 204 ? 'ok' : 'ERROR ' + r.status}`;
+}
+const blob = (c, tipo = 'image/png', q) => new Promise(r => c.toBlob(r, tipo, q));
+
+const log = [];
+const comun = svgIcono(true, 0.8), entero = svgIcono(false, 0.62);
+log.push(await guardar('icono.svg', new Blob([comun], { type: 'image/svg+xml' })));
+for (const [nombre, svg, lado] of [['icono-192.png', comun, 192], ['icono-512.png', comun, 512],
+  ['icono-mascara-512.png', entero, 512], ['icono-apple.png', entero, 180]]) {
+  const c = await png(svg, lado);
+  muestras.append(c);
+  log.push(await guardar(nombre, await blob(c)));
+}
+// La vista previa del link, con los emoji del atlas
+usarAtlas('hd');
+const atlas = new Image();
+atlas.src = '../' + ARCHIVO_EMOJI + '.webp';
+await atlas.decode();
+const vista = await dibujarVistaPrevia(atlas);
+muestras.append(vista);
+log.push(await guardar('vista-previa.jpg', await blob(vista, 'image/jpeg', 0.86)));
+estado.textContent = log.join('\n');
+window.__listo = log;
+</script>
+</body>
+</html>

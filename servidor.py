@@ -8,7 +8,7 @@
 #      cambio "no anda".
 #   2. Fuerza el tipo correcto para .js: en algunos Windows, Python lo sirve
 #      como texto plano y el navegador se niega a cargar los módulos.
-#   3. Acepta capturas del canvas (POST a /__captura/nombre.jpg) y las guarda
+#   3. Acepta capturas del canvas (POST a /__captura/nombre.jpg, .png o .svg) y las guarda
 #      en capturas/. Sirve para revisar los microjuegos con pruebas
 #      automáticas. Sólo existe acá: GitHub Pages no acepta POST.
 #
@@ -32,6 +32,8 @@ class SinCache(http.server.SimpleHTTPRequestHandler):
         '.woff2': 'font/woff2',
         '.json': 'application/json',
         '.webp': 'image/webp',
+        '.webmanifest': 'application/manifest+json',
+        '.svg': 'image/svg+xml',
     }
 
     def end_headers(self):
@@ -39,7 +41,7 @@ class SinCache(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_POST(self):
-        m = re.fullmatch(r'/__captura/([\w-]+\.jpg)', self.path)
+        m = re.fullmatch(r'/__captura/([\w-]+\.(?:jpg|png|svg))', self.path)
         if not m:
             self.send_error(404)
             return

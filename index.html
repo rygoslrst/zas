@@ -8,16 +8,44 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="Microjuegos de 4 segundos. ¿Cuántos aguantas?">
+<!-- Vista previa del link (WhatsApp, Instagram...): necesita la dirección completa -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rygoslrst.github.io/zas/">
 <meta property="og:title" content="ZAS">
 <meta property="og:description" content="Microjuegos de 4 segundos. ¿Cuántos aguantas?">
+<meta property="og:locale" content="es_CL">
+<meta property="og:image" content="https://rygoslrst.github.io/zas/assets/vista-previa.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ZAS: microjuegos de 4 segundos">
+<meta name="twitter:card" content="summary_large_image">
 <title>ZAS</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231b1030'/%3E%3Cpath d='M36 6 L14 36 H30 L26 58 L50 26 H33 Z' fill='%23ffd23f' stroke='%23c9971a' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!-- Primero que nada: si algo falla en un teléfono, que quede anotado -->
+<script src="js/errores.js"></script>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icono.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icono-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/icono-apple.png">
 <link rel="preload" href="fuentes/anton-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
 
 <div id="juego"></div>
+
+<!-- A los costados del juego, si hay lugar (la computadora del stand): el QR
+     para jugar en el celular y la tabla de récords en vivo -->
+<aside id="lado-qr" class="lado izq" hidden>
+  <p class="lado-titulo">¡Juega en tu celular!</p>
+  <img class="lado-qr" src="stand/qr.svg" alt="Código QR para abrir ZAS en el celular" width="220" height="220">
+  <p class="lado-url">rygoslrst.github.io/zas</p>
+  <img class="lado-zas" src="assets/zas-guino.svg" alt="" width="200" height="224">
+</aside>
+<aside id="lado-tabla" class="lado der" hidden>
+  <p class="lado-titulo">Récords</p>
+  <ol id="lado-lista" class="lado-lista"></ol>
+  <p id="lado-nota" class="lado-nota"></p>
+</aside>
 
 <div id="cargando" class="capa">
   <img class="zas-carga" src="assets/zas-feliz.svg" alt="" width="200" height="224">
@@ -40,6 +68,7 @@
     <button class="boton texto ancho" data-accion="duelo" type="button">2 jugadores</button>
     <button class="boton texto ancho" data-accion="practica" type="button">Cómo jugar</button>
   </div>
+  <button id="btn-instalar" class="boton texto chico subrayado" type="button" hidden>Instalar en el teléfono</button>
   <div class="esquina">
     <button class="boton icono" data-accion="musica" type="button"></button>
     <button class="boton icono" data-accion="sonido" type="button"></button>
@@ -71,6 +100,7 @@
   </div>
   <button id="fin-cta" class="cta" type="button">Jugar otra vez</button>
   <div class="fila-botones">
+    <button class="boton texto ancho compartir" data-accion="compartir" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3" fill="currentColor"/><circle cx="6" cy="12" r="3" fill="currentColor"/><circle cx="18" cy="19" r="3" fill="currentColor"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" stroke="currentColor" stroke-width="2"/></svg>Compartir</button>
     <button class="boton texto ancho" data-accion="menu" type="button">Menú</button>
     <button class="boton texto ancho solo-partida" data-accion="records" type="button">Récords</button>
     <button class="boton texto ancho solo-galeria" data-accion="galeria" type="button">Galería</button>
@@ -89,6 +119,14 @@
   <p id="turno-aviso" class="bajada">Pásale el teléfono y toca cuando esté listo.</p>
   <button id="turno-listo" class="cta" type="button">¡Listo!</button>
 </section>
+
+<!-- Modo stand: el juego se juega solo hasta que alguien toca -->
+<div id="demo" class="capa" hidden>
+  <p class="demo-cinta">DEMO</p>
+  <p class="demo-toca"><span class="solo-tactil">¡Toca para jugar!</span><span class="solo-mouse">¡Haz clic para jugar!</span></p>
+</div>
+
+<p id="aviso" class="aviso" role="status" hidden></p>
 
 <section id="pausa" class="capa" hidden>
   <p id="pausa-cuenta" class="cuenta" aria-live="assertive"></p>

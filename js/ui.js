@@ -9,7 +9,8 @@
 import { EMOJI, CELDA_EMOJI } from './datos/emoji.js';
 import { svgMascota } from './datos/mascota.js';
 import { MICROS, JEFES } from './micro/indice.js';
-import { CLAVE_GALERIA } from './config.js';
+import { CLAVE_GALERIA, MODO_STAND, STAND, URL_JUEGO, ANCHO } from './config.js';
+import { dibujarTarjeta } from './tarjeta.js';
 import { leerTabla, entraEnTabla, anotar, revisarNombre, ultimoNombre, recordarNombre, precargar, enLinea,
   hayPendientes, subirPendientes } from './tabla.js';
 
@@ -34,8 +35,11 @@ function veredicto(p) {
   return '¡Leyenda! ¿Eres humano?';
 }
 
+// El ancho mínimo a cada costado del juego para mostrar el QR y los récords
+const LADO_MIN = 250;
+
 export class UI {
-  constructor(audio, imagenEmoji) {
+  constructor(audio, imagenEmoji, instalar) {
     this.audio = audio;
     this.imagenEmoji = imagenEmoji;
     this.director = null;
@@ -112,6 +116,16 @@ export class UI {
     window.addEventListener('resize', () => requestAnimationFrame(() => this.ajustarColumna()));
     this.pintarSonido();
 
+    // Compartir el resultado (con una imagen, si el teléfono deja)
+    for (const b of document.querySelectorAll('[data-accion="compartir"]')) b.addEventListener('click', () => this.compartir());
+    // Instalar en la pantalla de inicio (Chrome en Android lo ofrece; el
+    // aviso llega antes de que exista la interfaz: lo guarda main.js)
+    this.instalar = instalar;
+    instalar.alCambiar = () => { $('btn-instalar').hidden = !instalar.pedido || MODO_STAND; };
+    instalar.alCambiar();
+    $('btn-instalar').addEventListener('click', () => this.pedirInstalar());
+    if (MODO_STAND) this.iniciarStand();
+
     // "click" llega al levantar el dedo: en iOS el audio sólo se destraba ahí.
     $('btn-jugar').addEventListener('click', () => this.empezar());
     $('fin-cta').addEventListener('click', () => this.otraVez());
@@ -161,12 +175,180 @@ export class UI {
     const c = document.querySelector('#juego canvas');
     if (!c) return;
     const r = c.getBoundingClientRect(), raiz = document.documentElement.style;
-    raiz.setProperty('--col-izq', `${Math.max(0, Math.round(r.left))}px`);
-    raiz.setProperty('--col-der', `${Math.max(0, Math.round(window.innerWidth - r.right))}px`);
+    const izq = Math.max(0, Math.round(r.left)), der = Math.max(0, Math.round(window.innerWidth - r.right));
+    raiz.setProperty('--col-izq', `${izq}px`);
+    raiz.setProperty('--col-der', `${der}px`);
+    // Si a los costados sobra lugar (la computadora del stand), el QR para
+    // jugar en el celular y la tabla de récords en vivo
+    const lado = Math.min(izq, der);
+    raiz.setProperty('--ancho-lado', `${Math.min(340, lado - 36)}px`);
+    this.mostrarLados(lado >= LADO_MIN && window.innerHeight >= 560);
+  }
+
+  mostrarLados(v) {
+    if (v === this.ladosVisibles) return;
+    this.ladosVisibles = v;
+    $('lado-qr').hidden = $('lado-tabla').hidden = !v;
+    clearInterval(this.relojLados);
+    if (!v) return;
+    this.actualizarLado();
+    // Cada 45 s se vuelve a leer (no a mitad de un microjuego: espera al telón)
+    this.relojLados = setInterval(() => {
+      const est = this.director && this.director.estado;
+      if (!document.hidden && est !== 'micro' && est !== 'leccion') this.actualizarLado();
+    }, 45000);
+  }
+
+  // La tabla del costado. nuevo: { nombre, puntaje } recién anotado (se resalta)
+  async actualizarLado(nuevo = null) {
+    if (!this.ladosVisibles) return;
+    const tabla = await leerTabla();
+    const ol = $('lado-lista');
+    ol.textContent = '';
+    tabla.forEach((e, i) => {
+      const li = document.createElement('li');
+      if (nuevo && e.nombre === nuevo.nombre && e.puntaje === nuevo.puntaje) li.className = 'nuevo';
+      for (const [clase, texto] of [['pos', i + 1], ['nom', e.nombre], ['pts', conPuntos(e.puntaje)]]) {
+        const span = document.createElement('span');
+        span.className = clase;
+        span.textContent = String(texto);
+        li.appendChild(span);
+      }
+      ol.appendChild(li);
+    });
+    ol.hidden = tabla.length === 0;
+    $('lado-nota').textContent = !tabla.length ? '¡Todavía no hay récords! ¿Serás el primero?'
+      : enLinea ? 'En vivo: los 10 mejores de todos' : 'Los mejores de este aparato (sin conexión)';
   }
 
   // El botón de pausa se ve sólo durante la partida
   mostrarEnJuego(v) { this.btnPausa.hidden = !v; }
+
+  // --------------------------------------------------------------------------
+  //  MODO STAND (?stand): la demo, y volver solo al título
+  // --------------------------------------------------------------------------
+  iniciarStand() {
+    document.body.classList.add('stand');
+    this.ultimoToque = performance.now();
+    // Los bots de las pruebas juegan la demo; tocan la pantalla con eventos
+    // de mouse sobre el canvas (como el arnés de pruebas)
+    window.__paso = window.__paso || (() => {});
+    window.__ev = window.__ev || ((tipo, x, y) => {
+      const c = document.querySelector('#juego canvas');
+      if (!c) return;
+      const r = c.getBoundingClientRect(), k = r.width / ANCHO;
+      const t = { pointerdown: 'mousedown', pointermove: 'mousemove', pointerup: 'mouseup' }[tipo];
+      c.dispatchEvent(new MouseEvent(t, { clientX: r.left + x * k, clientY: r.top + y * k, bubbles: true, button: 0,
+        buttons: t === 'mouseup' ? 0 : 1 }));
+    });
+    import('../herramientas/pruebas/bots.js').catch(() => { /* sin bots, sin demo */ });
+    // Un toque de verdad (no los de los bots) corta la demo y nada más
+    const tocado = e => {
+      if (!e.isTrusted) return;
+      this.ultimoToque = performance.now();
+      if (this.director && this.director.demo) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.director.terminarDemo();
+      }
+    };
+    window.addEventListener('pointerdown', tocado, true);
+    window.addEventListener('keydown', tocado, true);
+    setInterval(() => this.revisarStand(), 1000);
+  }
+
+  revisarStand() {
+    const d = this.director;
+    if (!d || document.hidden) return;
+    const quieto = (performance.now() - this.ultimoToque) / 1000;
+    if (!this.records.hidden || !this.galeria.hidden || !this.creditos.hidden) {
+      if (quieto > STAND.CERRAR_PANEL_S) {
+        this.abrirRecords(false); this.abrirGaleria(false); this.abrirCreditos(false);
+        this.ultimoToque = performance.now();
+      }
+      return;
+    }
+    if (d.estado === 'titulo' && !d.demo && !this.arrancando && quieto > STAND.DEMO_TRAS_S) d.empezarDemo();
+    else if (d.estado === 'fin' && quieto > (this.pidiendoNombre ? STAND.VOLVER_NOMBRE_S : STAND.VOLVER_FIN_S)) d.irAlMenu();
+    else if (d.estado === 'pausa' && !this.contando && quieto > STAND.VOLVER_PAUSA_S) d.irAlMenu();
+  }
+
+  mostrarDemo(v) {
+    clearTimeout(this.relojDemo);
+    if (v) {
+      $('demo').hidden = false;
+      this.titulo.hidden = true;
+      this.btnPausa.hidden = true;
+    } else {
+      // La capa se va un poco después: el dedo que cortó la demo no tiene que
+      // caer en un botón del título al levantarse
+      this.relojDemo = setTimeout(() => { $('demo').hidden = true; }, 400);
+      this.ultimoToque = performance.now();
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  //  Compartir el resultado
+  // --------------------------------------------------------------------------
+  // Se prepara al mostrar el final (la imagen tarda un poco, y al tocar el
+  // botón ya tiene que estar: el teléfono sólo deja compartir justo al tocar)
+  prepararCompartir(texto, tarjeta) {
+    this.aCompartir = { texto, archivo: null };
+    const yo = this.aCompartir;
+    let puede = false;
+    try { puede = !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.png', { type: 'image/png' })] })); } catch (e) { /* nada */ }
+    if (!puede) return;
+    setTimeout(async () => {
+      try {
+        const c = await dibujarTarjeta({ ...tarjeta, url: URL_JUEGO.replace(/^https:\/\//, '').replace(/\/$/, ''), atlas: this.imagenEmoji });
+        const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+        if (blob && this.aCompartir === yo) yo.archivo = new File([blob], 'zas.png', { type: 'image/png' });
+      } catch (e) { /* sin imagen: se comparte el texto */ }
+    }, 700);
+  }
+
+  async compartir() {
+    const c = this.aCompartir;
+    if (!c) return;
+    const conLink = `${c.texto}\n${URL_JUEGO}`;
+    if (navigator.share) {
+      try {
+        if (c.archivo && navigator.canShare({ files: [c.archivo] })) await navigator.share({ files: [c.archivo], title: 'ZAS', text: conLink });
+        else await navigator.share({ title: 'ZAS', text: c.texto, url: URL_JUEGO });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;          // lo cerró sin elegir: nada
+      }
+    }
+    // Sin "compartir" (en la computadora): se copia el texto
+    try {
+      await navigator.clipboard.writeText(conLink);
+      this.avisar('¡Copiado! Pégalo en WhatsApp o donde quieras.');
+    } catch (e) {
+      this.avisar(conLink, 6);
+    }
+  }
+
+  // Un aviso corto abajo de la pantalla
+  avisar(texto, segundos = 3) {
+    const a = $('aviso');
+    a.textContent = texto;
+    a.hidden = false;
+    clearTimeout(this.relojAviso);
+    this.relojAviso = setTimeout(() => { a.hidden = true; }, segundos * 1000);
+  }
+
+  async pedirInstalar() {
+    const p = this.instalar.pedido;
+    if (!p) return;
+    this.instalar.pedido = null;
+    this.instalar.alCambiar();
+    try {
+      p.prompt();
+      const r = await p.userChoice;
+      if (r && r.outcome === 'accepted') this.avisar('¡Listo! ZAS queda en tu pantalla de inicio.');
+    } catch (e) { /* nada */ }
+  }
 
   // Seguir después de la pausa. Si se estaba en pleno microjuego, antes una
   // cuenta 3, 2, 1: la mecha sigue donde quedó y nadie tiene que perder por
@@ -203,6 +385,7 @@ export class UI {
 
   // De vuelta al menú principal
   mostrarMenu() {
+    this.ultimoToque = performance.now();          // (stand: la demo espera su rato en el título)
     this.cancelarCuenta();
     this.turno.hidden = true;
     this.pausa.hidden = true;
@@ -323,6 +506,8 @@ export class UI {
   // deja (iPhone), no pasa nada: el juego anda igual.
   pantallaCompleta() {
     if (!this.tactil) return;
+    // Instalado en la pantalla de inicio ya se abre a pantalla completa
+    if (window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches) return;
     const el = document.documentElement;
     const pedir = el.requestFullscreen || el.webkitRequestFullscreen;
     if (!pedir || document.fullscreenElement) return;
@@ -360,7 +545,11 @@ export class UI {
     $('fin-puntos').textContent = conPuntos(d.puntaje);
     $('fin-detalle').textContent = `puntos · ${d.puntos} ${d.puntos === 1 ? 'microjuego' : 'microjuegos'}`;
     $('fin-veredicto').textContent = veredicto(d.puntos);
-    this.dibujarMedalla(d.medalla, d.nuevo && d.puntos > 0 ? 'euforico' : d.puntos === 0 ? 'triste' : 'feliz');
+    const cara = d.nuevo && d.puntos > 0 ? 'euforico' : d.puntos === 0 ? 'triste' : 'feliz';
+    this.dibujarMedalla(d.medalla, cara);
+    const juegos = `${d.puntos} ${d.puntos === 1 ? 'microjuego' : 'microjuegos'}`;
+    this.prepararCompartir(`¡Hice ${conPuntos(d.puntaje)} puntos en ZAS (${juegos})! ¿Me ganas?`,
+      { grande: conPuntos(d.puntaje), linea: `PUNTOS · ${juegos.toUpperCase()}`, cara, medalla: d.medalla });
     // El mejor de ESTE aparato ("¡Entraste a la tabla!" es la de todos)
     const rec = $('fin-record');
     rec.textContent = d.nuevo ? '¡Tu mejor partida!' : `Tu mejor partida: ${conPuntos(d.recordPuntaje)} puntos · ${d.record} microjuegos`;
@@ -395,7 +584,10 @@ export class UI {
     $('fin-detalle').textContent = `${d.puntos === 1 ? 'superado' : 'superados'} · tu mejor: ${d.mejor}`;
     $('fin-veredicto').textContent = d.nuevoMejor && d.puntos > 0 ? '¡Tu mejor marca en este microjuego!' : 'Cada uno que pasas, va más rápido.';
     $('fin-cta').textContent = 'Otra vez';
-    this.dibujarMedalla(null, d.nuevoMejor && d.puntos > 0 ? 'euforico' : d.puntos === 0 ? 'triste' : 'feliz');
+    const cara = d.nuevoMejor && d.puntos > 0 ? 'euforico' : d.puntos === 0 ? 'triste' : 'feliz';
+    this.dibujarMedalla(null, cara);
+    this.prepararCompartir(`¡Pasé ${d.puntos} seguidos de ${d.ultimo} en ZAS! ¿Me ganas?`,
+      { arriba: d.ultimo, grande: String(d.puntos), linea: d.puntos === 1 ? 'SUPERADO' : 'SUPERADOS SEGUIDOS', cara });
     this.fin.hidden = false;
     this.finDesde = performance.now();
   }
@@ -418,6 +610,10 @@ export class UI {
     $('fin-veredicto').textContent = d.ganador ? '¿Revancha?' : 'Superaron los mismos. ¿Desempate?';
     $('fin-cta').textContent = 'Revancha';
     this.dibujarMedalla(null, d.ganador ? 'euforico' : 'guino');
+    const marcador = `${d.puntos[0]} – ${d.puntos[1]}`;
+    this.prepararCompartir(`Duelo en ZAS: ${marcador}. ${d.ganador ? `¡Ganó el jugador ${d.ganador}!` : '¡Empate!'} ¿Se atreven?`,
+      { arriba: d.ganador ? `¡GANA EL JUGADOR ${d.ganador}!` : '¡EMPATE!', grande: marcador, linea: 'DUELO DE 2 JUGADORES',
+        cara: d.ganador ? 'euforico' : 'guino', pie: '¿SE ATREVEN?' });
     this.fin.hidden = false;
     this.finDesde = performance.now();
   }
@@ -472,6 +668,7 @@ export class UI {
     this.cerrarNombre();
     this.finDesde = performance.now();
     if (!this.fin.hidden) this.abrirRecords(true, r.puesto, !r.enLinea);
+    this.actualizarLado({ nombre: revisado.nombre, puntaje: p.puntaje });
   }
 
   // La tabla de récords (puesto: la fila que se acaba de anotar, resaltada).

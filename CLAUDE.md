@@ -104,6 +104,10 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    telón, música del menú, vibración y sonidos nuevos. En la revisión salieron
    3 microjuegos con estado que sobrevivía a la escena reutilizada (Duelo: la
    segunda vez no salía el "¡YA!"; Ataja: sin sonido de patada; Pesca).
+15. 2026-10-04: comodidad, stand y "otros" del informe de mejoras → compartir
+   el resultado, vista previa del link, instalable y sin internet, modo stand
+   con demo, QR y récords a los costados, y registro de errores. Se arregló el
+   juego corrido a la derecha en la computadora (lo centraban Phaser y el CSS).
 
 ## Cómo es el juego hoy
 
@@ -328,6 +332,43 @@ los costados hacia el tesoro; cada corte le baja vida; 3 que llegan y pierdes;
 su vida es 66/62/62 % de los tentáculos que salen, y un bot que corta todo gana
 con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
 
+- **Compartir** (botón en el final): con `navigator.share` manda una imagen
+  de 1080 x 1350 (`js/tarjeta.js`: logo, Zas, puntaje, "¿ME GANAS?" y la
+  dirección) más el texto; la imagen se arma al mostrar el final (el teléfono
+  sólo deja compartir justo al tocar). Sin `share` (computadora), copia el
+  texto. Textos distintos para partida, galería y duelo.
+- **Vista previa del link** (WhatsApp, etc.): `assets/vista-previa.jpg`
+  (1200 x 630) y las etiquetas `og:` del `index.html`.
+- **Instalable y sin internet:** `manifest.webmanifest`, íconos
+  `assets/icono*` y el service worker `sw.js`, que guarda TODOS los archivos
+  de una versión juntos (no se mezclan versiones) y el atlas de emoji que usa
+  cada aparato. `sw.js` lo GENERA `herramientas/armar_sw.py` (versión = huella
+  de los archivos); lo corre solo el gancho `.git/hooks/pre-commit` antes de
+  cada commit. **Si el gancho no está (otra copia del repo), correr
+  `python herramientas/armar_sw.py` antes de publicar**: si no, los aparatos
+  siguen con la versión vieja. En localhost no se registra (salvo `?sw`). En
+  Android aparece "Instalar en el teléfono" en el título; instalado, se abre a
+  pantalla completa. Probado: con el servidor apagado, todo sale del aparato.
+  Íconos y vista previa se rehacen abriendo `herramientas/generar_imagenes.html`
+  con el servidor andando (quedan en `capturas/`: moverlos a `assets/`).
+- **A los costados** (si sobran 250 px por lado, p. ej. un notebook): el QR
+  "¡Juega en tu celular!" y la tabla de récords en vivo (se relee cada 45 s,
+  nunca a mitad de un microjuego, y al anotar un puntaje).
+- **Modo stand** (abrir con `?stand`, números en `STAND` de `config.js`): a
+  los 20 s sin tocar el título, una **demo** que juegan los bots de
+  `herramientas/pruebas/bots.js` (12 rondas, sin récords ni lecciones; gana
+  ~34 de 36); un toque de verdad la corta y vuelve al título. El final, la
+  pausa y los paneles vuelven solos al título. Las lecciones de primera vez
+  no se recuerdan: cada jugador nuevo las recibe. Si se cambia un bot, se
+  cambia también la demo.
+- **Registro de errores:** `js/errores.js` (script común, se carga primero, en
+  sintaxis vieja: avisa aunque el navegador no entienda los módulos) manda a
+  Supabase (`anotar_error`, tabla `errores`, ver
+  `herramientas/registro_errores.sql`) los errores de JavaScript, archivos que
+  no cargaron, "sigue en Cargando a los 30 s" y "sin WebGL". Nada personal;
+  3 por visita, 200 por hora entre todos, se guardan los últimos 5000. El
+  juego no puede leerla. Para mirar: Supabase → Table Editor → errores.
+
 ## Cómo está hecho (lo esencial)
 
 - **Phaser 3.90** en `vendor/`, sin build ni npm. Módulos ES nativos.
@@ -405,6 +446,10 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
   los bots (conviene `import('/capturas/arnes.js?' + Date.now())` para no
   tomar una versión vieja: la página importa las copias de `capturas/`, así
   que después de editar `herramientas/pruebas/*.js` hay que copiarlas ahí).
+- El panel del navegador no tiene service workers. Para probar "sin
+  internet": Edge sin ventana con depuración remota y la página liviana
+  `herramientas/pruebas/sw.html` (el juego con gráficos por software anda tan
+  lento que todo vence por tiempo); apagar el servidor y pedir archivos.
 - Si el chat se abrió desde otra carpeta (p. ej. la de FUGA),
   `preview_start` con nombre levanta el servidor de ESA carpeta. Solución:
   arrancar `python servidor.py 8124` desde `zas` en segundo plano y abrir el

@@ -1,0 +1,20 @@
+{
+  "name": "ZAS — microjuegos de 4 segundos",
+  "short_name": "ZAS",
+  "description": "Microjuegos de 4 segundos. ¿Cuántos aguantas?",
+  "lang": "es",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#1b1030",
+  "theme_color": "#1b1030",
+  "categories": ["games"],
+  "icons": [
+    { "src": "assets/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icono-mascara-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
