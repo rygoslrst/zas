@@ -20,7 +20,7 @@ window.addEventListener('appinstalled', () => { instalar.pedido = null; instalar
 // JUGAR SIN INTERNET: el service worker (sw.js, lo arma herramientas/armar_sw.py)
 // guarda el juego en el aparato: la segunda vez carga al instante y anda sin
 // conexión. En localhost no (se probarían versiones viejas), salvo con ?sw.
-function registrarSW(archivoAtlas, director) {
+function registrarSW(archivoAtlas, director, ui) {
   const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   if (!('serviceWorker' in navigator) || (local && !new URLSearchParams(location.search).has('sw'))) return;
   const sw = navigator.serviceWorker, yaHabia = !!sw.controller;
@@ -39,7 +39,11 @@ function registrarSW(archivoAtlas, director) {
   setInterval(() => {
     const d = director();
     const abierto = document.querySelector('.panel:not([hidden])');
-    if (nueva && !document.hidden && d && d.estado === 'titulo' && !d.demo && !abierto) location.reload();
+    if (nueva && !document.hidden && d && d.estado === 'titulo' && !d.demo && !abierto) {
+      nueva = false;
+      ui.avisar('¡Versión nueva del juego! Actualizando…', 3);
+      setTimeout(() => location.reload(), 1200);
+    }
   }, 3000);
   sw.register('sw.js').then(reg => {
     if (yaHabia) guardar();
@@ -241,7 +245,7 @@ async function arrancar() {
   avance(1);
   document.getElementById('cargando').hidden = true;
   if (DEBUG) window.juego = juego;
-  setTimeout(() => registrarSW(archivo, director), 3000);      // después: que no le quite red a la carga
+  setTimeout(() => registrarSW(archivo, director, ui), 3000);      // después: que no le quite red a la carga
 }
 
 arrancar();

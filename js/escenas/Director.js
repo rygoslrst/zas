@@ -1002,6 +1002,7 @@ export class Director extends Phaser.Scene {
   empezarDemo() {
     if (this.estado !== 'titulo' || !window.__B) return;
     this.demo = true;
+    this.audio.enDemo = true;            // la demo no hace vibrar el aparato
     this.audio.iniciarPartida();
     this.practica = null;
     if (this.galeria) { this.galeria = null; this.soloEste = this.soloEsteUrl; }
@@ -1023,7 +1024,7 @@ export class Director extends Phaser.Scene {
 
   // Al título, abandonando lo que hubiera (pausa, final o demo)
   volverAlTitulo() {
-    if (this.demo) { this.demo = false; this.ui.mostrarDemo(false); }
+    if (this.demo) { this.demo = false; this.audio.enDemo = false; this.ui.mostrarDemo(false); }
     this.galeria = null;
     this.duelo = null;
     this.esperandoTurno = false;

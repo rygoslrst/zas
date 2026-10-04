@@ -203,7 +203,9 @@ export class Audio {
 
   // Vibración corta (Android; el iPhone no deja). Va con los efectos.
   vibrar(patron) {
-    if (!this.efectos || !this.puedeVibrar) return;
+    if (!this.efectos || !this.puedeVibrar || this.enDemo) return;
+    // Antes del primer toque el navegador no deja (y lo anota como error)
+    if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
     try { navigator.vibrate(patron); } catch (e) { /* nada */ }
   }
 

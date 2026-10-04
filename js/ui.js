@@ -874,6 +874,16 @@ export class UI {
 
   abrirCreditos(v) {
     this.creditos.hidden = !v;
-    if (v) $('cerrar-creditos').focus();
+    if (!v) return;
+    $('cerrar-creditos').focus();
+    // Qué versión quedó guardada en el aparato (la del service worker): sirve
+    // para saber si ya llegó la última que se publicó
+    const p = $('version');
+    if (window.caches) {
+      caches.keys().then(nombres => {
+        const v2 = nombres.find(n => n.startsWith('zas-'));
+        p.textContent = v2 ? `Versión ${v2.slice(4, 10)}` : '';
+      }).catch(() => {});
+    }
   }
 }
