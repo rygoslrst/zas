@@ -413,8 +413,13 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
   Android aparece "Instalar en el teléfono" en el título; instalado, se abre a
   pantalla completa. Probado: con el servidor apagado, todo sale del aparato.
   Cuando llega una versión nueva, se recarga sola la próxima vez que el
-  juego está en el título (sin demo ni paneles); un aparato abierto todo el
-  día pregunta cada media hora si hay versión nueva.
+  juego está en el título (sin demo ni paneles), con el aviso "¡Versión nueva
+  del juego! Actualizando…"; un aparato abierto todo el día pregunta cada
+  media hora si hay versión nueva. Créditos muestra la versión guardada en el
+  aparato (los 6 primeros caracteres de `VERSION` en `sw.js`). El usuario
+  creyó una vez que no se había publicado: estaba viendo la copia guardada.
+  Para comprobar lo publicado: `curl` a `sw.js` del sitio y comparar
+  `VERSION`; en la computadora, Ctrl+Shift+R se salta la copia guardada.
   Íconos y vista previa se rehacen abriendo `herramientas/generar_imagenes.html`
   con el servidor andando (quedan en `capturas/`: moverlos a `assets/`).
 - **A los costados** (si sobran 250 px por lado, p. ej. un notebook): el QR
