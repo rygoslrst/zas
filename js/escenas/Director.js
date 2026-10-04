@@ -134,10 +134,13 @@ export class Director extends Phaser.Scene {
       this.reaccion, this.cinta, this.mensaje, this.velTxt]);
     this.detalles = [this.sombraPuntos, this.puntosTxt, this.puntajeTxt, this.sumaTxt, ...this.corazones,
       this.sombraCara, this.reaccion, this.cinta, this.mensaje, this.velTxt];
-    // Emoji que desfilan detrás del título y del final
+    // Emoji que desfilan detrás del título y del final, por los costados (por
+    // el medio pasaban detrás del logo y del puntaje y los ensuciaban)
+    // (a la misma velocidad y repartidos parejo: así no se amontonan)
     this.desfile = DESFILE.map((n, i) => ({
-      img: this.add.image(0, 0, 'emoji', n).setDisplaySize(90, 90).setAlpha(0.75).setDepth(11),
-      x: 40 + (i * 97) % 480, fase: i * 0.37, vel: 30 + (i % 4) * 12,
+      img: this.add.image(0, 0, 'emoji', n).setDisplaySize(80, 80).setAlpha(0.75).setDepth(11),
+      x: i % 2 ? ANCHO - 46 - (i * 13) % 34 : 46 + (i * 13) % 34,
+      lugar: Math.floor(i / 2) / Math.ceil(DESFILE.length / 2) + (i % 2) * 0.1, fase: 0, onda: i * 0.9,
     }));
   }
 
@@ -479,7 +482,7 @@ export class Director extends Phaser.Scene {
     const carteles = [];
     if (gano === null && p) carteles.push(['¡A PRACTICAR!', null, 0x2f7dff]);
     else if (gano === null && this.trasPractica) {
-      carteles.push(['¡AHORA EN SERIO!', null, 0xe0339b], ['¡TIENES 4 VIDAS!', () => this.audio.record(), 0x16a37a]);
+      carteles.push(['¡AHORA EN SERIO!', null, 0xe0339b], [`¡TIENES ${PARTIDA.VIDAS} VIDAS!`, () => this.audio.record(), 0x16a37a]);
     } else if (gano === null) carteles.push(['¡PREPÁRATE!', null, 0x2f7dff]);
     if (p && gano === false && p.intentos > 0) carteles.push(['¡OTRA VEZ!', null, 0xff7a1a]);
     this.trasPractica = false;
@@ -868,8 +871,8 @@ export class Director extends Phaser.Scene {
     const h = VISTA.alto + 120;
     for (const d of this.desfile) {
       d.fase += dt;
-      const y = h - ((d.fase * d.vel * 4) % h) - 60;
-      d.img.setPosition(d.x + Math.sin(d.fase * 1.3) * 18, y).setAngle(Math.sin(d.fase * 2) * 12);
+      const y = h - ((d.lugar * h + d.fase * 120) % h) - 60;
+      d.img.setPosition(d.x + Math.sin(d.fase * 1.3 + d.onda) * 10, y).setAngle(Math.sin(d.fase * 2 + d.onda) * 12);
     }
   }
 }

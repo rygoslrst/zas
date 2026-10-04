@@ -12,9 +12,12 @@
 --    mejores_records(cuantos)               → los primeros (10; 50 como mucho)
 --    revisar_nombre(nombre)                 → el nombre como quedaría, o null
 --                                             si no se puede usar
---    anotar_record(nombre, puntaje, rondas) → anota y devuelve el puesto
+--    anotar_record(nombre, puntaje, rondas, clave) → anota y devuelve el puesto
 --  anotar_record rechaza puntajes imposibles, limpia el nombre (si es
---  prohibido, "JUGADOR") y acepta como mucho 20 anotaciones por minuto.
+--  prohibido, "JUGADOR") y acepta como mucho 120 anotaciones por minuto entre
+--  todos (antes 20: en el torneo puede jugar mucha gente a la vez). La clave
+--  (uuid que inventa el juego) hace que un reintento no duplique la partida:
+--  si el juego no pudo subirla, la guarda como pendiente y la manda después.
 --
 --  FILTRO DE NOMBRES (v5, 2026-10-03; el usuario pidió reforzarlo "lo más
 --  posible"): las palabras prohibidas y las excepciones son DOS TABLAS que se
@@ -32,8 +35,10 @@
 --    - borrar: delete from public.records where nombre = 'NOMBRE';
 --
 --  OJO: el tope de puntaje depende de cómo se calcula en el juego
---  (Director.puntosPorMicro: un microjuego da como mucho 370, un jefe 1110).
---  Si se cambia el puntaje del juego, hay que cambiar el tope acá también.
+--  (Director.puntosPorMicro: un microjuego da como mucho 740 —200 × velocidad
+--  1,85 × racha ×2— y un jefe el triple; el primer jefe es el 8.º y después
+--  cada 12). Si se cambia el puntaje del juego, cambiar el tope acá también.
+--  Rondas: como mucho 150 (nadie real llega; limita los puntajes falsos).
 -- ============================================================================
 
 -- ---------------------------------------------------------------- récords
@@ -41,9 +46,10 @@ create table public.records (
   id bigint generated always as identity primary key,
   nombre text not null check (char_length(nombre) between 1 and 10),
   puntaje integer not null check (puntaje > 0 and puntaje % 10 = 0),
-  rondas integer not null check (rondas between 1 and 500),
+  rondas integer not null constraint records_rondas_check check (rondas between 1 and 150),
   creado timestamptz not null default now(),
   oculto boolean not null default false,
+  clave uuid unique,
   constraint records_nombre_valido
     check (nombre ~ '^[A-ZÁÉÍÓÚÑÜ0-9]([A-ZÁÉÍÓÚÑÜ0-9 ]*[A-ZÁÉÍÓÚÑÜ0-9])?$')
 );
@@ -225,22 +231,36 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------- anotar y leer
-create or replace function public.anotar_record(p_nombre text, p_puntaje integer, p_rondas integer)
+-- (p_clave es opcional: así el juego viejo que quedó en caché sigue andando)
+create or replace function public.anotar_record(p_nombre text, p_puntaje integer, p_rondas integer, p_clave uuid default null)
 returns integer language plpgsql security definer set search_path = '' as $$
 declare
   nuevo bigint;
+  ya public.records%rowtype;
   puesto integer;
 begin
-  if p_rondas is null or p_rondas < 1 or p_rondas > 500
+  if p_rondas is null or p_rondas < 1 or p_rondas > 150
      or p_puntaje is null or p_puntaje <= 0 or p_puntaje % 10 <> 0
-     or p_puntaje > p_rondas * 370 + ((p_rondas + 8) / 12 + 1) * 740 then
+     or p_puntaje > p_rondas * 740 + ((p_rondas + 4) / 12 + 1) * 1480 then
     raise exception 'puntaje imposible';
   end if;
-  if (select count(*) from public.records where creado > now() - interval '1 minute') >= 20 then
+  -- ¿Ya se anotó esta partida (un reintento)? Se devuelve su puesto
+  if p_clave is not null then
+    select * into ya from public.records where clave = p_clave;
+    if found then
+      select count(*) + 1 into puesto from public.records r
+        where not r.oculto
+          and (r.puntaje > ya.puntaje
+               or (r.puntaje = ya.puntaje and r.rondas > ya.rondas)
+               or (r.puntaje = ya.puntaje and r.rondas = ya.rondas and r.id < ya.id));
+      return puesto;
+    end if;
+  end if;
+  if (select count(*) from public.records where creado > now() - interval '1 minute') >= 120 then
     raise exception 'demasiadas anotaciones: espera un momento';
   end if;
-  insert into public.records (nombre, puntaje, rondas)
-    values (public.limpiar_nombre(p_nombre), p_puntaje, p_rondas)
+  insert into public.records (nombre, puntaje, rondas, clave)
+    values (public.limpiar_nombre(p_nombre), p_puntaje, p_rondas, p_clave)
     returning id into nuevo;
   select count(*) + 1 into puesto from public.records r
     where not r.oculto
@@ -273,10 +293,10 @@ revoke all on function public.forma_prohibida(text) from public, anon, authentic
 revoke all on function public.nombre_prohibido(text) from public, anon, authenticated;
 revoke all on function public.limpiar_nombre(text) from public, anon, authenticated;
 revoke all on function public.revisar_nombre(text) from public, authenticated;
-revoke all on function public.anotar_record(text, integer, integer) from public, authenticated;
+revoke all on function public.anotar_record(text, integer, integer, uuid) from public, authenticated;
 revoke all on function public.mejores_records(integer) from public, authenticated;
 grant execute on function public.revisar_nombre(text) to anon;
-grant execute on function public.anotar_record(text, integer, integer) to anon;
+grant execute on function public.anotar_record(text, integer, integer, uuid) to anon;
 grant execute on function public.mejores_records(integer) to anon;
 
 -- ---------------------------------------------------------------- listas

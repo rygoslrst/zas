@@ -65,13 +65,15 @@ function soportaWebp() {
 
 // ----------------------------------------------------------------------------
 //  ZAS se juega con el celular en vertical. Si lo giran, se pide volver y se
-//  pausa. En la computadora (mouse) cualquier forma de ventana sirve.
+//  pausa. En la computadora (mouse) cualquier forma de ventana sirve, y en una
+//  tablet también: acostada hay alto de sobra (se juega en una franja, como en
+//  la computadora). Sólo molesta un teléfono acostado: queda muy bajo.
 // ----------------------------------------------------------------------------
 function vigilarOrientacion(director) {
   const aviso = document.getElementById('gira');
   const tactil = window.matchMedia('(pointer: coarse)').matches;
   const revisar = () => {
-    const acostado = tactil && window.innerWidth > window.innerHeight;
+    const acostado = tactil && window.innerWidth > window.innerHeight && window.innerHeight < 500;
     aviso.hidden = !acostado;
     const d = director();
     if (acostado && d) d.pausar();

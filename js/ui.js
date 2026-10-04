@@ -7,7 +7,8 @@
 // ============================================================================
 
 import { EMOJI, CELDA_EMOJI } from './datos/emoji.js';
-import { leerTabla, entraEnTabla, anotar, revisarNombre, ultimoNombre, recordarNombre, precargar, enLinea } from './tabla.js';
+import { leerTabla, entraEnTabla, anotar, revisarNombre, ultimoNombre, recordarNombre, precargar, enLinea,
+  hayPendientes, subirPendientes } from './tabla.js';
 
 const $ = id => document.getElementById(id);
 const AVISO_PANTALLA_S = 3.8;      // lo que tarda en irse el aviso de pantalla completa (Chrome en Android)
@@ -74,7 +75,9 @@ export class UI {
     this.btnPausa.addEventListener('click', () => this.director && this.director.pausar());
     // El nombre para la tabla: ni los toques ni las teclas llegan al juego
     $('form-nombre').addEventListener('submit', e => { e.preventDefault(); this.guardarNombre(); });
-    $('no-guardar').addEventListener('click', () => this.cerrarNombre());
+    // "No, gracias" no es para siempre: queda un botón para anotarse igual
+    $('no-guardar').addEventListener('click', () => { this.cerrarNombre(); $('anotar-luego').hidden = !this.ultimaPartida; });
+    $('anotar-luego').addEventListener('click', () => this.pedirNombre());
     for (const el of [this.creditos, this.records, this.cajaNombre]) {
       el.addEventListener('pointerdown', e => e.stopPropagation());
       el.addEventListener('pointerup', e => e.stopPropagation());
@@ -85,7 +88,9 @@ export class UI {
     // "click" llega al levantar el dedo: en iOS el audio sólo se destraba ahí.
     $('btn-jugar').addEventListener('click', () => this.empezar());
     $('fin-cta').addEventListener('click', () => this.empezar());
-    this.pausa.addEventListener('pointerup', () => this.director && this.director.seguir());
+    this.pausa.addEventListener('pointerup', () => this.seguirConCuenta());
+    // Lo que no se pudo subir a la tabla la vez pasada, se intenta al abrir
+    setTimeout(() => subirPendientes().catch(() => {}), 1500);
 
     window.addEventListener('keydown', e => {
       if (e.repeat || (e.target && e.target.tagName === 'INPUT')) return;     // escribiendo el nombre
@@ -94,14 +99,14 @@ export class UI {
         if (!this.creditos.hidden) this.abrirCreditos(false);
         else if (!this.records.hidden) this.abrirRecords(false);
         else if (EN_JUEGO.includes(est)) this.director.pausar();
-        else if (est === 'pausa') this.director.seguir();
+        else if (est === 'pausa') this.seguirConCuenta();
         return;
       }
       if (e.code === 'KeyM') { this.alternarSonido(); return; }
       if (e.code !== 'Space' && e.code !== 'Enter') return;
       if (!this.creditos.hidden || !this.records.hidden || !this.director) return;
       if (est === 'titulo' || est === 'fin') { e.preventDefault(); this.empezar(); }
-      else if (est === 'pausa') { e.preventDefault(); this.director.seguir(); }
+      else if (est === 'pausa') { e.preventDefault(); this.seguirConCuenta(); }
     });
   }
 
@@ -113,10 +118,11 @@ export class UI {
     this.ajustarColumna();
   }
 
+  // El mejor puntaje de este aparato (la tabla de récords es otra cosa: la de todos)
   mostrarRecord() {
     const d = this.director;
     $('titulo-record').textContent = d && d.recordPuntaje > 0
-      ? `Tu récord: ${conPuntos(d.recordPuntaje)} puntos · ${d.record} microjuegos` : '';
+      ? `Tu mejor partida: ${conPuntos(d.recordPuntaje)} puntos · ${d.record} microjuegos` : '';
   }
 
   // En la computadora el juego es una franja vertical: los botones que van
@@ -132,8 +138,39 @@ export class UI {
   // El botón de pausa se ve sólo durante la partida
   mostrarEnJuego(v) { this.btnPausa.hidden = !v; }
 
+  // Seguir después de la pausa. Si se estaba en pleno microjuego, antes una
+  // cuenta 3, 2, 1: la mecha sigue donde quedó y nadie tiene que perder por
+  // sorpresa. (Si se vuelve a esconder la página en la cuenta, se cancela.)
+  seguirConCuenta() {
+    const d = this.director;
+    if (!d || d.estado !== 'pausa' || this.contando) return;
+    if (d.previo !== 'micro') { d.seguir(); return; }
+    this.contando = true;
+    this.pausa.classList.add('contando');
+    const cuenta = $('pausa-cuenta');
+    let n = 3;
+    const paso = () => {
+      if (!this.contando) return;
+      if (document.hidden) { this.cancelarCuenta(); return; }
+      if (n === 0) { this.cancelarCuenta(); d.seguir(); return; }
+      cuenta.textContent = String(n--);
+      cuenta.classList.remove('pum');
+      void cuenta.offsetWidth;                         // para que la animación vuelva a arrancar
+      cuenta.classList.add('pum');
+      this.relojCuenta = setTimeout(paso, 600);
+    };
+    paso();
+  }
+
+  cancelarCuenta() {
+    clearTimeout(this.relojCuenta);
+    this.contando = false;
+    this.pausa.classList.remove('contando');
+  }
+
   // De vuelta al menú principal
   mostrarMenu() {
+    this.cancelarCuenta();
     this.pausa.hidden = true;
     this.fin.hidden = true;
     this.cerrarNombre();
@@ -171,33 +208,53 @@ export class UI {
           // El aviso del navegador ("desliza para salir") dura unos segundos y
           // no se puede quitar: el primer microjuego espera a que se vaya.
           if (this.director) this.director.esperarAviso(AVISO_PANTALLA_S);
-          if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {});
+          // En el teléfono, se traba en vertical. En una tablet no: si está
+          // acostada sobre una mesa (en el stand), girarle la pantalla molesta.
+          const telefono = Math.min(screen.width, screen.height) < 500;
+          if (telefono && screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {});
         }).catch(() => {});
       }
     } catch (e) { /* nada */ }
   }
 
   mostrarFin(d) {
+    // En qué microjuego se perdió la última vida
+    const micro = $('fin-micro');
+    micro.textContent = '';
+    if (d.ultimo) {
+      const b = document.createElement('b');
+      b.textContent = d.ultimo;
+      micro.append('Perdiste en ', b);
+    }
     $('fin-puntos').textContent = conPuntos(d.puntaje);
     $('fin-detalle').textContent = `puntos · ${d.puntos} ${d.puntos === 1 ? 'microjuego' : 'microjuegos'}`;
     $('fin-veredicto').textContent = veredicto(d.puntos);
     this.dibujarMedalla(d.medalla);
+    // El mejor de ESTE aparato ("¡Entraste a la tabla!" es la de todos)
     const rec = $('fin-record');
-    rec.textContent = d.nuevo ? '¡Nuevo récord!' : `Tu récord: ${conPuntos(d.recordPuntaje)} puntos · ${d.record} microjuegos`;
+    rec.textContent = d.nuevo ? '¡Tu mejor partida!' : `Tu mejor partida: ${conPuntos(d.recordPuntaje)} puntos · ${d.record} microjuegos`;
     rec.classList.toggle('nuevo', d.nuevo);
     this.mostrarRecord();
     this.fin.hidden = false;
     this.finDesde = performance.now();
     // ¿Entra en la tabla? Entonces se pide el nombre (con el último ya escrito)
-    this.ultimaPartida = { puntaje: d.puntaje, rondas: d.puntos };
+    this.ultimaPartida = null;
     this.cerrarNombre();
-    entraEnTabla(d.puntaje).then(entra => { if (entra && !this.fin.hidden) this.pedirNombre(); });
+    $('anotar-luego').hidden = true;
+    const partida = { puntaje: d.puntaje, rondas: d.puntos };
+    entraEnTabla(d.puntaje).then(entra => {
+      if (!entra || this.fin.hidden) return;
+      this.ultimaPartida = partida;
+      this.pedirNombre();
+    });
   }
 
   pedirNombre() {
+    if (!this.ultimaPartida) return;
     this.pidiendoNombre = true;
     this.fin.classList.add('pidiendo');
     this.cajaNombre.hidden = false;
+    $('anotar-luego').hidden = true;
     $('fin-cta').hidden = true;
     this.inputNombre.value = ultimoNombre();
     $('nombre-error').hidden = true;
@@ -257,6 +314,7 @@ export class UI {
     const tabla = await leerTabla(soloLocal);
     if (this.records.hidden) return;
     nota.textContent = enLinea ? 'Los 10 mejores puntajes de todos.' : 'Los 10 mejores de este aparato (sin conexión).';
+    if (hayPendientes()) nota.textContent += ' Tu puntaje se subirá a la tabla de todos apenas haya conexión.';
     $('tabla-vacia').hidden = tabla.length > 0;
     if (tabla.length) {
       const cabeza = document.createElement('li');
@@ -294,6 +352,7 @@ export class UI {
   }
 
   mostrarPausa(v) {
+    this.cancelarCuenta();
     this.pausa.hidden = !v;
     this.btnPausa.hidden = v;
     if (this.director && this.director.practica) this.saltar.hidden = v;    // en pausa no se salta

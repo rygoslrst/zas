@@ -11,7 +11,7 @@
 //  base de datos no contesta, se usa ésta y el juego sigue igual.
 // ============================================================================
 
-import { CLAVE_TABLA, CLAVE_NOMBRE } from './config.js';
+import { CLAVE_TABLA, CLAVE_NOMBRE, CLAVE_PENDIENTES } from './config.js';
 import { nombreProhibido } from './filtroNombres.js';
 
 export const TAMANO_TABLA = 10;
@@ -22,15 +22,17 @@ const EN_LINEA = {
   llave: 'sb_publishable_bEC0jMG9Ls2YGHzx2faIcg_xFMQU6WG',
 };
 const ESPERA_MS = 3500;         // si no contesta en este tiempo, se usa la del aparato
+const ESPERA_ANOTAR_MS = 8000;  // para guardar se espera más (con mala señal tarda)
 const VIGENCIA_MS = 30000;      // cuánto sirve la última tabla leída para decidir si "entras"
+const MAX_PENDIENTES = 10;
 
 // true si la última tabla que se mostró es la de todos (en línea)
 export let enLinea = false;
 let ultima = null;              // { lista, momento } de la última lectura en línea
 
-async function rpc(funcion, datos) {
+async function rpc(funcion, datos, espera = ESPERA_MS) {
   const ctl = new AbortController();
-  const plazo = setTimeout(() => ctl.abort(), ESPERA_MS);
+  const plazo = setTimeout(() => ctl.abort(), espera);
   try {
     const r = await fetch(EN_LINEA.url + funcion, {
       method: 'POST',
@@ -38,11 +40,28 @@ async function rpc(funcion, datos) {
       body: JSON.stringify(datos),
       signal: ctl.signal,
     });
-    if (!r.ok) throw new Error(`${funcion}: ${r.status}`);
+    if (!r.ok) {
+      // La base explica por qué ("puntaje imposible", "demasiadas anotaciones")
+      let motivo = '';
+      try { motivo = (await r.json()).message || ''; } catch (e) { /* sin detalle */ }
+      const err = new Error(`${funcion}: ${r.status} ${motivo}`);
+      err.motivo = motivo;
+      throw err;
+    }
     return await r.json();
   } finally {
     clearTimeout(plazo);
   }
+}
+
+const esperar = ms => new Promise(r => setTimeout(r, ms));
+
+// Cada partida anotada lleva una clave única: si se manda dos veces (porque la
+// respuesta no llegó y se reintentó), la base la guarda una sola vez.
+function claveNueva() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  const h = () => Math.floor(Math.random() * 0x10000).toString(16).padStart(4, '0');
+  return `${h()}${h()}-${h()}-4${h().slice(1)}-a${h().slice(1)}-${h()}${h()}${h()}`;
 }
 
 function leerLocal() {
@@ -74,8 +93,10 @@ export async function leerTabla(soloLocal = false) {
 }
 
 // Se llama al empezar cada partida: así, al terminar, ya se sabe al instante
-// si el puntaje entra (sin esperar a la red).
-export function precargar() { leerTabla().catch(() => {}); }
+// si el puntaje entra (sin esperar a la red). De paso sube lo pendiente.
+export function precargar() {
+  subirPendientes().catch(() => {}).then(() => leerTabla()).catch(() => {});
+}
 
 // ¿Este puntaje entra en la tabla?
 export async function entraEnTabla(puntaje) {
@@ -86,17 +107,65 @@ export async function entraEnTabla(puntaje) {
 
 // Anota una partida (en línea y, por las dudas, en el aparato). Devuelve el
 // puesto (1 = el mejor) y si quedó en la tabla en línea o sólo en el aparato.
+// Si no se pudo subir (sin internet, o muchos guardando a la vez), queda
+// PENDIENTE y se vuelve a intentar al empezar la próxima partida.
 export async function anotar(nombre, puntaje, rondas) {
   const e = { nombre, puntaje, rondas, fecha: Date.now() };
   const t = ordenar([...leerLocal(), e]).slice(0, TAMANO_TABLA);
   try { localStorage.setItem(CLAVE_TABLA, JSON.stringify(t)); } catch (err) { /* modo privado */ }
-  try {
-    const puesto = await rpc('anotar_record', { p_nombre: nombre, p_puntaje: puntaje, p_rondas: rondas });
-    ultima = null;
-    return { puesto, enLinea: true };
-  } catch (err) {
-    return { puesto: t.indexOf(e) + 1, enLinea: false };
+  const p = { nombre, puntaje, rondas, clave: claveNueva() };
+  for (let intento = 0; ; intento++) {
+    try {
+      const puesto = await subir(p);
+      ultima = null;
+      return { puesto, enLinea: true };
+    } catch (err) {
+      const motivo = err.motivo || '';
+      if (/imposible/.test(motivo)) break;                             // no tiene arreglo
+      if (/demasiadas/.test(motivo) && intento === 0) { await esperar(2500); continue; }   // mucha gente a la vez
+      guardarPendiente(p);
+      break;
+    }
   }
+  return { puesto: t.indexOf(e) + 1, enLinea: false };
+}
+
+function subir(p) {
+  return rpc('anotar_record', { p_nombre: p.nombre, p_puntaje: p.puntaje, p_rondas: p.rondas, p_clave: p.clave },
+    ESPERA_ANOTAR_MS);
+}
+
+function leerPendientes() {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLAVE_PENDIENTES));
+    return Array.isArray(v) ? v.filter(p => p && typeof p.puntaje === 'number' && p.clave) : [];
+  } catch (e) { return []; }
+}
+
+function guardarPendientes(lista) {
+  try { localStorage.setItem(CLAVE_PENDIENTES, JSON.stringify(lista.slice(-MAX_PENDIENTES))); } catch (e) { /* nada */ }
+}
+
+function guardarPendiente(p) { guardarPendientes([...leerPendientes().filter(o => o.clave !== p.clave), p]); }
+
+export function hayPendientes() { return leerPendientes().length > 0; }
+
+// Sube lo que quedó pendiente (de a uno; si falla por la red, se deja para después)
+let subiendo = null;
+export function subirPendientes() {
+  if (subiendo) return subiendo;
+  subiendo = (async () => {
+    for (const p of leerPendientes()) {
+      try {
+        await subir(p);
+      } catch (err) {
+        if (!/imposible/.test(err.motivo || '')) break;             // sin red o muy ocupada: más tarde
+      }
+      guardarPendientes(leerPendientes().filter(o => o.clave !== p.clave));
+      ultima = null;
+    }
+  })().finally(() => { subiendo = null; });
+  return subiendo;
 }
 
 // El último nombre que se usó (para no tener que escribirlo cada vez)

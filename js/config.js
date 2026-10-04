@@ -79,3 +79,4 @@ export const CLAVE_PRACTICA = 'zas_practica_v1';      // '1' cuando ya se hizo l
 export const CLAVE_PUNTAJE = 'zas_puntaje_v1';        // el mejor puntaje de este aparato
 export const CLAVE_TABLA = 'zas_tabla_v1';            // la tabla de récords (ver tabla.js)
 export const CLAVE_NOMBRE = 'zas_nombre_v1';          // el último nombre anotado
+export const CLAVE_PENDIENTES = 'zas_pendientes_v1';  // puntajes que no se pudieron subir todavía
