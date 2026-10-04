@@ -25,7 +25,10 @@ export class Duelo extends Micro {
     // Cuándo sale la señal y cuánto hay para reaccionar
     this.tSenal = this.azar(1.1, 2.0) / this.vel + 0.2;
     this.ventana = [0.7, 0.58, 0.5][this.nivel - 1] / Math.sqrt(this.vel);   // hay que poder reaccionar (~0,3 s)
-    this.tFalsa = this.nivel >= 2 && Math.random() < 0.7 ? this.tSenal - this.azar(0.35, 0.6) / this.vel : -1;
+    // La señal falsa sale antes de la verdadera y se apaga antes de que salga
+    // ésa (si se pisaban, la de verdad quedaba gris, como la falsa)
+    this.tFalsa = this.nivel >= 2 && Math.random() < 0.7 ? this.tSenal - Math.max(0.3, this.azar(0.35, 0.6) / this.vel) : -1;
+    this.finFalsa = Math.min(this.tFalsa + 0.3, this.tSenal - 0.1);
     this.salio = false;
     this.falsaSonada = false;
     this.alTocar(() => this.tiro());
@@ -51,11 +54,11 @@ export class Duelo extends Micro {
   paso(dt, t) {
     if (this.decidido) return;
     // La señal falsa (en gris, y dice otra cosa)
-    if (this.tFalsa > 0 && t >= this.tFalsa && t < this.tFalsa + 0.3) {
+    if (!this.salio && this.tFalsa > 0 && t >= this.tFalsa && t < this.finFalsa) {
       this.senal.setText('¿YA?').setTint(0x9aa0a6).setVisible(true);
       if (!this.falsaSonada) { this.falsaSonada = true; this.audio.senal(true); }
     }
-    else if (t < this.tSenal) this.senal.setVisible(false);
+    else if (!this.salio) this.senal.setVisible(false);
     if (t >= this.tSenal && !this.salio) {
       this.salio = true;
       this.espera.setVisible(false);
