@@ -13,6 +13,7 @@ export class Salta extends Micro {
     this.suelo = this.cy + 150;
     this.horizonte(this.suelo, 'dunas', 0xf1b67c);
     this.piso(this.suelo, 0xe0a458);
+    this.subsuelo(0, this.W, this.suelo + 10, 0xe0a458, 'arena');
     this.rapidez = 340 * this.vel;
     this.duracionSalto = 0.62 / this.vel;
     // El corredor mira a la izquierda: se lo da vuelta

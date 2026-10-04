@@ -11,6 +11,12 @@ export class Comer extends Micro {
 
   armar() {
     this.tema('cocina');
+    // La pared de azulejos, un reloj y una planta en los costados (lejos del
+    // camino de la comida, que va por el medio)
+    this.azulejos(0, this.bajo - 58, 0xfff1e2, 92, 46);
+    this.vineta(0.32);
+    this.emoji('reloj', 64, this.cy - 40, 78).setAlpha(0.95);
+    this.emoji('planta', this.W - 62, this.bajo - 120, 96);
     this.yCara = this.arriba + 160;
     this.cara = this.emoji('boca', this.cx, this.yCara, 180);
     this.amplitud = [0, 120, 150][this.nivel - 1];

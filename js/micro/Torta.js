@@ -21,8 +21,16 @@ export class Torta extends Micro {
   };
 
   armar() {
-    this.tema('cocina');
+    this.tema('pasto');
     this.tx = this.cx; this.ty = this.cy + 40;
+    // Un mantel de cuadros (las hormigas cruzan el pasto y el mantel)
+    const mantel = this.add.graphics(), lado = 420, c = 52.5, mx = this.tx - lado / 2, my = this.ty - lado / 2 + 10;
+    mantel.fillStyle(COLOR.OSCURO, 0.2).fillRect(mx + 8, my + 12, lado, lado);
+    mantel.fillStyle(0xffffff, 1).fillRect(mx, my, lado, lado);
+    mantel.fillStyle(0xe63946, 0.85);
+    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if ((i + j) % 2 === 0) mantel.fillRect(mx + i * c, my + j * c, c, c);
+    this.emoji('flor', 50, this.arriba + 40, 56).setAlpha(0.95);
+    this.emoji('tulipan', this.W - 46, this.bajo - 30, 56).setAlpha(0.95);
     this.circulo(this.tx, this.ty + 10, 110, 0xffffff, 0.9);
     this.circulo(this.tx, this.ty + 10, 96, 0xf2e6d8);
     this.torta = this.emoji('torta', this.tx, this.ty - 10, 150);

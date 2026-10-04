@@ -20,7 +20,17 @@ export class Encesta extends Micro {
   };
 
   armar() {
-    this.tema('madera');
+    // Un gimnasio: pared de bloques pintados y piso de madera con la línea
+    this.fondo([0x7fa3d9, 0x3b5a8f], null);
+    const yPiso = this.bajo - 26;
+    this.azulejos(0, yPiso, 0x6f93c9, 128, 64);
+    this.rect(this.cx, yPiso - 200, this.W, 14, 0xffd23f).setOrigin(0.5);
+    this.piso(yPiso, 0xd99a5b);
+    this.tablasPiso = this.add.graphics();
+    this.tablasPiso.lineStyle(3, 0xb87945, 0.6);
+    for (let x = 30; x < this.W; x += 64) this.tablasPiso.lineBetween(x, yPiso + 8, x - 40, this.H);
+    this.rect(this.cx, yPiso + 60, this.W, 6, 0xffffff, 0.85).setOrigin(0.5);
+    this.vineta(0.35);
     this.yAro = this.arriba + 240;
     this.xAro = this.cx;
     this.vAro = [0, 95, 140][this.nivel - 1] * Math.sqrt(this.vel) * (Math.random() < 0.5 ? -1 : 1);

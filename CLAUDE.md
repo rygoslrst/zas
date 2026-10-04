@@ -116,6 +116,15 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
    GitHub Actions (el usuario no lo quiso).
 17. 2026-10-04: el usuario pidió sacar ¡QUE NO TE VEA! (Avanza) y poner otro
    → Grua ¡SACA EL PELUCHE! (también de mantener apretado).
+18. 2026-10-04: "más microjuegos y analiza todo lo visual" → hojas de
+   contacto de los 51 en un teléfono alto: fondos lisos o vacíos arreglados
+   (¡DALE DE COMER! cocina con azulejos, ¡DEFIENDE EL PASTEL! mantel de
+   picnic en el pasto, ¡ENCESTA! gimnasio, ¡FRENA! y ¡SALTA! con
+   `subsuelo()` —vetas y piedritas bajo el piso—, ¡CIERRA LAS PUERTAS!
+   ventana con luna y telarañas, ¿DÓNDE ESTABA? cartas grandes en dos filas),
+   el × y el + de la fuente se veían como puntos ("×1,5") → se dibujan más
+   grandes (`AGRANDAR` en Atlas.js). 3 nuevos: Cuerda, Fuego, Pedalea → 49
+   + 5 jefes = 54.
 
 ## Cómo es el juego hoy
 
@@ -244,7 +253,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     las partidas normales (no práctica, galería, duelo ni demo). Sin internet
     quedan pendientes y se suben con lo demás. SQL en
     `herramientas/tabla_en_linea.sql` (al final).
-- **Galería** (2026-10-03): botón en el título. Los 51 con su ícono (`static
+- **Galería** (2026-10-03): botón en el título. Los 54 con su ícono (`static
   ICONO`, un emoji); los que no salieron en el aparato (`zas_vistos_v1`), en
   silueta con "???". Tocar uno = **práctica libre** de ese microjuego
   (`Director.empezarGaleria`, usa `soloEste`): 4 vidas, más rápido cada 2 y
@@ -325,7 +334,7 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     + `_desfase`; la del menú, con el reloj del audio. `pausar()` se puede
     llamar de más (al ocultar la página, siempre).
 
-**Microjuegos (46)**, por control:
+**Microjuegos (49)**, por control:
 - *tocar:* Reventa ¡REVIENTA!, Aplasta ¡APLASTA!, Distinto ¡EL DISTINTO!,
   NoToques ¡NO TOQUES NADA!, Cuantos ¿CUÁNTOS HAY?, Frena ¡FRENA!, Salta
   ¡SALTA!, Pesca ¡PESCA!, Foto ¡TOMA LA FOTO!, Vasos ¡ENCUENTRA EL DIAMANTE!
@@ -346,16 +355,24 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
   LA ESTRELLA! (y el rayo, el corazón, el triángulo: pasar el dedo por la
   figura punteada desde el punto verde; avanza mientras el dedo esté cerca de
   la línea), Puntillas ¡SIN HACER RUIDO! (llevar al hámster a la galleta sin
-  despertar al gato: arrastrar rápido llena la barra de ruido)
+  despertar al gato: arrastrar rápido llena la barra de ruido), Fuego ¡APAGA
+  EL FUEGO! (con el dedo apoyado, la manguera moja donde está el dedo; cada
+  fuego se apaga con un ratito de agua; en el nivel 3 los que no se terminan
+  de apagar vuelven a crecer)
 - *deslizar:* Corta ¡CORTA!, Patea ¡PATEA!, Cable ¡CORTA EL ROJO! (y otros
   colores), Flechas ¡SIGUE LAS FLECHAS!, Encesta ¡ENCESTA! (la pelota va
   adonde apunta el gesto; el aro se mueve desde el nivel 2), Puertas ¡CIERRA
   LAS PUERTAS! (pasillo embrujado: barrer de lado a lado cada puerta antes de
-  que llegue su fantasma; 2, 3 o 4 puertas)
+  que llegue su fantasma; 2, 3 o 4 puertas), Cuerda ¡CORTA LA CUERDA! (un
+  chupetín se hamaca; al cortar sale con el impulso que traía y tiene que
+  caer en la boca del sapo; el sapo se pone donde caería cortando en un
+  momento elegido: en el nivel 1 cerca de una punta del vaivén —medio segundo
+  para acertar—, en el 3 en cualquier parte —0,15 s—)
 - *tocar rápido / mantener:* Infla ¡INFLA!, Despega ¡DESPEGA!, Llena ¡LLENA EL
   VASO!, Grua ¡SACA EL PELUCHE! (máquina de peluches: mientras se mantiene
   apretado la garra avanza, al soltar baja; un intento; desde el nivel 2 hay
-  bombas al lado del peluche), Equilibra ¡EQUILIBRA! (mantener un lado de
+  bombas al lado del peluche), Pedalea ¡PEDALEA! (tocar un pedal y después el
+  otro; desde el nivel 2 hay que ganarle a otro ciclista), Equilibra ¡EQUILIBRA! (mantener un lado de
   la pantalla inclina el tablón; sin apretar, se va hacia la pelota), Sopla
   ¡APAGA LAS VELAS!
 - *girar en círculos* (2026-10-03, gesto nuevo): Manivela ¡GIRA LA MANIVELA!

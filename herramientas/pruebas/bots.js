@@ -447,3 +447,27 @@ B.Grua = m => {
   if (m.estadoG === 'espera') ev('pointerdown', 270, 600);
   else if (m.estadoG === 'avanza' && m.x >= m.xPeluche - 4) ev('pointerup', 270, 600);
 };
+
+// --- octava tanda (2026-10-04) ---
+// Cuerda: corta cuando, cortando ya, el chupetín caería en la boca del sapo
+B.Cuerda = m => {
+  if (m.t < 0.3 || m.decidido || m.cortada) return;
+  if (Math.abs(m.cae(m.fase + m.w / 60) - m.xSapo) > m.tolerancia * 0.6) return;    // (corta un cuadro después)
+  const mx = (m.px + m.dulce.x) / 2, my = (m.py + m.dulce.y) / 2;
+  ev('pointerdown', mx - 80, my); window.__paso(1);
+  ev('pointermove', mx + 80, my); window.__paso(1);
+  ev('pointerup', mx + 80, my);
+};
+// Fuego: moja un fuego hasta apagarlo y pasa al siguiente
+B.Fuego = m => {
+  if (m.t < 0.25 || m.decidido) return;
+  const f = m.fuegos.find(o => o.vida > 0);
+  if (!f) return;
+  if (!m.dedo) ev('pointerdown', f.x, f.y); else ev('pointermove', f.x, f.y);
+};
+// Pedalea: a ritmo humano (6 toques por segundo), alternando
+B.Pedalea = m => {
+  if (m.t < 0.25 || m.decidido || ++cuadro % 10) return;
+  const p = m.pedales[m.siguiente];
+  ev('pointerdown', p.x, p.y); ev('pointerup', p.x, p.y);
+};

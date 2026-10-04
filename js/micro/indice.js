@@ -56,17 +56,20 @@ import { Separa } from './Separa.js';
 import { Traza } from './Traza.js';
 import { Puntillas } from './Puntillas.js';
 import { Grua } from './Grua.js';
+import { Cuerda } from './Cuerda.js';
+import { Fuego } from './Fuego.js';
+import { Pedalea } from './Pedalea.js';
 
 export const MICROS = [
   // tocar
   Reventa, Aplasta, Distinto, NoToques, Cuantos, Frena, Salta, Pesca, Foto, Vasos, Vuela, Suma, Grande, Orden,
   Ritmo, Memoria, Duelo, Colores, Ataja, Ruleta, Rebota, Cruza,
   // arrastrar
-  Atrapa, Esquiva, Comer, Limpia, Sigue, Honda, Encaja, Separa, Traza, Puntillas,
+  Atrapa, Esquiva, Comer, Limpia, Sigue, Honda, Encaja, Separa, Traza, Puntillas, Fuego,
   // deslizar
-  Corta, Patea, Cable, Flechas, Encesta, Puertas,
+  Corta, Patea, Cable, Flechas, Encesta, Puertas, Cuerda,
   // machacar y mantener
-  Infla, Llena, Grua, Despega, Equilibra, Sopla,
+  Infla, Llena, Grua, Despega, Equilibra, Sopla, Pedalea,
   // girar en círculos y dibujar un lazo
   Manivela, Lazo,
 ];

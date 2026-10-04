@@ -26,7 +26,29 @@ export class Puertas extends Micro {
     this.tablas(0x4a3566, 96).setAlpha(0.95);
     this.vineta(0.5);
     this.piso(yPiso, 0x3b2a1e);
-    this.emoji('luna', this.W - 70, this.arriba + 60, 90).setAlpha(0.9);
+    // Una ventana con la luna arriba de las puertas, y telarañas
+    const vy = this.cy - 270, vw = 170, vh = 130;
+    const v = this.add.graphics();
+    v.fillStyle(COLOR.OSCURO, 1).fillRoundedRect(this.cx - vw / 2 - 14, vy - vh / 2 - 14, vw + 28, vh + 28, { tl: 60, tr: 60, bl: 6, br: 6 });
+    v.fillStyle(0x1d2a5c, 1).fillRoundedRect(this.cx - vw / 2, vy - vh / 2, vw, vh, { tl: 50, tr: 50, bl: 2, br: 2 });
+    this.emoji('luna', this.cx + 30, vy - 10, 70);
+    this.add.graphics().fillStyle(COLOR.OSCURO, 1).fillRect(this.cx - 4, vy - vh / 2, 8, vh).fillRect(this.cx - vw / 2, vy + 6, vw, 8);
+    for (const lado of [-1, 1]) {
+      const t = this.add.graphics(), ox = lado < 0 ? 0 : this.W, oy = this.arriba - 60, sx = -lado;
+      t.lineStyle(2, 0xffffff, 0.35);
+      for (let k = 0; k <= 4; k++) {
+        const a = (k / 4) * Math.PI / 2;
+        t.lineBetween(ox, oy, ox + sx * Math.cos(a) * 150, oy + Math.sin(a) * 150);
+      }
+      for (let r = 40; r <= 140; r += 33) {
+        t.beginPath();
+        for (let k = 0; k <= 4; k++) {
+          const a = (k / 4) * Math.PI / 2, px = ox + sx * Math.cos(a) * r, py = oy + Math.sin(a) * r;
+          if (k === 0) t.moveTo(px, py); else t.lineTo(px, py);
+        }
+        t.strokePath();
+      }
+    }
     // Las puertas, repartidas a lo ancho
     const ancho = Math.min(150, 470 / n - 14), alto = 300;
     this.yPuerta = yPiso - alto / 2;

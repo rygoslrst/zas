@@ -291,6 +291,29 @@ export class Micro extends Phaser.Scene {
     return g;
   }
 
+  // Lo que hay debajo del piso (tierra o arena), para que en las pantallas
+  // altas no quede un bloque liso: vetas onduladas y piedritas
+  subsuelo(x0, x1, y0, color, tipo = 'tierra') {
+    const g = this.add.graphics();
+    const oscuro = mezcla(color, 0x000000, 0.2), claro = mezcla(color, 0xffffff, 0.16);
+    for (let y = y0 + 60, i = 0; y < this.H; y += 64 + ((i * 23) % 34), i++) {
+      g.fillStyle(i % 2 ? oscuro : claro, 0.55);
+      g.beginPath();
+      g.moveTo(x0, y);
+      for (let x = x0; x <= x1 + 30; x += 30) g.lineTo(Math.min(x, x1), y + Math.sin(x * 0.021 + i) * 7);
+      for (let x = x1; x >= x0 - 30; x -= 30) g.lineTo(Math.max(x, x0), y + 16 + Math.sin(x * 0.027 + i * 2) * 5);
+      g.closePath();
+      g.fillPath();
+    }
+    const piedra = tipo === 'arena' ? mezcla(color, 0xffffff, 0.35) : mezcla(color, 0x000000, 0.38);
+    for (let k = 0; k < 16; k++) {
+      const x = x0 + ((k * 137 + 40) % Math.max(1, x1 - x0));
+      const y = y0 + 36 + ((k * 211) % Math.max(1, this.H - y0 - 50));
+      g.fillStyle(piedra, 0.85).fillEllipse(x, y, 16 + (k % 3) * 9, 10 + (k % 2) * 6);
+    }
+    return g;
+  }
+
   // --------------------------------------------------------------------------
   //  Decoración animada (se mueve sola)
   // --------------------------------------------------------------------------

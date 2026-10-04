@@ -18,6 +18,7 @@ export class Frena extends Micro {
     this.zona0 = this.borde - zona;
     // Precipicio: el camino termina en el borde
     this.rect(this.borde / 2, this.suelo + (this.H - this.suelo) / 2, this.borde, this.H - this.suelo, 0x6b4f3a).setOrigin(0.5);
+    this.subsuelo(0, this.borde, this.suelo + 20, 0x6b4f3a);
     this.add.image(0, this.suelo + 20, 'atlas', 'degradeV').setOrigin(0).setDisplaySize(this.borde, 80).setTint(0x8a6a50);
     this.rect(this.borde / 2, this.suelo + 10, this.borde, 20, 0x3d3d4a);
     for (let x = 20; x < this.borde; x += 60) this.rect(x + 15, this.suelo + 10, 28, 4, 0xfff1a8);

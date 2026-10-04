@@ -9,7 +9,7 @@
 //  versión nueva vuelve a bajar los que ya se usaban.
 //  Lo que no es del juego (la tabla de récords en Supabase) va directo a la red.
 // ============================================================================
-const VERSION = 'f5c9a14f5281';
+const VERSION = '28e56e6eb2e6';
 const ARCHIVOS = [
   './',
   'index.html',
@@ -34,6 +34,7 @@ const ARCHIVOS = [
   'js/micro/Corta.js',
   'js/micro/Cruza.js',
   'js/micro/Cuantos.js',
+  'js/micro/Cuerda.js',
   'js/micro/Despega.js',
   'js/micro/Distinto.js',
   'js/micro/Duelo.js',
@@ -44,6 +45,7 @@ const ARCHIVOS = [
   'js/micro/Flechas.js',
   'js/micro/Foto.js',
   'js/micro/Frena.js',
+  'js/micro/Fuego.js',
   'js/micro/Grande.js',
   'js/micro/Grua.js',
   'js/micro/Honda.js',
@@ -57,6 +59,7 @@ const ARCHIVOS = [
   'js/micro/NoToques.js',
   'js/micro/Orden.js',
   'js/micro/Patea.js',
+  'js/micro/Pedalea.js',
   'js/micro/Pesca.js',
   'js/micro/Puertas.js',
   'js/micro/Pulpo.js',

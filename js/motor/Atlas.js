@@ -130,6 +130,9 @@ function piezas() {
 const FUENTE = {
   TAM: 128, BORDE: 11,
   CARACTERES: ' ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÑÜ0123456789!¡?¿.,:;-+×·%\'"/()#',
+  // En Anton el × y el + son chiquitos ("×1,5" se leía como "·1,5"): se
+  // dibujan más grandes y centrados a la altura de las mayúsculas
+  AGRANDAR: { '×': 1.7, '+': 1.25 },
 };
 
 function bloqueFuente() {
@@ -141,17 +144,26 @@ function bloqueFuente() {
   const altoCelda = asc + desc + FUENTE.BORDE * 2;
   const MAX_W = 2040;
 
+  const altoMayus = med.measureText('H').actualBoundingBoxAscent || FUENTE.TAM * 0.75;
   const glifos = [];
   let x = 0, y = 0;
   for (const ch of FUENTE.CARACTERES) {
+    const k = FUENTE.AGRANDAR[ch] || 1;
+    med.font = `${FUENTE.TAM * k}px Anton`;
     const mc = med.measureText(ch);
+    med.font = `${FUENTE.TAM}px Anton`;
+    // Los agrandados se corren para quedar centrados con las mayúsculas
+    let dy = 0;
+    if (k !== 1 && mc.actualBoundingBoxAscent !== undefined) {
+      dy = Math.round(-altoMayus / 2 - (mc.actualBoundingBoxDescent - mc.actualBoundingBoxAscent) / 2);
+    }
     const avance = Math.ceil(mc.width);
     const w = avance + FUENTE.BORDE * 2;
     // Cuánto sube y baja la tinta desde la línea de base (+1 por el suavizado)
-    const sube = Math.min(asc, Math.ceil((mc.actualBoundingBoxAscent ?? asc) + 1));
-    const baja = Math.min(desc, Math.max(0, Math.ceil((mc.actualBoundingBoxDescent ?? desc) + 1)));
+    const sube = Math.min(asc, Math.ceil((mc.actualBoundingBoxAscent ?? asc) - dy + 1));
+    const baja = Math.min(desc, Math.max(0, Math.ceil((mc.actualBoundingBoxDescent ?? desc) + dy + 1)));
     if (x + w > MAX_W) { x = 0; y += altoCelda; }
-    glifos.push({ ch, x, y, w, avance, sube: Math.max(0, sube), baja });
+    glifos.push({ ch, x, y, w, avance, sube: Math.max(0, sube), baja, k, dy });
     x += w;
   }
   const W = MAX_W, H = y + altoCelda;
@@ -181,9 +193,11 @@ function bloqueFuente() {
       c.fillStyle = '#fff';
       for (const g of glifos) {
         if (g.ch === ' ') continue;
-        const px = bx + g.x + FUENTE.BORDE, py = by + g.y + FUENTE.BORDE + asc;
+        const px = bx + g.x + FUENTE.BORDE, py = by + g.y + FUENTE.BORDE + asc + g.dy;
+        if (g.k !== 1) c.font = `${FUENTE.TAM * g.k}px Anton`;
         c.strokeText(g.ch, px, py);
         c.fillText(g.ch, px, py);
+        if (g.k !== 1) c.font = `${FUENTE.TAM}px Anton`;
       }
       c.restore();
     },
