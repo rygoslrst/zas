@@ -265,6 +265,14 @@ entenderse en segundos, dar ganas de volver a jugar y verse muy bien.
     vibración (Android; el iPhone no deja) va con los efectos.
   - En el iPhone, con el interruptor de silencio puesto no suena (como los
     juegos del iPhone; se decidió no forzarlo). Los créditos lo avisan.
+  - **Destrabar el audio:** ningún navegador deja sonar nada antes de que la
+    persona toque la página. El primer toque EN CUALQUIER PARTE (o una tecla)
+    lo destraba (`ui.js`, `destrabar`; antes sólo los botones, y el usuario
+    notó que a veces no sonaba la música del menú). La música del menú se
+    PIDE (`empezarMenu` deja `quiereMenu`) y suena apenas el audio arranca
+    (`onstatechange` → `_alArrancar`). Si una partida empezó sin audio (el
+    audio tardó en arrancar), `_alArrancar` la pasa al reloj del audio sin
+    saltos (medido: 8 ms) y desde ahí suena la música.
   - Una pista a la vez (`pista.tipo`): `micro` (al azar por semilla: bombo
     con clic, caja con cuerpo, platillos a la derecha, acordes —golpecitos o
     colchón— a la izquierda, melodía de 2 compases con eco, redoble en los
@@ -349,6 +357,9 @@ con ~4-6 s de sobra). Un jefe dura `PULSOS × pulso × √vel`.
   siguen con la versión vieja. En localhost no se registra (salvo `?sw`). En
   Android aparece "Instalar en el teléfono" en el título; instalado, se abre a
   pantalla completa. Probado: con el servidor apagado, todo sale del aparato.
+  Cuando llega una versión nueva, se recarga sola la próxima vez que el
+  juego está en el título (sin demo ni paneles); un aparato abierto todo el
+  día pregunta cada media hora si hay versión nueva.
   Íconos y vista previa se rehacen abriendo `herramientas/generar_imagenes.html`
   con el servidor andando (quedan en `capturas/`: moverlos a `assets/`).
 - **A los costados** (si sobran 250 px por lado, p. ej. un notebook): el QR

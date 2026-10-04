@@ -20,16 +20,32 @@ window.addEventListener('appinstalled', () => { instalar.pedido = null; instalar
 // JUGAR SIN INTERNET: el service worker (sw.js, lo arma herramientas/armar_sw.py)
 // guarda el juego en el aparato: la segunda vez carga al instante y anda sin
 // conexión. En localhost no (se probarían versiones viejas), salvo con ?sw.
-function registrarSW(archivoAtlas) {
+function registrarSW(archivoAtlas, director) {
   const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   if (!('serviceWorker' in navigator) || (local && !new URLSearchParams(location.search).has('sw'))) return;
-  navigator.serviceWorker.register('sw.js').then(() => {
-    // El atlas de emoji de este aparato también tiene que quedar guardado: si
-    // se bajó antes de que el service worker manejara la página, se pide de
-    // nuevo a través de él (sale de la caché del navegador: no se baja otra vez)
-    const guardar = () => fetch(archivoAtlas).catch(() => {});
-    if (navigator.serviceWorker.controller) guardar();
-    else navigator.serviceWorker.addEventListener('controllerchange', guardar, { once: true });
+  const sw = navigator.serviceWorker, yaHabia = !!sw.controller;
+  // El atlas de emoji de este aparato también tiene que quedar guardado: si
+  // se bajó antes de que el service worker manejara la página, se pide de
+  // nuevo a través de él (sale de la caché del navegador: no se baja otra vez)
+  const guardar = () => fetch(archivoAtlas).catch(() => {});
+  let nueva = false;
+  sw.addEventListener('controllerchange', () => {
+    if (!yaHabia) { guardar(); return; }
+    nueva = true;                          // llegó una versión nueva del juego
+  });
+  // La versión nueva se estrena apenas no hay nadie jugando: en el título,
+  // sin demo ni paneles abiertos, se recarga la página (desde el aparato: es
+  // un instante). Si no, el juego seguiría viejo hasta la próxima vez.
+  setInterval(() => {
+    const d = director();
+    const abierto = document.querySelector('.panel:not([hidden])');
+    if (nueva && !document.hidden && d && d.estado === 'titulo' && !d.demo && !abierto) location.reload();
+  }, 3000);
+  sw.register('sw.js').then(reg => {
+    if (yaHabia) guardar();
+    // Un aparato que queda abierto todo el día (el del stand) pregunta cada
+    // media hora si hay versión nueva
+    setInterval(() => { if (!document.hidden) reg.update().catch(() => {}); }, 30 * 60 * 1000);
   }).catch(() => { /* sin service worker: el juego anda igual */ });
 }
 
@@ -225,7 +241,7 @@ async function arrancar() {
   avance(1);
   document.getElementById('cargando').hidden = true;
   if (DEBUG) window.juego = juego;
-  setTimeout(() => registrarSW(archivo), 3000);      // después: que no le quite red a la carga
+  setTimeout(() => registrarSW(archivo, director), 3000);      // después: que no le quite red a la carga
 }
 
 arrancar();

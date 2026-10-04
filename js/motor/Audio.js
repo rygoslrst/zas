@@ -96,6 +96,7 @@ export class Audio {
     this._perfPausado = 0; this._pausadoEn = null;
     this._desfase = 0; this._congeladoEn = null;
     this.pista = null;
+    this.quiereMenu = false;       // en el título y el final: la música del menú, apenas se pueda
     this.chorroActivo = null;
     this.puedeVibrar = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
   }
@@ -126,6 +127,9 @@ export class Audio {
 
   _construir() {
     const c = this.ctx;
+    // El audio puede arrancar (o volver) tarde: con un toque cualquiera, o
+    // después de ocultar la página. En ese momento, lo pendiente.
+    c.onstatechange = () => this._alArrancar();
     this.comp = c.createDynamicsCompressor();
     this.comp.threshold.value = -12; this.comp.ratio.value = 4;
     this.comp.connect(c.destination);
@@ -169,6 +173,21 @@ export class Audio {
 
   get audioVivo() { return this.ctx !== null && this.ctx.state === 'running'; }
 
+  _alArrancar() {
+    if (!this.audioVivo) return;
+    // Si la partida empezó sin audio (el primer toque tardó en destrabarlo, o
+    // la computadora es lenta), se pasa al reloj del audio SIN SALTOS: el
+    // tiempo del juego sigue igual y desde ahí suena la música.
+    if (this._usarPerf && this._pausadoEn === null) {
+      const p = performance.now() / 1000 - this._perfPausado;
+      this.resincronizar();
+      this._congeladoEn = null;
+      this._desfase = this._crudo() - p;
+      this._usarPerf = false;
+    }
+    if (this.quiereMenu) this._sonarMenu();
+  }
+
   // Los dos botones: la música y los efectos (que incluyen la vibración)
   setMusica(on) {
     this.musicaOn = on;
@@ -194,6 +213,7 @@ export class Audio {
   // --------------------------------------------------------------------------
   // El reloj se elige al empezar cada partida y no se cambia a mitad.
   iniciarPartida() {
+    this.quiereMenu = false;
     this.detenerPista();
     if (this.ctx && this._congeladoEn !== null) {        // (no debería pasar: por las dudas)
       this._desfase += this._crudo() - this._congeladoEn;
@@ -293,6 +313,7 @@ export class Audio {
   // La música de un microjuego. op: { jefe, fin } (fin: cuándo se acaba la
   // mecha, en el reloj del juego: antes, un redoble)
   empezarPista(bpm, t0, semilla, op = {}) {
+    this.quiereMenu = false;
     if (!this.ctx) return;
     const r = azar(semilla);
     const menor = !!op.jefe;
@@ -315,6 +336,7 @@ export class Audio {
   // Entre microjuego y microjuego: un ritmo liviano al pulso de la partida
   // (en Do: pega con los jingles de ganar y perder)
   empezarTelon(bpm, t0) {
+    this.quiereMenu = false;
     if (!this.ctx) return;
     this._nuevaPista({
       tipo: 'telon', reloj: 'juego', bpm, t0, raiz: 48, escala: MAYOR, prog: [0, 0, 3, 4],
@@ -322,9 +344,16 @@ export class Audio {
     });
   }
 
-  // El menú y el final: tranquila, sin bombo fuerte
+  // El menú y el final: tranquila, sin bombo fuerte. Se puede pedir antes de
+  // que haya audio (el navegador no deja sonar nada hasta el primer toque):
+  // queda pedida y suena apenas el audio arranca (_alArrancar).
   empezarMenu() {
-    if (!this._ok || (this.pista && this.pista.tipo === 'menu')) return;
+    this.quiereMenu = true;
+    if (this._ok) this._sonarMenu();
+  }
+
+  _sonarMenu() {
+    if (this.pista && this.pista.tipo === 'menu') return;
     const r = azar(20261011);
     this._nuevaPista({
       tipo: 'menu', reloj: 'audio', bpm: 96, t0: this.ctx.currentTime + 0.1, raiz: 48, escala: MAYOR,

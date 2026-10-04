@@ -397,6 +397,7 @@ export class Director extends Phaser.Scene {
 
   modoTitulo() {
     this.estado = 'titulo';
+    this.audio.empezarMenu();           // (si todavía no hay audio, suena con el primer toque)
     this.ui.mostrarEnJuego(false);
     this.telonAbajo(false);
     this.pintarTelon(COLOR.FONDOS[3]);
@@ -1036,8 +1037,9 @@ export class Director extends Phaser.Scene {
     this.ui.mostrarSaltar(false);
     if (MODO_STAND) this.lecciones = new Set();        // el que sigue, las recibe de nuevo
     this.modoTitulo();
-    // (si venía de la pausa, el audio estaba suspendido)
-    this.audio.reanudar().then(() => { if (this.estado === 'titulo') this.audio.empezarMenu(); });
+    // (si venía de la pausa, el audio estaba suspendido: suena cuando vuelva)
+    this.audio.reanudar();
+    this.audio.empezarMenu();
     this.ui.mostrarMenu();
   }
 

@@ -69,14 +69,15 @@ export class UI {
     for (const b of document.querySelectorAll('[data-accion="musica"]')) {
       b.addEventListener('click', () => this.alternarMusica());
     }
-    // Cada botón suena (si el audio ya anda). El primer toque en cualquiera
-    // destraba el audio (iOS no deja antes) y, en el menú, arranca su música.
+    // El navegador no deja sonar nada hasta que la persona toca la página: el
+    // primer toque EN CUALQUIER PARTE (o una tecla) destraba el audio, y la
+    // música del menú arranca sola (Audio._alArrancar). iOS sólo acepta
+    // algunos tipos de toque: se intenta con todos hasta que anda.
+    const destrabar = e => { if (e.isTrusted && !this.audio.audioVivo) this.audio.desbloquear(); };
+    for (const tipo of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) window.addEventListener(tipo, destrabar, true);
+    // Cada botón suena
     document.addEventListener('click', e => {
-      if (!e.target.closest || !e.target.closest('.boton, .cta')) return;
-      if (this.audio.audioVivo) { this.audio.clic(); return; }
-      this.audio.desbloquear().then(() => setTimeout(() => {
-        if (this.director && this.director.estado === 'titulo') this.audio.empezarMenu();
-      }, 0));
+      if (e.target.closest && e.target.closest('.boton, .cta') && this.audio.audioVivo) this.audio.clic();
     }, true);
     for (const b of document.querySelectorAll('[data-accion="practica"]')) {
       b.addEventListener('click', () => this.empezar(true));
@@ -301,13 +302,14 @@ export class UI {
     this.aCompartir = { texto, archivo: null };
     const yo = this.aCompartir;
     let puede = false;
-    try { puede = !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.png', { type: 'image/png' })] })); } catch (e) { /* nada */ }
+    try { puede = !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.jpg', { type: 'image/jpeg' })] })); } catch (e) { /* nada */ }
     if (!puede) return;
     setTimeout(async () => {
       try {
         const c = await dibujarTarjeta({ ...tarjeta, url: URL_JUEGO.replace(/^https:\/\//, '').replace(/\/$/, ''), atlas: this.imagenEmoji });
-        const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-        if (blob && this.aCompartir === yo) yo.archivo = new File([blob], 'zas.png', { type: 'image/png' });
+        // JPEG: pesa un quinto que PNG y se arma más rápido en un teléfono lento
+        const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
+        if (blob && this.aCompartir === yo) yo.archivo = new File([blob], 'zas.jpg', { type: 'image/jpeg' });
       } catch (e) { /* sin imagen: se comparte el texto */ }
     }, 700);
   }
